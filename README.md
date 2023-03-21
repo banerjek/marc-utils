@@ -2,7 +2,7 @@
 Simple tools to analyze and manipulate MARC files
 
 # Disclaimers
-These tool are to MARC what a Skilsaw is to carpentry -- a lightweight and powerful tool that won't protect you from yourself and can do a lot of damage if used improperly. 
+These tools are to MARC what a Skilsaw is to carpentry -- a primitive but powerful tool that can do a lot of damage if used improperly. 
 
 The author has no way of knowing your needs or environment, so they may be completely unsuitable for your purposes and come without any kind of warranty or support. Use at your own risk. 
 
