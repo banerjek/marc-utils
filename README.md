@@ -4,7 +4,7 @@ Simple tools to analyze and manipulate MARC files
 # Disclaimers
 These tool are to MARC what a Skilsaw is to carpentry -- a lightweight and powerful tool that won't protect you from yourself and can do a lot of damage if used improperly. 
 
-The author has no way of knowing your needs or environment, so they may be completely unsuitable for your purposes and you use at your own risk. 
+The author has no way of knowing your needs or environment, so they may be completely unsuitable for your purposes and come without any kind of warranty or support. Use at your own risk. 
 
 # Purpose
 The MARC utils are standalone and minimal command-line utilities that can be easily modified to serve needs at hand. They are designed primarily to facilitate quick analysis of MARC files and be integrated into shell processes and assume that you already have your favorite ways of parsing/searching text. 
