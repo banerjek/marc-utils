@@ -29,11 +29,17 @@ Records with different than reported lengths and a few other basic problems are 
 Converts text files created by marc2text back to MARC -- it cannot read MarcEdit files. 
 
 ### marcsearch
-**Usage:** *marcsearch [filename] [marc-tag] [regex_search_expression]*
+**Usage:** *marcsearch [filename] [marc-tag] [regex_search_expression] [count]*
 
 Extracts MARC records where regex_search_expression was found in a MARC tag and directs them to a file named "found_records.mrc". If you want to target a specific subfield, you'll need to create an expression that involves the subfield delimiters (hex 1F)
+
+The count parameter is optional. If the word "count" is sent, marcsearch only reports on how many records it found without extracting them.
 
 ### marcfix
 **Usage:** *marcfix [filename]*
 
 Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good records in one file, and separates out a bunch with a series of common problems that can trip up processing in others
+
+### marcfc
+**Usage:** *marcfc [filename]*
+Gives frequency count for each MARC tag along with total record count. Does not do subfields at this point.
