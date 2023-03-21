@@ -7,6 +7,12 @@ read -r -d '' awkscript << "ENDOFAWK"
 
 BEGIN { records_found = 0 }
 {
+        if(length("а") != 2) {
+                badawk = 1
+                printf("Your version of awk does not support marcfc -- you need a version that supports the -b switch\\n")
+                exit
+        }
+
 	leader=substr($0,1,24)
 	baseaddress=substr(leader,13, 5) + 0
 	directory=substr($0,25, baseaddress - 25)
