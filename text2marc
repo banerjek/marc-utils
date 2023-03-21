@@ -1,0 +1,64 @@
+infile="${1}"
+fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
+outfile="${fileroot}.mrc"
+
+read -r -d '' awkscript << "ENDOFAWK"
+#!/usr/bin/awk -f 
+
+BEGIN {
+	if(length("а") != 2) {
+		badawk = 1
+		printf("Your version of awk does not support text2marc -- you need a version that supports the -b switch\\n")
+		exit
+	}
+}
+{
+	if (substr($1, 1, 4) == "=LDR") {
+		leader1 = substr($1, 12, 7) 
+		leader2 = substr($1, 24, 7)
+		directory = ""
+		base_address = 0
+		field_counter = 0 
+		field_length = 0
+		record_content = ""
+		record_counter++
+		}	
+	
+	for (field = 2; field <= NF; ++field) {
+		tag = substr($field, 1, 3)
+	
+		field_content = substr($field, 6)""OFS
+		field_length=sprintf("%04d", length(field_content))
+	
+		directory_address = sprintf("%05d", base_address)
+		base_address = base_address + field_length
+	
+		directory = directory""tag""field_length""directory_address
+		record_content = record_content""field_content
+		field_counter++
+		}
+	
+	directory = directory""OFS
+	base_data_address = sprintf("%05d", 24 + length(directory))
+	
+	record_content = record_content
+	record_length = 24 + length(directory) + length(record_content) + 1
+	
+	leader = sprintf("%05d", record_length)""leader1""base_data_address""leader2
+	print leader""directory""record_content > OUTFILE
+	
+	if (NR % 10000 == 0){ printf "Records created: %d \\r", record_counter }
+}
+END { 
+	if (badawk != 1) {
+		printf ("\\n\\n %d records were output to %s\\n", record_counter, OUTFILE)
+	}
+}
+
+ENDOFAWK
+
+echo -e "${awkscript}" > tmp_checkmarc
+chmod 700 tmp_checkmarc
+
+awk -v ORS=$'\x1d' -v RS='\n\n' -v OFS=$'\x1e' -v FS='\n=' -v SUBFIELD=$'\x1f' -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+rm -f tmp_checkmarc
