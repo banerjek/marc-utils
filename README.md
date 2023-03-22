@@ -1,8 +1,7 @@
 # marc-utils
-Simple tools to analyze and manipulate MARC files
+Lightweight standalone command line utilities to analyze and manipulate MARC files.  These tools are to MARC what a Skilsaw is to carpentry -- primitive, but they allow you do a lot very fast. Just add them to your path.
 
 # Disclaimers
-These tools are to MARC what a Skilsaw is to carpentry -- primitive, but allows you do a lot very fast. 
 
 The author has no way of knowing your needs or environment, so they may be completely unsuitable for your purposes and come without any kind of warranty or support. Use at your own risk. 
 
@@ -10,7 +9,7 @@ The author has no way of knowing your needs or environment, so they may be compl
 The MARC utils are minimal standalone command-line utilities that can be easily modified to serve needs at hand. They are designed primarily to facilitate quick analysis of MARC files and be integrated into shell processes and assume that you already have your favorite ways of parsing/searching text. 
 
 # System requirements
-bash and a version of awk that understands the "-b" switch (i.e. anything in the past couple decades should be good)
+bash and a version of awk that understands the "-b" switch (i.e. anything in the past couple decades that's in your base linux distro should be good). 
 
 # The utilities
 
@@ -26,7 +25,7 @@ Records with different than reported lengths and a few other basic problems are 
 ### text2marc
 **Usage:** *text2marc [filename]*
 
-Converts text files created by marc2text back to MARC -- it cannot read MarcEdit files. 
+Converts text files created by marc2text back to MARC -- it cannot read MarcEdit files. Wildcard expressions can be used to process multiple files. 
 
 ### marcsearch
 **Usage:** *marcsearch [filename] [marc-tag] [regex_search_expression] [count]*
@@ -38,8 +37,8 @@ The count parameter is optional. If the word "count" is sent, marcsearch only re
 ### marcfix
 **Usage:** *marcfix [filename]*
 
-Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good records in one file, and separates out a bunch with a series of common problems that can trip up processing in others
+Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good records in one file, and separates out a bunch with a series of common problems that can trip up processing in others. Wildcard expressions can be used to process multiple files.
 
 ### marcfc
 **Usage:** *marcfc [filename]*
-Gives frequency count for each MARC tag along with total record count. Does not do subfields at this point.
+Gives frequency count for each MARC tag along with total record count. Does not do subfields at this point. Wildcard expressions can be used to process multiple files.
