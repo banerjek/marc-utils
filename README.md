@@ -9,7 +9,7 @@ The author has no way of knowing your needs or environment, so they may be compl
 The MARC utils are minimal standalone command-line utilities that can be easily modified to serve needs at hand. They are designed primarily to facilitate quick analysis of MARC files and be integrated into shell processes and assume that you already have your favorite ways of parsing/searching text. 
 
 # System requirements
-bash and a version of awk that understands the "-b" switch (i.e. anything in the past couple decades that's in your base linux distro should be good). 
+bash and a version of awk that understands the "-b" switch (i.e. anything from the past couple decades that's in your base linux distro should be good). 
 
 # The utilities
 
