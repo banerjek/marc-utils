@@ -1,6 +1,7 @@
-infile="${1}"
+filelist=("$@")
+infile="${filelist[0]}"
 
-if [[ -z ${infile} ]];then echo "Counts MARC tags in binary MARC files. Usage: marcfc [filename]";exit;fi
+if [[ -z ${infile} ]];then echo "You must supply a file name or expression (wildcards OK). Counts MARC tags in binary MARC files. Usage: marcfc [filename]";exit;fi
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
@@ -28,11 +29,13 @@ BEGIN { records_found = 0 }
 	if (NR % 10000 == 0){ printf "Records searched: "NR"\r", foundrecs }
 }
 END {
-	print ""
-	print ""
 	print NR" records were searched"
-	for (value in tagcount) {
-		print value ":", tagcount[value] | "sort"
+	n = asorti(tagcount, sorted_bytag)
+
+	print "Total records: "NR"\\n" > OUTFILE
+
+	for (tag=1; tag<=n; tag++) {
+		print sorted_bytag[tag] ":", tagcount[sorted_bytag[tag]] > OUTFILE
 	}
 }
 
@@ -41,6 +44,12 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
-awk -v RS=$'\x1d' -v ORS=$'\n' -v FS=$'\x1e' -b -f tmp_checkmarc "${infile}"
+for file in "${filelist[@]}";do
+	fileroot=$(echo "${file}" | sed 's/\.....\?$//')
+	outfile="${fileroot}_fieldcounts.txt"
+	awk -v RS=$'\x1d' -v ORS=$'\n' -v FS=$'\x1e' -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+	echo "Field counts exported to ${outfile}"
+	echo
+done
 echo
 rm -f tmp_checkmarc

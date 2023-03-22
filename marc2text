@@ -1,6 +1,6 @@
-infile="${1}"
-fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
-outfile="${fileroot}.txt"
+filelist=("$@")
+infile="${filelist[0]}"
+if [[ -z ${infile} ]];then echo "You must supply a file name or expression (wildcards OK). Usage: marc2text [filename]";fi
 
 rm -f bad_*.mrc
 
@@ -10,7 +10,7 @@ read -r -d '' awkscript << "ENDOFAWK"
 BEGIN { 
         if(length("а") != 2) {
                 badawk = 1
-                printf("Your version of awk does not support text2marc -- you need a version that supports the -b switch\\n")
+                printf("Your version of awk does not support marc2text -- you need a version that supports the -b switch\\n")
                 exit
         }
 
@@ -106,7 +106,12 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
-awk -v RS=$'\x1d' -v ORS=$'\n\n' -v FS=$'\x1e' -v OFS='\n' -v SUBFIELD=$'\x1f' -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+for file in "${filelist[@]}";do
+	fileroot=$(echo "${file}" | sed 's/\.....\?$//')
+	outfile="${fileroot}.txt"
+	awk -v RS=$'\x1d' -v ORS=$'\n\n' -v FS=$'\x1e' -v OFS='\n' -v SUBFIELD=$'\x1f' -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${file}"
+done
+
 sleep 1
 ls bad_*.mrc 2> /dev/null 
 rm -f tmp_checkmarc

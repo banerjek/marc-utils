@@ -1,6 +1,6 @@
-infile="${1}"
-fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
-outfile="${fileroot}.mrc"
+filelist=("$@")
+infile="${filelist[0]}"
+if [[ -z ${infile} ]];then echo "You must supply a file name or expression (wildcards OK). Usage: text2marc [filename]";fi
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
@@ -60,5 +60,10 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
-awk -v ORS=$'\x1d' -v RS='\n\n' -v OFS=$'\x1e' -v FS='\n=' -v SUBFIELD=$'\x1f' -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+for file in "${filelist[@]}";do
+	fileroot=$(echo "${file}" | sed 's/\.....\?$//')
+	outfile="${fileroot}.mrc"
+	awk -v ORS=$'\x1d' -v RS='\n\n' -v OFS=$'\x1e' -v FS='\n=' -v SUBFIELD=$'\x1f' -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${file}"
+done
+
 rm -f tmp_checkmarc

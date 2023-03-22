@@ -11,6 +11,9 @@ else
 
 fi
 
+fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
+outfile="${fileroot}_found.mrc"
+
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
@@ -46,7 +49,7 @@ if (directory_check == 0) {
 if ( good_record == 1 ) { 
 	foundrecs++
 	if (COUNTONLY != "count") { 
-		print $0 > "found_records.mrc" 
+		print $0 > OUTFILE
 	}
 }
 if (NR % 10000 == 0){ printf "Records searched: "NR" Records found: %d \r", foundrecs }
@@ -58,10 +61,13 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
-awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v MARCTAG=${marctag} -v SEARCH="${search}" -v COUNTONLY="${count}" -b -f tmp_checkmarc "${infile}"
+
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v MARCTAG=${marctag} -v SEARCH="${search}" -v OUTFILE="${outfile}" -v COUNTONLY="${count}" -b -f tmp_checkmarc "${infile}"
 echo
 echo
+
 if [[ $count != "count" ]];then
-	echo "Records have been output to found_records.mrc                     " 
+	echo "Records have been output to ${outfile}                     " 
 fi
+
 rm -f tmp_checkmarc
