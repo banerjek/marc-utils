@@ -47,7 +47,7 @@ chmod 700 tmp_checkmarc
 for file in "${filelist[@]}";do
 	fileroot=$(echo "${file}" | sed 's/\.....\?$//')
 	outfile="${fileroot}_fieldcounts.txt"
-	awk -v RS=$'\x1d' -v ORS=$'\n' -v FS=$'\x1e' -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+	awk -v RS=$'\x1d' -v ORS=$'\n' -v FS=$'\x1e' -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${file}"
 	echo "Field counts exported to ${outfile}"
 	echo
 done
