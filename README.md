@@ -27,14 +27,14 @@ Converts text files created by marc2text back to MARC -- it cannot read MarcEdit
 ### marcsearch
 **Usage:** *marcsearch [filename] [marc-tag] [regex_search_expression] [count]*
 
-Extracts MARC records where regex_search_expression was found in a MARC tag and directs them to a file named "found_records.mrc". If you want to target a specific subfield, you'll need to create an expression that involves the subfield delimiters (hex 1F)
+Extracts MARC records where regex_search_expression was found in a MARC tag and directs them to a file named *[filename]_found.mrc*. If you want to target a specific subfield, you'll need to create an expression that involves the subfield delimiters (hex 1F)
 
 The count parameter is optional. If the word "count" is sent, marcsearch only reports on how many records it found without extracting them.
 
 ### marcfix
 **Usage:** *marcfix [filename]*
 
-Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good records in one file, and separates out a bunch with a series of common problems that can trip up processing in others. Wildcard expressions can be used to process multiple files.
+Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good records in one file, and separates out problematic records into separate files categorized by issue. Wildcard expressions can be used to process multiple files.
 
 ### marcfc
 **Usage:** *marcfc [filename]*
