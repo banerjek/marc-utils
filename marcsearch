@@ -1,6 +1,6 @@
 if [[ -z $1 || -z $2 || -z $3 ]];then
-	echo "Usage: marcsearch [filename] [marcfield] '[searchexpression]' [count]
-	echo "Regular expresions are supported for searchexpression. Count is optional and
+	echo "Usage: marcsearch [filename] [marcfield] '[searchexpression]' [count]"
+	echo "Regular expresions are supported for searchexpression. Count is optional and"
 	echo "should just be \"count\" if you want a record count only"
 	exit
 else
