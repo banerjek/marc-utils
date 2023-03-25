@@ -31,6 +31,13 @@ Extracts MARC records where regex_search_expression was found in a MARC tag and 
 
 The count parameter is optional. If the word "count" is sent, marcsearch only reports on how many records it found without extracting them.
 
+### marcextract
+**Usage:** *Usage: marcextract [filename] [marcfield] '[regex_search_expression]' [idtag]*
+
+Outputs record identifier and MARC tag searched where MARC records where regex_search_expression was found in the MARC tag to a file named *[filename]_extract.txt*. If you want to target a specific subfield, you'll need to create an expression that involves the subfield delimiters (hex 1F)
+
+The idtag parameter is optional. If left out, the record ID will be assumed to be 001. Otherwise, the full content from the tag including all subfields will be included in the first column as the record identifier.
+
 ### marcfix
 **Usage:** *marcfix [filename]*
 
