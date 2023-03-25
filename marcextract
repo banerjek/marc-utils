@@ -45,7 +45,7 @@ if (directory_check == 0) {
 		if (record_id == "") {
 			if (substr(directory, i, 3) == IDTAG) {
 				field_length = substr(directory, i + 3, 4) + 0
-				starting_pos = substr(directory, i + 7, 5) 
+				starting_pos = substr(directory, i + 7, 5) + 1 
 				field_content = substr(record_content, starting_pos, field_length - 1)
 			
 				record_id = field_content
@@ -55,7 +55,7 @@ if (directory_check == 0) {
 		if (substr(directory, i, 3) == MARCTAG) {
 			field_length = substr(directory, i + 3, 4) + 0
 			starting_pos = substr(directory, i + 7, 5) 
-			field_content = substr(record_content, starting_pos, field_length)
+			field_content = substr(record_content, starting_pos + 1, field_length - 1)
 			foundrecs++
 			
 			if (wantedfields == ""){wantedfields = field_content}else{wantedfields = wantedfields"\t"field_content}
