@@ -20,7 +20,7 @@ bash and a version of awk that understands the "-b" switch (i.e. anything from t
 # The utilities
 
 ## marc2text
-**Usage:** *marc2text [filename]*
+**Usage:** *marc2text [filename]*  
 **Example:** *marc2text marc_file_001*.mrc*
 
 Converts binary MARC to plain text. Wildcard expressions can be used to process multiple files. Records with different than reported lengths and a few other basic problems are directed to separate files where they can be analyzed separately.
@@ -31,13 +31,13 @@ The text output format is not the MarcBreaker format used by MarcEdit, but tools
 Records with different than reported lengths and a few other basic problems are directed to separate files where they can be analyzed separately.
 
 ## text2marc
-**Usage:** *text2marc [filename]*
+**Usage:** *text2marc [filename]*  
 **Example:** *text2marc marc_file_001*.mrc*
 
 Converts text files created by marc2text back to MARC -- it cannot read MarcEdit files. Wildcard expressions can be used to process multiple files. 
 
 ## marcsearch
-**Usage:** *marcsearch [filename] [marc-tag] [regex_search_expression] [count]*
+**Usage:** *marcsearch [filename] [marc-tag] [regex_search_expression] [count]*  
 **Example:** *marcsearch marcfile.mrc 856 "my_proxy.edu"*
 
 Extracts MARC records where regex_search_expression was found in a MARC tag and directs them to a file named *[filename]_found.mrc*. If you want to target a specific subfield, you'll need to create an expression that involves the subfield delimiters (hex 1F)
@@ -45,7 +45,7 @@ Extracts MARC records where regex_search_expression was found in a MARC tag and 
 The count parameter is optional. If the word "count" is sent, marcsearch only reports on how many records it found without extracting them.
 
 ## marcextract
-**Usage:** *Usage: marcextract [filename] [marcfield] '[regex_search_expression]' [idtag]*
+**Usage:** *Usage: marcextract [filename] [marcfield] '[regex_search_expression]' [idtag]*  
 **Example:** *marcsearch marcfile.mrc 856 "my_proxy.edu" 907*
 
 Outputs record identifier and MARC tag searched where MARC records where regex_search_expression was found in the MARC tag to a file named *[filename]_extract.txt*. If you want to target a specific subfield, you'll need to create an expression that involves the subfield delimiters (hex 1F)
@@ -53,13 +53,13 @@ Outputs record identifier and MARC tag searched where MARC records where regex_s
 The idtag parameter is optional. If left out, the record ID will be assumed to be 001. Otherwise, the full content from the tag including all subfields will be included in the first column as the record identifier.
 
 ## marcfix
-**Usage:** *marcfix [filename]*
+**Usage:** *marcfix [filename]*  
 **Example:** *marcfix marc_file_001*.mrc*
 
 Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good records in one file, and separates out problematic records into separate files categorized by issue. Wildcard expressions can be used to process multiple files.
 
 ## marcfc
-**Usage:** *marcfc [filename]*
+**Usage:** *marcfc [filename]*  
 **Example:** *marcfc marc_file_001*.mrc*
 
 Gives frequency count for each MARC tag along with total record count. Does not do subfields at this point. Wildcard expressions can be used to process multiple files.
