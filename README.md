@@ -24,9 +24,9 @@ bash and a version of awk that understands the "-b" switch (i.e. anything from t
 **Example:** *marc2text marc_file_001*.mrc*
 
 Converts binary MARC to plain text. Wildcard expressions can be used to process multiple files. Records with different than reported lengths and a few other basic problems are directed to separate files where they can be analyzed separately.
-All *marc2text* does is interpret the directory and stick labels in front of the contents of the fields. It does NOT replace subfield markers (hex 1F) with dollar signs, translate characters into expressions in curly braces, or replace spaces with backlashes in indicator or leader fields as it makes working with and analyzing the file with standard text utilities more awkward.
+All *marc2text* does is interpret the directory and stick labels in front of the contents of the fields. It does NOT replace subfield markers (hex 1F) with dollar signs, translate characters into expressions in curly braces, or replace spaces with backlashes in indicator or leader fields as this slows processing and makes working with and analyzing the file with standard text utilities more awkward.
 
-The text output format is not the MarcBreaker format used by MarcEdit, but tools that read that format can read these files
+The text output format is not the MarcBreaker format used by MarcEdit. However, tools that read that format can read these files -- it is the same, except it doesn't require string replacements before being converted to MARC.
 
 Records with different than reported lengths and a few other basic problems are directed to separate files where they can be analyzed separately.
 
