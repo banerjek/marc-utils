@@ -4,11 +4,11 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 Speed is achieved by minimal processing -- very specifically by not performing time consuming string replacements that add or interpret characters and tokens which complicate analysis using standard text processing utilities.
 
 # Table of Contents
-**1. [marc2text](#marc2text)** -- Convert binary MARC files to text
-**2. [text2marc](#text2marc)** -- Convert text files to MARC
-**3. [marcsearch](#marcsearch)** -- Extract MARC records containing a search patterns
-**4. [marcfix](#marcfix)** -- Separate MARC records likely to cause processing issues
-**5. [marcfc](#marcfc)** -- Provide field counts
+**1. [marc2text]**(#marc2text) -- Convert binary MARC files to text
+**2. [text2marc]**(#text2marc) -- Convert text files to MARC
+**3. [marcsearch]**(#marcsearch) -- Extract MARC records containing a search patterns
+**4. [marcfix]**(#marcfix) -- Separate MARC records likely to cause processing issues
+**5. [marcfc]**(#marcfc) -- Provide field counts
 
 # Disclaimers
 
