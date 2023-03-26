@@ -1,7 +1,5 @@
 # marc-utils
-The marc-utils are a set of minimal tools to allow fast analysis of MARC and extractions from files using command line utilities. They are intended to be as simple as possible both to achieve speed and to allow easy modification to serve specific needs at hand. As such, they do not have and will not be enhanced to provide programming hooks, record correction, or other features found in full-featured MARC tools capabilities. They will be most useful if added to your path.
-
-Speed is achieved by minimal processing -- very specifically by not performing time consuming string replacements that add or interpret characters and tokens which complicate analysis using standard text processing utilities.
+The marc-utils are a set of minimal tools to allow fast analysis of MARC and extractions from files using command line utilities. Functionality is limited to maximize speed and transparency to facilitate modification for needs at hand. They will be most useful if added to your path.
 
 # Table of Contents
 1. [**marc2text**](#marc2text) -- Convert binary MARC files to text
