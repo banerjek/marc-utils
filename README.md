@@ -19,7 +19,7 @@ bash and a version of awk that understands the "-b" switch (i.e. anything from t
 
 ## marc2text
 **Usage:** *marc2text [filename]*  
-**Example:** *marc2text marc_file_001*.mrc*
+**Example:** *marc2text marc_file_001\*.mrc*
 
 Converts binary MARC to plain text. Wildcard expressions can be used to process multiple files. Records with different than reported lengths and a few other basic problems are directed to separate files where they can be analyzed separately.
 All *marc2text* does is interpret the directory and stick labels in front of the contents of the fields. It does NOT replace subfield markers (hex 1F) with dollar signs, translate characters into expressions in curly braces, or replace spaces with backlashes in indicator or leader fields as this slows processing and makes working with and analyzing the file with standard text utilities more awkward.
@@ -30,7 +30,7 @@ Records with different than reported lengths and a few other basic problems are 
 
 ## text2marc
 **Usage:** *text2marc [filename]*  
-**Example:** *text2marc marc_file_001*.mrc*
+**Example:** *text2marc marc_file_001\*.mrc*
 
 Converts text files created by marc2text back to MARC -- it cannot read MarcEdit files. Wildcard expressions can be used to process multiple files. 
 
@@ -54,13 +54,13 @@ The idtag parameter is optional. If left out, the record ID will be assumed to b
 
 ## marcfix
 **Usage:** *marcfix [filename]*  
-**Example:** *marcfix marc_file_001*.mrc*
+**Example:** *marcfix marc_file_001\*.mrc*
 
 Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good records in one file, and separates out problematic records into separate files categorized by issue. Wildcard expressions can be used to process multiple files.
 
 ## marcfc
 **Usage:** *marcfc [filename]*  
-**Example:** *marcfc marc_file_001*.mrc*
+**Example:** *marcfc marc_file_001\*.mrc*
 
 Gives frequency count for each MARC tag along with total record count. Does not do subfields at this point. Wildcard expressions can be used to process multiple files.
 
