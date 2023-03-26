@@ -26,7 +26,7 @@ bash and a version of awk that understands the "-b" switch (i.e. anything from t
 Converts binary MARC to plain text. Wildcard expressions can be used to process multiple files. Records with different than reported lengths and a few other basic problems are directed to separate files where they can be analyzed separately.
 All *marc2text* does is interpret the directory and stick labels in front of the contents of the fields. It does NOT replace subfield markers (hex 1F) with dollar signs, translate characters into expressions in curly braces, or replace spaces with backlashes in indicator or leader fields as it makes working with and analyzing the file with standard text utilities more awkward.
 
-The text output format is not the MarcBreaker format used by MarcEdit, but tools that read that format can read these files -- it is identicial except it doesn't convert subfield delimiters and certain tokens to strings that are friendly to human editors but awkward with standard utilities
+The text output format is not the MarcBreaker format used by MarcEdit, but tools that read that format can read these files
 
 Records with different than reported lengths and a few other basic problems are directed to separate files where they can be analyzed separately.
 
@@ -35,6 +35,8 @@ Records with different than reported lengths and a few other basic problems are 
 **Example:** *text2marc marc_file_001*.mrc*
 
 Converts text files created by marc2text back to MARC -- it cannot read MarcEdit files. Wildcard expressions can be used to process multiple files. 
+
+*text2marc* only reads files created by *marc2text*. It doesn't read MarkBreaker format files -- it achieves speed by not performing nonessential analysis or string conversions (i.e. human friendly representations of subfield delimiters and certain characters) 
 
 ## marcsearch
 **Usage:** *marcsearch [filename] [marc-tag] [regex_search_expression] [count]*  
