@@ -5,7 +5,7 @@ Speed is achieved by minimal processing -- very specifically by not performing t
 
 # Table of Contents
 1. [**marc2text**](#marc2text) -- Convert binary MARC files to text
-2. [**text2marci**](#text2marc) -- Convert text files to MARC
+2. [**text2marc**](#text2marc) -- Convert text files to MARC
 3. [**marcsearch**](#marcsearch) -- Extract MARC records containing a search patterns
 4. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
 5. [**marcfc**](#marcfc) -- Provide field counts
