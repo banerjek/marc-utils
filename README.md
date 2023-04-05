@@ -3,10 +3,11 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 
 # Table of Contents
 1. [**marc2text**](#marc2text) -- Convert binary MARC files to text
-2. [**text2marc**](#text2marc) -- Convert text files to MARC
-3. [**marcsearch**](#marcsearch) -- Extract MARC records containing a search patterns
-4. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
-5. [**marcfc**](#marcfc) -- Provide field counts
+2. [**marcextract**](#marcsearch) -- Extract record identifier and data from MARC tag matching a pattern 
+3. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
+4. [**marcfc**](#marcfc) -- Provide field counts
+5. [**marcsearch**](#marcsearch) -- Extract MARC records containing a search patterns
+6. [**text2marc**](#text2marc) -- Convert text files to MARC
 
 # Disclaimers
 
@@ -28,13 +29,25 @@ The text output format is not the MarcBreaker format used by MarcEdit. However, 
 
 Records with different than reported lengths and a few other basic problems are directed to separate files where they can be analyzed separately.
 
-## text2marc
-**Usage:** *text2marc [filename]*  
-**Example:** *text2marc marc_file_001\*.mrc*
+## marcextract
+**Usage:** *Usage: marcextract [filename] [marcfield] '[regex_search_expression]' [idtag]*  
+**Example:** *marcsearch marcfile.mrc 856 "my_proxy.edu" 907*
 
-Converts text files created by marc2text back to MARC -- it cannot read MarcEdit files. Wildcard expressions can be used to process multiple files. 
+Outputs record identifier and MARC tag searched where MARC records where regex_search_expression was found in the MARC tag to a file named *[filename]_extract.txt*. If you want to target a specific subfield, you'll need to create an expression that involves the subfield delimiters (hex 1F)
 
-*text2marc* only reads files created by *marc2text*. It doesn't read MarkBreaker format files -- it achieves speed by not performing nonessential analysis or string conversions (i.e. human friendly representations of subfield delimiters and certain characters) 
+The idtag parameter is optional. If left out, the record ID will be assumed to be 001. Otherwise, the full content from the tag including all subfields will be included in the first column as the record identifier.
+
+## marcfc
+**Usage:** *marcfc [filename]*  
+**Example:** *marcfc marc_file_001\*.mrc*
+
+Gives frequency count for each MARC tag along with total record count. Does not do subfields at this point. Wildcard expressions can be used to process multiple files.
+
+## marcfix
+**Usage:** *marcfix [filename]*  
+**Example:** *marcfix marc_file_001\*.mrc*
+
+Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good records in one file, and separates out problematic records into separate files categorized by issue. Wildcard expressions can be used to process multiple files.
 
 ## marcsearch
 **Usage:** *marcsearch [filename] [marc-tag] [regex_search_expression] [count]*  
@@ -44,25 +57,12 @@ Extracts MARC records where regex_search_expression was found in a MARC tag and 
 
 The count parameter is optional. If the word "count" is sent, marcsearch only reports on how many records it found without extracting them.
 
-## marcextract
-**Usage:** *Usage: marcextract [filename] [marcfield] '[regex_search_expression]' [idtag]*  
-**Example:** *marcsearch marcfile.mrc 856 "my_proxy.edu" 907*
+## text2marc
+**Usage:** *text2marc [filename]*  
+**Example:** *text2marc marc_file_001\*.mrc*
 
-Outputs record identifier and MARC tag searched where MARC records where regex_search_expression was found in the MARC tag to a file named *[filename]_extract.txt*. If you want to target a specific subfield, you'll need to create an expression that involves the subfield delimiters (hex 1F)
+Converts text files created by marc2text back to MARC -- it cannot read MarcEdit files. Wildcard expressions can be used to process multiple files. 
 
-The idtag parameter is optional. If left out, the record ID will be assumed to be 001. Otherwise, the full content from the tag including all subfields will be included in the first column as the record identifier.
-
-## marcfix
-**Usage:** *marcfix [filename]*  
-**Example:** *marcfix marc_file_001\*.mrc*
-
-Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good records in one file, and separates out problematic records into separate files categorized by issue. Wildcard expressions can be used to process multiple files.
-
-## marcfc
-**Usage:** *marcfc [filename]*  
-**Example:** *marcfc marc_file_001\*.mrc*
-
-Gives frequency count for each MARC tag along with total record count. Does not do subfields at this point. Wildcard expressions can be used to process multiple files.
-
+*text2marc* only reads files created by *marc2text*. It doesn't read MarkBreaker format files -- it achieves speed by not performing nonessential analysis or string conversions (i.e. human friendly representations of subfield delimiters and certain characters) 
 
 
