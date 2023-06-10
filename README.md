@@ -3,11 +3,12 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 
 # Table of Contents
 1. [**marc2text**](#marc2text) -- Convert binary MARC files to text
-2. [**marcextract**](#marcsearch) -- Extract record identifier and data from MARC tag matching a pattern 
-3. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
-4. [**marcfc**](#marcfc) -- Provide field counts
-5. [**marcsearch**](#marcsearch) -- Extract MARC records containing a search patterns
-6. [**text2marc**](#text2marc) -- Convert text files to MARC
+2. [**marcdedup**](#marcdedup) -- Remove duplicate records and extract identifiers of the dups
+3. [**marcextract**](#marcsearch) -- Extract record identifier and data from MARC tag matching a pattern 
+4. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
+5. [**marcfc**](#marcfc) -- Provide field counts
+6. [**marcsearch**](#marcsearch) -- Extract MARC records containing a search patterns
+7. [**text2marc**](#text2marc) -- Convert text files to MARC
 
 # Disclaimers
 
@@ -17,6 +18,12 @@ The author has no way of knowing your needs or environment, so they may be compl
 bash and a version of awk that understands the "-b" switch (i.e. anything from the past couple decades that's in your base linux distro should be good). 
 
 # The utilities
+
+## marc2text
+**Usage:** *marcdedup [filename]*  
+**Example:** *marcdedup marc_file.mrc*
+
+Extracts unique MARC records based on the 001 and directs them to one file, extracts the identifiers of duplicate records and sends them to another
 
 ## marc2text
 **Usage:** *marc2text [filename]*  
