@@ -20,12 +20,6 @@ bash and a version of awk that understands the "-b" switch (i.e. anything from t
 # The utilities
 
 ## marc2text
-**Usage:** *marcdedup [filename]*  
-**Example:** *marcdedup marc_file.mrc*
-
-Extracts unique MARC records based on the 001 and directs them to one file, extracts the identifiers of duplicate records and sends them to another
-
-## marc2text
 **Usage:** *marc2text [filename]*  
 **Example:** *marc2text marc_file_001\*.mrc*
 
@@ -35,6 +29,12 @@ All *marc2text* does is interpret the directory and stick labels in front of the
 The text output format is not the MarcBreaker format used by MarcEdit. However, tools that read that format can read these files -- it is the same, except it doesn't require string replacements before being converted to MARC.
 
 Records with different than reported lengths and a few other basic problems are directed to separate files where they can be analyzed separately.
+
+## marcdedup
+**Usage:** *marcdedup [filename]*  
+**Example:** *marcdedup marc_file.mrc*
+
+Extracts unique MARC records based on the 001 and directs them to one file, extracts the identifiers of duplicate records and sends them to another
 
 ## marcextract
 **Usage:** *Usage: marcextract [filename] [marcfield] '[regex_search_expression]' [idtag]*  
