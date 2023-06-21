@@ -58,9 +58,11 @@ if (directory_check == 0) {
 		field_length = substr(directory, i + 3, 4) + 0
 		starting_pos = substr(directory, i + 7, 5) 
 		field_content = substr(record_content, starting_pos + 1, field_length - 1)
-		if (alreadyfound == "") { alreadyfound = 1; foundrecs++ }
-			
-		print record_id,field_content > OUTFILE
+
+		if (field_content ~ SEARCH) { 
+			foundrecs++
+			print record_id,field_content > OUTFILE
+			}
 		}
 	}
 }
