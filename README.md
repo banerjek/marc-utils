@@ -3,11 +3,12 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 
 # Table of Contents
 1. [**marc2text**](#marc2text) -- Convert binary MARC files to text
-2. [**marcextract**](#marcsearch) -- Extract record identifier and data from MARC tag matching a pattern 
-3. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
-4. [**marcfc**](#marcfc) -- Provide field counts
-5. [**marcsearch**](#marcsearch) -- Extract MARC records containing a search patterns
-6. [**text2marc**](#text2marc) -- Convert text files to MARC
+2. [**marc2tsv**](#marc2tsv) -- Extract MARC fields ihto TSV file 
+3. [**marcextract**](#marcsearch) -- Extract record identifier and data from MARC tag matching a pattern 
+4. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
+5. [**marcfc**](#marcfc) -- Provide field counts
+6. [**marcsearch**](#marcsearch) -- Extract MARC records containing a search patterns
+7. [**text2marc**](#text2marc) -- Convert text files to MARC
 
 # Disclaimers
 
@@ -28,6 +29,16 @@ All *marc2text* does is interpret the directory and stick labels in front of the
 The text output format is not the MarcBreaker format used by MarcEdit. However, tools that read that format can read these files -- it is the same, except it doesn't require string replacements before being converted to MARC.
 
 Records with different than reported lengths and a few other basic problems are directed to separate files where they can be analyzed separately.
+
+## marc2tsv
+**Usage:** *Usage: marc2tsv [filename] [list of MARC fields]*  
+**Example:** *marc2tsv marc_file_001\*.mrc 245 500650*
+
+Extracts specific MARC tags into TSV file.
+
+Whole tags are extracted, leading subfield marker (usually a) is stripped. The subfield delimiter (hex 1F) is left in all but first field.
+
+001 is output by default, and repeated fields are subdelimited with a semicolon.
 
 ## marcextract
 **Usage:** *Usage: marcextract [filename] [marcfield] '[regex_search_expression]' [idtag]*  
