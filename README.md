@@ -38,7 +38,7 @@ Extracts specific MARC tags into TSV file.
 
 Whole tags are extracted, leading subfield marker (usually a) is stripped. The subfield delimiter (hex 1F) is left in all but first field.
 
-001 is output by default, and repeated fields are subdelimited with a semicolon.
+001 is output by default, and repeated fields are subdelimited with a semicolon. Use "ldr" to extract the leader.
 
 ## marcextract
 **Usage:** *Usage: marcextract [filename] [marcfield] '[regex_search_expression]' [idtag]*  

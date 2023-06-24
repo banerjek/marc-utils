@@ -1,7 +1,8 @@
 
 if [[ -z $1 || -z $2 ]];then
 	echo "Usage: marc2tsv [filename] [list of MARC fields]"
-	echo "Example: marc2tsv myfile.mrc 100 245 650"
+	echo "Example: marc2tsv myfile.mrc ldr 100 245 650"
+	echo "Use \"ldr\" to extract the leader"
 	echo 
 	echo "Whole tags are extracted, leading subfield marker (usually a) is stripped"
 	echo "Subfield delimiter in MARC is hex 1F and left in all but first field"
@@ -36,12 +37,12 @@ BEGIN { records_found = 0
 		split(TAGLIST, tags, " ")
 		for (tag in tags) { marc_tag = tags[tag]; record[marc_tag] = "";}
 
-		list_length = length(tags)
-		
 	}
 }
 
 function extract_tag() {
+	if (marc_tag == "ldr"){ record[marc_tag] = leader }
+
 	for (i=1; i<=directory_length; i=i+12) {
 		if (substr(directory, i, 3) == marc_tag) {
 
