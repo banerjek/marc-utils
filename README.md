@@ -32,13 +32,13 @@ Records with different than reported lengths and a few other basic problems are 
 
 ## marc2tsv
 **Usage:** *Usage: marc2tsv [filename] [list of MARC fields]*  
-**Example:** *marc2tsv marc_file_001\*.mrc 245 500650*
+**Example:** *marc2tsv marc_file_001\*.mrc ldr 245 337b 650a*
 
-Extracts specific MARC tags into TSV file.
+Extracts specific MARC tags or subfields into TSV file.
 
 Whole tags are extracted, leading subfield marker (usually a) is stripped. The subfield delimiter (hex 1F) is left in all but first field.
 
-001 is output by default, and repeated fields are subdelimited with a semicolon. Use "ldr" to extract the leader.
+001 is output by default, and repeated fields are subdelimited with a semicolon. Use "ldr" to extract the leader. Add a single subfield after tags to extract specific subfields
 
 ## marcextract
 **Usage:** *Usage: marcextract [filename] [marcfield] '[regex_search_expression]' [idtag]*  
