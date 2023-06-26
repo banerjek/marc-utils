@@ -50,10 +50,14 @@ function extract_subfields() {
 
 		for (subfield in subfields) {
 			if (substr(subfields[subfield], 1, 1) == search_subfield) {
+				subfield = substr(subfields[subfield],2)
+
 				if (field_content == "") { 
-					field_content = substr(subfields[subfield], 2)
+					field_content = subfield
 				} else {
-					field_content = field_content"; "substr(subfields[subfield],2)
+					if (subfield ~ /[0-9a-zA-Z/-]) {
+						field_content = field_content"; "subfield
+					}
 				}
 			}	
 		}
