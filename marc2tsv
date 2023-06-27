@@ -19,8 +19,6 @@ else
 
 	fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
 	outfile="${fileroot}.tsv"
-	echo "${taglist}" |tr " " "\t" > ${outfile}
-
 fi
 
 
@@ -35,32 +33,32 @@ BEGIN { records_found = 0
         } else {
 
 		split(TAGLIST, tags, " ")
-		for (tag in tags) { marc_tag = tags[tag]; record[marc_tag] = "";}
-
+		num_tags = length(tags)
+		for (i=1;i<=num_tags;i++) { marc_tag = tags[i]; record[marc_tag] = "";}
 	}
 }
 
 function extract_subfields() { 
 	if (length(marc_tag) == 4) {
 		search_subfield = substr(marc_tag, 4, 1)
-		if (search_subfield == "a") { field_content = SFS"a"field_content }
 
 		split(field_content, subfields, SFS)
 		field_content = ""
 
 		for (subfield in subfields) {
 			if (substr(subfields[subfield], 1, 1) == search_subfield) {
-				subfield = substr(subfields[subfield],2)
+				tmpfield = substr(subfields[subfield],2)
 
 				if (field_content == "") { 
-					field_content = subfield
+					field_content = tmpfield
 				} else {
-					if (subfield ~ /[0-9a-zA-Z/-]) {
-						field_content = field_content"; "subfield
+					if (subfield ~ /[0-9a-zA-Z/-]/) {
+						field_content = field_content"; "tmpfield
 					}
 				}
 			}	
 		}
+		if (substr(field_content, 1, 2) == SFS"a") { field_content = substr(field_content, 3) }
 	}
 }
 
@@ -92,7 +90,6 @@ function extract_tag() {
 }
 
 {
-lineout=""
 
 for (marc_tag in record) {record[marc_tag] = ""} # initialize temp array to keep track of repeated fields
 
@@ -106,13 +103,28 @@ record_content=substr($0, baseaddress + 1)
 if (directory_check == 0) {
 	for (marc_tag in record) { extract_tag() }
 
-	for (tag in tags) {
-		marc_tag = tags[tag]
-		lineout = lineout"\t"record[marc_tag] 
+	lineout = ""
+
+	if (NR == 1) { 
+		for (i=1;i<=num_tags;i++) {
+			if (i == 1) {
+				lineout = tags[i]
+			} else {
+				lineout = lineout"\t"tags[i]
+			}
+		}
+		print lineout > OUTFILE
+		lineout = ""
 	}
-
-	lineout = substr(lineout, 2)
-
+		
+	for (i=1;i<=num_tags;i++) {
+		marc_tag = tags[i]
+		if (i == 1) {
+			lineout = record[marc_tag]
+		} else {
+			lineout = lineout"\t"record[marc_tag] 
+		}
+	}
 	print lineout >> OUTFILE
 }
 
