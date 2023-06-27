@@ -55,7 +55,7 @@ if ( good_record == 1 ) {
 if (NR % 10000 == 0){ printf "Records searched: "NR" Records found: %d \r", foundrecs }
 
 }
-
+END { printf "Records searched: "NR" Records found: %d \r", foundrecs }
 ENDOFAWK
 
 echo -e "${awkscript}" > tmp_checkmarc
