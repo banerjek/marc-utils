@@ -1,0 +1,33 @@
+if [[ -z $1  ]];then
+	echo "Usage: marcsplit [filename] [num_records]"
+	echo "If num_records isn't provided, default is 500"
+	exit
+else
+	infile="${1}"
+	num_records=$2
+	if [[ $num_records == "" ]];then num_records=500;fi
+fi
+
+
+read -r -d '' awkscript << "ENDOFAWK"
+#!/usr/bin/awk -f 
+
+BEGIN { filecounter = 1 } 
+{
+if (NR % NUMRECS == 0) {filecounter = filecounter + 1}
+outfile = sprintf("m_split-%05d.mrc", filecounter)
+
+
+print $0 > outfile
+if (NR % 10000 == 0){ printf "Records procesess: "NR"\r"}
+
+}
+
+ENDOFAWK
+
+echo -e "${awkscript}" > tmp_checkmarc
+chmod 700 tmp_checkmarc
+
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v NUMRECS=$num_records -b -f tmp_checkmarc "${infile}"
+echo
+echo "All records are processed"

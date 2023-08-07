@@ -8,7 +8,8 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 4. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
 5. [**marcfc**](#marcfc) -- Provide field counts
 6. [**marcsearch**](#marcsearch) -- Extract MARC records containing a search patterns
-7. [**text2marc**](#text2marc) -- Convert text files to MARC
+7. [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
+8. [**text2marc**](#text2marc) -- Convert text files to MARC
 
 # Disclaimers
 
@@ -67,6 +68,12 @@ Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good re
 Extracts MARC records where regex_search_expression was found in a MARC tag and directs them to a file named *[filename]_found.mrc*. If you want to target a specific subfield, you'll need to create an expression that involves the subfield delimiters (hex 1F)
 
 The count parameter is optional. If the word "count" is sent, marcsearch only reports on how many records it found without extracting them.
+
+## marcssplit
+**Usage:** *marcsplit [filename] [num_records]*  
+**Example:** *marcsplit marc_file_001\*.mrc 1000"*
+
+Splits large MARC file into multiple files, each containing *num_records* records. If *num_records* isn't provided, default is 500
 
 ## text2marc
 **Usage:** *text2marc [filename]*  
