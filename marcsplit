@@ -31,3 +31,4 @@ chmod 700 tmp_checkmarc
 awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v NUMRECS=$num_records -b -f tmp_checkmarc "${infile}"
 echo
 echo "All records are processed"
+rm tmp_checkmarc
