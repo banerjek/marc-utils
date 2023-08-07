@@ -19,7 +19,7 @@ outfile = sprintf("m_split-%05d.mrc", filecounter)
 
 
 print $0 > outfile
-if (NR % 10000 == 0){ printf "Records procesess: "NR"\r"}
+if (NR % 10000 == 0){ printf "Records procesessed: "NR"\r"}
 
 }
 
