@@ -3,7 +3,7 @@ if [[ -z $1  ]];then
 	echo "Usage: marc-itemextract [filename] ]"
 	echo 
 	echo "001 and 907a are automatically stored and output. Other identifiers require code modification "  
-	echo "Repeated fields are subdelimited with a semicolon"
+	echo "Items are expected to be one item per MARC tag"
 	echo
 	exit
 else
