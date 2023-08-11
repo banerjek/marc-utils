@@ -1,5 +1,5 @@
 
-if [[ -z $1  ]];then
+if [[ -z $2  ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] ]"
 	echo 
 	echo "001 is automatically stored and output."  
@@ -17,8 +17,14 @@ else
 fi
 
 knownsystems=("sierra")
+foundsystem=0
 
-if ! [[ ${knownsystems[@]} =~ $2 ]];then
+for system in "${knownsystems[@]}";do
+	if [[ ${2} == $system ]];then foundsystem=1;fi
+done
+
+
+if [[ ${foundsystem} -eq 0 ]];then
 	echo "You must specify a system. The following systems are known"
 	echo  ${knownsystems[@]}
 	exit
