@@ -95,6 +95,7 @@ function extract_subfields() {
 		for (subfield in subfields) {
 			if (substr(subfields[subfield], 1, 1) == tags[j]) {
 				item_subfield[j] = substr(subfields[subfield],2)
+				gsub(/^[ \\-]*$/, "", item_subfield[j])
 			}	
 		}
 	}
