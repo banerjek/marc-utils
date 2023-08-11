@@ -73,7 +73,7 @@ function extract_tag() {
 			field_content = ""
 
 			if (substr(record_content, starting_pos + 3, 1) == SFS) {
-				field_content = substr(record_content, starting_pos + 5, field_length - 5)
+				field_content = substr(record_content, starting_pos + 3, field_length - 3)
 			} else {
 				field_content = substr(record_content, starting_pos + 1, field_length - 1)
 			}
