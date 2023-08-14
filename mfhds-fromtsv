@@ -28,6 +28,7 @@ function build_mfhd() {
 	record_counter++
 
 	text_mfhd = record_template
+
 	gsub(/LOCATION/, $location, text_mfhd)
 	gsub(/BIBID/, $bibId, text_mfhd)
 	gsub(/HOLDINGSID/, holdId, text_mfhd)
@@ -85,9 +86,14 @@ function build_mfhd() {
 	record_length = 24 + length(directory) + length(record_content) + 1
 	
 	leader = sprintf("%05d", record_length)""leader1""base_data_address""leader2
-	print leader""directory""record_content > OUTFILE
-	
-	if (NR % 10000 == 0){ printf "Records created: %d \\r", record_counter }
+
+	if (processed[holdId] != 1){ 
+		print leader""directory""record_content > OUTFILE
+		processed[holdId] = 1
+		created = created + 1
+	}
+
+	if (NR % 10000 == 0){ printf "Records processed: %d :created: %d \\r", record_counter, created }
 }
 {
 	sub("\r", "", $NF)
@@ -96,7 +102,7 @@ function build_mfhd() {
 		for(i=1;i<=NF;i++) {
 
 			switch($i) {
-				case "RECORD#BIBLIO":
+				case "BIBNO":
 					bibId=i
 					printf ("Bib ID found in "$i"\\n")
 					break
@@ -104,11 +110,11 @@ function build_mfhd() {
 					location=i
 					printf ("Location found in "$i"\\n")
 					break
-				case "CALL#ITEM":
+				case "CALL_MARC":
 					callNumpos=i
 					printf ("Call number found in "$i"\\n")
 					break
-				case "CALL#BIBLIO":
+				case "CALL_NONMARC":
 					callNumFallback=i
 					printf ("Call number fallback found in "$i"\\n")
 					break
@@ -118,6 +124,7 @@ function build_mfhd() {
 					break
 				case "HOLDID":
 					holdIdpos=i
+					holdId=i
 					printf ("Holdings ID fallback found in "$i"\\n")
 					break
 				case "ACTIONNOTE":
@@ -146,11 +153,16 @@ function build_mfhd() {
 	if (! location ) {  printf ("\\nNo valid location field could be found\\n"); exit }
 	if (! callNumpos ) {  printf ("\\nNo valid call number field could be found\\n"); exit }
 	}
+
+	gsub(/^ */, "", $location) 
+	gsub(/ *$/, "", $location) 
+
 	callNum = $callNumpos
 
 	if (callNumFallback && length($callNumpos) == 0) { callNum = $callNumFallback }
 
-	if (! holdIdpos) {holdId = $bibId""$location""callNum}
+	if (! holdIdpos) {holdId = $bibId""$location""callNum; gsub(/[^a-zA-Z0-9]/, "", holdId)} else { holdId = $holdIdpos }
+
 
 	build_mfhd()
 }
