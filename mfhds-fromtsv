@@ -144,7 +144,7 @@ function build_mfhd() {
 		}
 	if (! bibId) {  printf ("\\nNo valid bib ID field could be found\\n"); exit }
 	if (! location ) {  printf ("\\nNo valid location field could be found\\n"); exit }
-	if (! callNumpos ) {  printf ("\\nNo valid location field could be found\\n"); exit }
+	if (! callNumpos ) {  printf ("\\nNo valid call number field could be found\\n"); exit }
 	}
 	callNum = $callNumpos
 
