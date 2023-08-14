@@ -1,0 +1,170 @@
+infile="${1}"
+
+if [[ -z ${infile} ]];then echo "You must supply a file name for a tab delimited file\nYou will need to modify the fields in the awk script to match the headers of your input file";fi
+
+fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
+outfile="mfhds_fromitems.mrc"
+
+read -r -d '' awkscript << "ENDOFAWK"
+#!/usr/bin/awk -f 
+
+BEGIN {
+	record_template="=LDR  00159cx  a22000733  4500"FS"=001  HOLDINGSID"FS"=004  BIBID"FS"=008  9810090p    8   4001aueng0000000"FS"=852  0 "SFS"bLOCATION"SFS"hCALLNUM"
+
+	if(length("а") != 2) {
+		badawk = 1
+		printf("Your version of awk does not support mfhds-fromitems -- you need a version that supports the -b switch\\n")
+		exit
+	}
+}
+function build_mfhd() {
+	leader1 = "cx  a22"
+	leader2 = "3  4500"
+	directory = ""
+	base_address = 0
+	field_counter = 0 
+	field_length = 0
+	record_content = ""
+	record_counter++
+
+	text_mfhd = record_template
+	gsub(/LOCATION/, $location, text_mfhd)
+	gsub(/BIBID/, $bibId, text_mfhd)
+	gsub(/HOLDINGSID/, holdId, text_mfhd)
+	gsub(/CALLNUM/, callNum, text_mfhd)
+
+	### nonrequired fields must be entered here
+	if (publicNote > 0 && $publicNote ~ /[a-zA-Z0-9]/) {
+		split($publicNote, statements, ";")
+		for (statement in statements) { text_mfhd = text_mfhd""FS"=538    "SFS"a"statements[statement] }
+	}
+	if (ownershipNote > 0 && $ownershipNote ~ /[a-zA-Z0-9]/) {
+		split($ownershipNote, statements, ";")
+		for (statement in statements) { text_mfhd = text_mfhd""FS"=561  0 "SFS"a"statements[statement] }
+	}
+	if (copyNote > 0 && $copyNote ~ /[a-zA-Z0-9]/) {
+		split($copyNote, statements, ";")
+		for (statement in statements) { text_mfhd = text_mfhd""FS"=562  0 "SFS"a"statements[statement] }
+	}
+	if (bindingNote > 0 && $bindingNote ~ /[a-zA-Z0-9]/) {
+		split($bindingNote, statements, ";")
+		for (statement in statements) { text_mfhd = text_mfhd""FS"=563    "SFS"a"statements[statement] }
+	}
+	if (actionNote > 0 && $actionNote ~ /[a-zA-Z0-9]/) {
+		split($actionNote, statements, ";")
+		for (statement in statements) { text_mfhd = text_mfhd""FS"=583    "SFS"a"statements[statement] }
+	}
+	if (libHas > 0 && $libHas ~ /[a-zA-Z0-9]/) {
+		split($libHas, statements, ";") 
+		for (statement in statements) { text_mfhd = text_mfhd""FS"=866    "SFS"a"statements[statement]
+		}
+	}
+
+	split(text_mfhd, marc_array, FS)	
+	num_mfhd_fields = length(marc_array)
+	
+	for (field = 2; field <= num_mfhd_fields; ++field) {
+		tag = substr(marc_array[field], 2, 3)
+	
+		field_content = substr(marc_array[field], 6)""OFS
+		field_length=sprintf("%04d", length(field_content))
+	
+		directory_address = sprintf("%05d", base_address)
+		base_address = base_address + field_length
+	
+		directory = directory""tag""field_length""directory_address
+		record_content = record_content""field_content
+		field_counter++
+		}
+	
+	directory = directory""OFS
+	base_data_address = sprintf("%05d", 24 + length(directory))
+	
+	record_content = record_content
+
+	record_length = 24 + length(directory) + length(record_content) + 1
+	
+	leader = sprintf("%05d", record_length)""leader1""base_data_address""leader2
+	print leader""directory""record_content > OUTFILE
+	
+	if (NR % 10000 == 0){ printf "Records created: %d \\r", record_counter }
+}
+{
+	sub("\r", "", $NF)
+
+	if (NR == 1) {
+		for(i=1;i<=NF;i++) {
+
+			switch($i) {
+				case "RECORD#BIBLIO":
+					bibId=i
+					printf ("Bib ID found in "$i"\\n")
+					break
+				case "LOCATION":
+					location=i
+					printf ("Location found in "$i"\\n")
+					break
+				case "CALL#ITEM":
+					callNumpos=i
+					printf ("Call number found in "$i"\\n")
+					break
+				case "CALL#BIBLIO":
+					callNumFallback=i
+					printf ("Call number fallback found in "$i"\\n")
+					break
+				case "LIBHAS":
+					libHas=i
+					printf ("Lib has found in "$i"\\n")
+					break
+				case "HOLDID":
+					holdIdpos=i
+					printf ("Holdings ID fallback found in "$i"\\n")
+					break
+				case "ACTIONNOTE":
+					actionNote=i
+					printf ("Action note has found in "$i"\\n")
+					break
+				case "BINDINGNOTE":
+					bindingNote=i
+					printf ("Binding note has found in "$i"\\n")
+					break
+				case "COPYNOTE":
+					copyNote=i
+					printf ("Copy note has found in "$i"\\n")
+					break
+				case "OWNERSHIPNOTE":
+					ownershipNote=i
+					printf ("Ownership note has found in "$i"\\n")
+					break
+				case "PUBLICNOTE":
+					publicNote=i
+					printf ("Public note has found in "$i"\\n")
+					break
+			}
+		}
+	if (! bibId) {  printf ("\\nNo valid bib ID field could be found\\n"); exit }
+	if (! location ) {  printf ("\\nNo valid location field could be found\\n"); exit }
+	if (! callNumpos ) {  printf ("\\nNo valid location field could be found\\n"); exit }
+	}
+	callNum = $callNumpos
+
+	if (callNumFallback && length($callNumpos) == 0) { callNum = $callNumFallback }
+
+	if (! holdIdpos) {holdId = $bibId""$location""callNum}
+
+	build_mfhd()
+}
+END { 
+	if (badawk != 1) {
+		printf ("\\n\\n %d records were output to %s\\n", record_counter, OUTFILE)
+	}
+}
+
+ENDOFAWK
+
+echo -e "${awkscript}" > tmp_checkmarc
+chmod 700 tmp_checkmarc
+
+awk -v ORS=$'\x1d' -v RS='\n' -v OFS=$'\x1e' -v FS='\t' -v SFS=$'\x1f' -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+
+rm -f tmp_*
