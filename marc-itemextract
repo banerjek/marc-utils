@@ -74,7 +74,7 @@ if [[ $2 == "sierra"  ]];then
 	labels[17]="TOTRENEW"
 	labels[18]="YTDCIRC"
 	labels[19]="LYCIRC"
-	labels[20]="ITEMNUM"
+	labels[20]="RECORD#ITEM"
 	labels[21]="CREATED"
 fi
 
