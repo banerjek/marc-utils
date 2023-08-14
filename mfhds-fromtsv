@@ -114,7 +114,7 @@ function build_mfhd() {
 					break
 				case "LIBHAS":
 					libHas=i
-					printf ("Lib has found in "$i"\\n")
+					printf ("Lib was found in "$i"\\n")
 					break
 				case "HOLDID":
 					holdIdpos=i
@@ -122,23 +122,23 @@ function build_mfhd() {
 					break
 				case "ACTIONNOTE":
 					actionNote=i
-					printf ("Action note has found in "$i"\\n")
+					printf ("Action note was found in "$i"\\n")
 					break
 				case "BINDINGNOTE":
 					bindingNote=i
-					printf ("Binding note has found in "$i"\\n")
+					printf ("Binding note was found in "$i"\\n")
 					break
 				case "COPYNOTE":
 					copyNote=i
-					printf ("Copy note has found in "$i"\\n")
+					printf ("Copy note was found in "$i"\\n")
 					break
 				case "OWNERSHIPNOTE":
 					ownershipNote=i
-					printf ("Ownership note has found in "$i"\\n")
+					printf ("Ownership note was found in "$i"\\n")
 					break
 				case "PUBLICNOTE":
 					publicNote=i
-					printf ("Public note has found in "$i"\\n")
+					printf ("Public note was found in "$i"\\n")
 					break
 			}
 		}
