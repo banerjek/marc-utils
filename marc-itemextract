@@ -30,9 +30,14 @@ if [[ ${foundsystem} -eq 0 ]];then
 	exit
 fi
 
+## be sure to map call number and location to holdid
+
 if [[ $2 == "sierra"  ]];then
 	identifier="907a"
 	item_field="945"
+	call_subfield="a"
+	location_subfield="l"
+
 	tags[1]="a"
 	tags[2]="b"
 	tags[3]="c"
@@ -70,8 +75,8 @@ if [[ $2 == "sierra"  ]];then
 	labels[13]="OPACMSG"
 	labels[14]="STATUS"
 	labels[15]="ITYPE"
-	labels[16]="TOTCHKOUT"
-	labels[17]="TOTRENEW"
+	labels[16]="TOTCHK"
+	labels[17]="TOTRENWL"
 	labels[18]="YTDCIRC"
 	labels[19]="LYCIRC"
 	labels[20]="RECORD#ITEM"
@@ -110,12 +115,18 @@ function extract_subfields() {
 			if (substr(subfields[subfield], 1, 1) == tags[j]) {
 				item_subfield[j] = substr(subfields[subfield],2)
 				gsub(/^[ \\-]*$/, "", item_subfield[j])
+				if (tags[j] == LOCATION) { location = item_subfield[j] }
+				if (tags[j] == CALL) { callnum = item_subfield[j] }
 				item_subfield[j] = gensub(trimspace_regex, "\\1", 1, item_subfield[j])
 			}	
 		}
 	}
 
-	lineout = tag001"\t"bibno
+	holdid =  bibno""location""callnum
+
+	gsub(/^[a-zA-Z0-9]/, "", holdid)
+
+	lineout = tag001"\t"bibno"\t"holdid
 
 	for (j=1;j<=num_tags;j++) {
 		lineout = lineout"\t"item_subfield[j]
@@ -125,7 +136,7 @@ function extract_subfields() {
 }
 
 function extract_identifiers() {
-	tag001=bibno=""
+	tag001=bibno=holdid=callnum=location=""
 	tagid = substr(IDENTIFIER, 4, 1)
 
 	for (i=1; i<=directory_length; i=i+12) {
@@ -188,7 +199,7 @@ trimspace_regex = "^ +(.*) +$"
 
 if (directory_check == 0) {
 	if (NR == 1) { 
-		lineout = "tag001\tBIBNO"
+		lineout = "tag001\tBIBNO\tHOLDID\t"
 		for (i=1;i<=num_tags;i++) {
 			lineout = lineout"\t"labels[i]
 		}
@@ -209,7 +220,7 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
-awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${identifier}" -v ITEMFIELD="${item_field}" -v TAGLIST="${taglist}" -v LABELLIST="${labellist}" -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${identifier}" -v ITEMFIELD="${item_field}" -v CALL="${call_subfield}" -v LOCATION="${location_subfield}" -v TAGLIST="${taglist}" -v LABELLIST="${labellist}" -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
 echo
 
 rm -f tmp_checkmarc
