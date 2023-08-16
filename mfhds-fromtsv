@@ -9,7 +9,7 @@ read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
 BEGIN {
-	record_template="=LDR  00159cx  a22000733  4500"FS"=001  HOLDINGSID"FS"=004  BIBID"FS"=008  9810090p    8   4001aueng0000000"FS"=852  0 "SFS"bLOCATION"SFS"hCALLNUM"
+	record_template="=LDR  00159cx  a22000733  4500"FS"=001  HOLDINGSID"FS"=004  BIBID"FS"=008  9810090p    8   4001aueng0000000"FS"=852  0"SFS"bLOCATION"SFS"hCALLNUM"
 
 	if(length("а") != 2) {
 		badawk = 1
@@ -67,7 +67,7 @@ function build_mfhd() {
 	for (field = 2; field <= num_mfhd_fields; ++field) {
 		tag = substr(marc_array[field], 2, 3)
 	
-		field_content = substr(marc_array[field], 6)""OFS
+		field_content = substr(marc_array[field], 7)""OFS
 		field_length=sprintf("%04d", length(field_content))
 	
 		directory_address = sprintf("%05d", base_address)
