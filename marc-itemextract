@@ -124,7 +124,7 @@ function extract_subfields() {
 
 	holdid =  bibno""location""callnum
 
-	gsub(/^[a-zA-Z0-9]/, "", holdid)
+	gsub(/[^a-zA-Z0-9]/, "", holdid)
 
 	lineout = tag001"\t"bibno"\t"holdid
 
