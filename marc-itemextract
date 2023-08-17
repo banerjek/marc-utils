@@ -113,8 +113,13 @@ function extract_subfields() {
 	for (j=1;j<=num_tags;j++) {
 		for (subfield in subfields) {
 			if (substr(subfields[subfield], 1, 1) == tags[j]) {
-				item_subfield[j] = substr(subfields[subfield],2)
-				gsub(/^[ \\-]*$/, "", item_subfield[j])
+				if (item_subfield[j] == "") {
+					item_subfield[j] = substr(subfields[subfield],2)
+					gsub(/^[ \\-]*$/, "", item_subfield[j])
+				} else { 
+					item_subfield[j] = item_subfield[j]";"substr(subfields[subfield],2) 
+				}
+
 				if (tags[j] == LOCATION) { location = item_subfield[j] }
 				if (tags[j] == CALL) { callnum = item_subfield[j] }
 				item_subfield[j] = gensub(trimspace_regex, "\\1", 1, item_subfield[j])
