@@ -16,7 +16,7 @@ else
 	rm -f ${outfile}
 fi
 
-knownsystems=("sierra")
+knownsystems=("sierra" "wms")
 foundsystem=0
 
 for system in "${knownsystems[@]}";do
@@ -83,6 +83,22 @@ if [[ $2 == "sierra"  ]];then
 	labels[21]="CREATED"
 fi
 
+if [[ $2 == "wms"  ]];then
+	identifier="001"
+	item_field="876"
+	call_subfield=""
+	location_subfield=""
+
+	tags[1]="p"
+	tags[2]="3"
+	tags[3]="x"
+	tags[4]="z"
+
+	labels[1]="BARCODE"
+	labels[2]="VOLUME"
+	labels[3]="IMSG"
+	labels[4]="OPACMSG"
+fi
 taglist="$(echo ${tags[@]})"
 labellist="$(echo ${labels[@]})"
 
