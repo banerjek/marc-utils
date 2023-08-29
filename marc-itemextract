@@ -84,7 +84,7 @@ if [[ $2 == "sierra"  ]];then
 fi
 
 if [[ $2 == "wms"  ]];then
-	identifier="001"
+	identifier="004"
 	item_field="876"
 	call_subfield=""
 	location_subfield=""
@@ -143,7 +143,12 @@ function extract_subfields() {
 		}
 	}
 
-	holdid =  bibno""location""callnum
+	if (IDENTIFIER == "004") {
+		holdid = tag001 
+		gsub(/[^a-zA-Z0-9]/, "", bibno)
+	} else {
+		holdid =  bibno""location""callnum
+	}
 
 	gsub(/[^a-zA-Z0-9]/, "", holdid)
 
@@ -157,7 +162,7 @@ function extract_subfields() {
 }
 
 function extract_identifiers() {
-	tag001=bibno=holdid=callnum=location=""
+	tag001=tag004=bibno=holdid=callnum=location=""
 	tagid = substr(IDENTIFIER, 4, 1)
 
 	for (i=1; i<=directory_length; i=i+12) {
@@ -167,6 +172,13 @@ function extract_identifiers() {
 			starting_pos = substr(directory, i + 7, 5) 
 
 			tag001 = substr(record_content, starting_pos, field_length - 1)
+		}
+		if (substr(directory, i, 3) == "004") {
+
+			field_length = substr(directory, i + 3, 4) + 0
+			starting_pos = substr(directory, i + 7, 5) 
+
+			tag004 = substr(record_content, starting_pos, field_length - 1)
 		}
 
 		if (bibno == "") {
