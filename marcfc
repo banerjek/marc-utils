@@ -7,6 +7,27 @@ read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
 BEGIN { records_found = 0 }
+
+function extract_subfields() { 
+	field_length = substr(directory, i + 3, 4) + 0
+	starting_pos = substr(directory, i + 7, 5) 
+	field_content = ""
+	delete subfields
+
+	field_content = substr(record_content, starting_pos + 3, field_length - 3)
+
+	if (substr(field_content, 1, 1) == SFS) {
+		split(field_content, subfields, SFS)
+		for (subfield_index in subfields) { 
+			subfield = substr(subfields[subfield_index], 1, 1)
+			tagcount[marctag""subfield]++ 
+		}	
+	} else {
+		tagcount[marctag]++ 
+	}
+}
+
+
 {
         if(length("а") != 2) {
                 badawk = 1
@@ -23,10 +44,10 @@ BEGIN { records_found = 0 }
 	
 	for (i=1; i<=directory_length; i=i+12) {
 		marctag = substr(directory, i, 3)
-		tagcount[marctag]++
+		extract_subfields()
 	}
 	
-	if (NR % 10000 == 0){ printf "Records searched: "NR"\r", foundrecs }
+	if (NR % 1000 == 0){ printf "Records searched: "NR"\r", foundrecs }
 }
 END {
 	print NR" records were searched"
@@ -47,7 +68,7 @@ chmod 700 tmp_checkmarc
 for file in "${filelist[@]}";do
 	fileroot=$(echo "${file}" | sed 's/\.....\?$//')
 	outfile="${fileroot}_fieldcounts.txt"
-	awk -v RS=$'\x1d' -v ORS=$'\n' -v FS=$'\x1e' -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${file}"
+	awk -v RS=$'\x1d' -v ORS=$'\n' -v FS=$'\x1e' -v OFS="\t" -v SFS=$'\x1f' -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${file}"
 	echo "Field counts exported to ${outfile}"
 	echo
 done
