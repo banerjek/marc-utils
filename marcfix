@@ -26,7 +26,7 @@ BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=0
 }
 function check_fields() {
 
-	if (directory ~ /[^0-9]/){directory_check = 1}
+	if (directory ~ /[^0-9]/){directory_check = 1;good_directory = 0}
 
 	if (directory_check == 0) {
 		for (i=1; i<=directory_length; i=i+12) {
@@ -36,11 +36,13 @@ function check_fields() {
 			if (substr(directory, i, 3) ~ /[^0-9a-zA-Z]/) {goodrec = 0}
 			if (bibrec == 0 && substr(directory, i, 3) == "852") {found852 = 1}
 		}
+	} else {
+		good_directory = 0
 	}
 	found001 = 1
 
 	if ( goodrec == 1 && found001 == 1 && found008 == 1 && found245 == 1 && found852 == 1 && directory_check == 0){good_directory=1} else
-		{goodrec=0;good_directory=0}
+		{goodrec=0}
 }
 
 function check_leader() {
