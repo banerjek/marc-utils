@@ -1,5 +1,5 @@
 
-if [[ -z   ]];then
+if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] ]"
 	echo 
 	echo "001 is automatically stored and output."  
@@ -33,7 +33,7 @@ fi
 
 ## be sure to map call number and location to holdid
 
-if [[  == "sierra"  ]];then
+if [[ ${system}  == "sierra"  ]];then
 	identifier="907a"
 	item_field="945"
 	call_subfield="a"
@@ -84,7 +84,7 @@ if [[  == "sierra"  ]];then
 	labels[21]="CREATED"
 fi
 
-if [[  == "wms"  ]];then
+if [[ ${system} == "wms"  ]];then
 	identifier="004"
 	item_field="876"
 	call_subfield=""
@@ -101,7 +101,7 @@ if [[  == "wms"  ]];then
 	labels[4]="OPACMSG"
 fi
 
-if [[  == "eos"  ]];then
+if [[ ${system} == "eos" ]];then
 	identifier="001"
 	item_field="949"
 	call_subfield=""
