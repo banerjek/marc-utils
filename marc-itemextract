@@ -1,5 +1,5 @@
 
-if [[ -z $2  ]];then
+if [[ -z   ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] ]"
 	echo 
 	echo "001 is automatically stored and output."  
@@ -8,6 +8,7 @@ if [[ -z $2  ]];then
 	exit
 else
 	infile="${1}"
+	system="${2}"
 	tags=()
 	labels=()
 
@@ -16,11 +17,11 @@ else
 	rm -f ${outfile}
 fi
 
-knownsystems=("sierra" "wms")
+knownsystems=("sierra" "wms" "eos")
 foundsystem=0
 
 for system in "${knownsystems[@]}";do
-	if [[ ${2} == $system ]];then foundsystem=1;fi
+	if [[ ${system} == $system ]];then foundsystem=1;fi
 done
 
 
@@ -32,7 +33,7 @@ fi
 
 ## be sure to map call number and location to holdid
 
-if [[ $2 == "sierra"  ]];then
+if [[  == "sierra"  ]];then
 	identifier="907a"
 	item_field="945"
 	call_subfield="a"
@@ -83,7 +84,7 @@ if [[ $2 == "sierra"  ]];then
 	labels[21]="CREATED"
 fi
 
-if [[ $2 == "wms"  ]];then
+if [[  == "wms"  ]];then
 	identifier="004"
 	item_field="876"
 	call_subfield=""
@@ -98,6 +99,23 @@ if [[ $2 == "wms"  ]];then
 	labels[2]="VOLUME"
 	labels[3]="IMSG"
 	labels[4]="OPACMSG"
+fi
+
+if [[  == "eos"  ]];then
+	identifier="001"
+	item_field="949"
+	call_subfield=""
+	location_subfield=""
+
+	tags[1]="p"
+	tags[2]="k"
+	tags[3]="o"
+	tags[4]="b"
+
+	labels[1]="BARCODE"
+	labels[2]="CALL#"
+	labels[3]="ITYPE"
+	labels[4]="LOCATION"
 fi
 taglist="$(echo ${tags[@]})"
 labellist="$(echo ${labels[@]})"
@@ -232,7 +250,7 @@ trimspace_regex = "^ +(.*) +$"
 
 if (directory_check == 0) {
 	if (NR == 1) { 
-		lineout = "tag001\tBIBNO\tHOLDID\t"
+		lineout = "tag001\tBIBNO\tHOLDID"
 		for (i=1;i<=num_tags;i++) {
 			lineout = lineout"\t"labels[i]
 		}
