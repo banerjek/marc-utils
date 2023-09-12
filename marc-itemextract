@@ -104,8 +104,8 @@ fi
 if [[ ${system} == "eos" ]];then
 	identifier="001"
 	item_field="949"
-	call_subfield=""
-	location_subfield=""
+	call_subfield="k"
+	location_subfield="b"
 
 	tags[1]="p"
 	tags[2]="k"
