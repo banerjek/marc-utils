@@ -114,6 +114,10 @@ function build_mfhd() {
 					callNumpos=i
 					printf ("Call number found in "$i"\\n")
 					break
+				case "CALL#":
+					callNumpos=i
+					printf ("Call number found in "$i"\\n")
+					break
 				case "CALL_NONMARC":
 					callNumFallback=i
 					printf ("Call number fallback found in "$i"\\n")
