@@ -101,7 +101,7 @@ function build_mfhd() {
 	if (NR == 1) {
 		for(i=1;i<=NF;i++) {
 
-			switch($i) {
+			switch(toupper($i)) {
 				case "BIBNO":
 					bibId=i
 					printf ("Bib ID found in "$i"\\n")
