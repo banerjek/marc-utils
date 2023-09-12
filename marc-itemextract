@@ -175,7 +175,8 @@ function extract_subfields() {
 	for (j=1;j<=num_tags;j++) {
 		lineout = lineout"\t"item_subfield[j]
 	}
-	print lineout >> OUTFILE
+	
+	if (bibno != "") { print lineout >> OUTFILE }
 	lineout = ""
 }
 
