@@ -1,10 +1,14 @@
 
+knownsystems=("sierra" "wms" "eos")
+
 if [[ -z $2 ]];then
-	echo "Usage: marc-itemextract [filename] [systemtype] ]"
+	echo "Usage: marc-itemextract [filename] [systemtype] "
 	echo 
 	echo "001 is automatically stored and output."  
 	echo "Items are expected to be one item per MARC tag"
 	echo
+	echo "The following systems are known"
+	echo  ${knownsystems[@]}
 	exit
 else
 	infile="${1}"
@@ -17,7 +21,6 @@ else
 	rm -f ${outfile}
 fi
 
-knownsystems=("sierra" "wms" "eos")
 foundsystem=0
 
 for system in "${knownsystems[@]}";do
@@ -26,7 +29,7 @@ done
 
 
 if [[ ${foundsystem} -eq 0 ]];then
-	echo "You must specify a system. The following systems are known"
+	echo "You must specify a known system from the following"
 	echo  ${knownsystems[@]}
 	exit
 fi
@@ -154,9 +157,10 @@ function extract_subfields() {
 					item_subfield[j] = item_subfield[j]";"substr(subfields[subfield],2) 
 				}
 
+				gsub(/^ *+| +$/, "", item_subfield[j])
+
 				if (tags[j] == LOCATION) { location = item_subfield[j] }
 				if (tags[j] == CALL) { callnum = item_subfield[j] }
-				item_subfield[j] = gensub(trimspace_regex, "\\1", 1, item_subfield[j])
 			}	
 		}
 	}
@@ -191,6 +195,7 @@ function extract_identifiers() {
 			starting_pos = substr(directory, i + 7, 5) 
 
 			tag001 = substr(record_content, starting_pos, field_length - 1)
+			gsub(/^ *+| +$/, "", tag001)
 		}
 		if (substr(directory, i, 3) == "004") {
 
@@ -198,6 +203,7 @@ function extract_identifiers() {
 			starting_pos = substr(directory, i + 7, 5) 
 
 			tag004 = substr(record_content, starting_pos, field_length - 1)
+			gsub(/^ *+| +$/, "", tag004)
 		}
 
 		if (bibno == "") {
@@ -216,6 +222,7 @@ function extract_identifiers() {
 						bibno = substr(subfields[subfield],2)
 					}	
 				}
+			gsub(/^ *+| +$/, "", bibno)
 			}
 		}
 	}
