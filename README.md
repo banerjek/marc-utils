@@ -5,9 +5,9 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 1. [**marc2text**](#marc2text) -- Convert binary MARC files to text
 2. [**marc2tsv**](#marc2tsv) -- Extract MARC fields ihto TSV file 
 3. [**marcextract**](#marcsearch) -- Extract record identifier and data from MARC tag matching a pattern 
-4. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
-5. [**marcfc**](#marcfc) -- Provide field counts
-6. [**marcfc**](#marcid) -- Extract MARC records based on list of IDs or single id supplied as an argument
+4. [**marcfc**](#marcfc) -- Provide field counts
+5. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
+6. [**marcid**](#marcid) -- Extract MARC records based on list of IDs or single id supplied as an argument
 7. [**marcsearch**](#marcsearch) -- Extract MARC records containing a search patterns
 8. [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
 9. [**text2marc**](#text2marc) -- Convert text files to MARC
@@ -64,8 +64,8 @@ Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good re
 
 ## marcid 
 **Usage:** *marcid [filename] [id]*  
-**Example:** *marcfix marc_file_001\*.mrc*
-**Example:** *marcfix marc_file_001\*.mrc 12345678*
+**Example:** *marcid marc_file_001\*.mrc*
+**Example:** *marcid marc_file_001\*.mrc 12345678*
 
 marcid extracts raw MARC records from source based on a list of ids (assumes an input file of ids named "ids") or a single id after the input file. It searches 001 and 907a based on exact match. 
 
