@@ -34,14 +34,13 @@ function check_fields() {
 			if (substr(directory, i, 3) == "008") {found008 = 1}
 			if (substr(directory, i, 3) == "245") {found245 = 1}
 			if (substr(directory, i, 3) ~ /[^0-9a-zA-Z]/) {goodrec = 0}
-			if (bibrec == 0 && substr(directory, i, 3) == "852") {found852 = 1}
 		}
 	} else {
 		good_directory = 0
 	}
 	found001 = 1
 
-	if ( goodrec == 1 && found001 == 1 && found008 == 1 && found245 == 1 && found852 == 1 && directory_check == 0){good_directory=1} else
+	if ( goodrec == 1 && found001 == 1 && found008 == 1 && found245 == 1 && directory_check == 0){good_directory=1} else
 		{goodrec=0}
 }
 
@@ -56,17 +55,18 @@ function check_leader() {
 	
 	if (reported_length != record_length){good_length = 0}
 	if (substr(leader, 21,4) != "4500"){good_leader = 0}
-	if (substr(leader, 7, 1)  ~ /[uvxy]/){bibrec = 0;found245 = 1}else{found852 = 1}
-	if (substr(leader, 6, 1)  !~ /[acdnp]/){good_leader = 0}
-	if (bibrec == 1 && substr(leader,8,1) !~ /[abcdims]/){good_leader = 0}
+	if (substr(leader, 7, 1)  ~ /[uvxyz]/){bibrec = 0;found245 = 1}
+	#if (substr(leader, 6, 1)  !~ /[acdnpif]/){good_leader = 0}
+	#if (bibrec == 1 && substr(leader,8,1) !~ /[abcdims]/){good_leader = 0}
 
 }
 {
 goodrec=good_directory=good_leader=good_encoding=good_length=bibrec=1
-found001=found008=found245=found852=0
+found001=found008=found245=0
 
 check_leader()
 check_fields()
+
 if ( goodrec == 1 && good_directory == 1 && good_leader == 1 && good_encoding == 1 && good_length == 1){ goodrecs++;print $0 > FILENAME"_fixed" }else{ badrecs++}
 foundbad = 0
 if ( good_length == 0){ print $0 > "bad_length_"FILENAME;badlength++;badlengthtext = " (length: "badlength")";foundbad = 1 }
