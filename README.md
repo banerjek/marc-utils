@@ -7,9 +7,10 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 3. [**marcextract**](#marcsearch) -- Extract record identifier and data from MARC tag matching a pattern 
 4. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
 5. [**marcfc**](#marcfc) -- Provide field counts
-6. [**marcsearch**](#marcsearch) -- Extract MARC records containing a search patterns
-7. [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
-8. [**text2marc**](#text2marc) -- Convert text files to MARC
+6. [**marcfc**](#marcid) -- Extract MARC records based on list of IDs or single id supplied as an argument
+7. [**marcsearch**](#marcsearch) -- Extract MARC records containing a search patterns
+8. [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
+9. [**text2marc**](#text2marc) -- Convert text files to MARC
 
 # Disclaimers
 
@@ -60,6 +61,13 @@ Gives frequency count for each MARC tag along with total record count. Does not 
 **Example:** *marcfix marc_file_001\*.mrc*
 
 Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good records in one file, and separates out problematic records into separate files categorized by issue. Wildcard expressions can be used to process multiple files.
+
+## marcid 
+**Usage:** *marcid [filename] [id]*  
+**Example:** *marcfix marc_file_001\*.mrc*
+**Example:** *marcfix marc_file_001\*.mrc 12345678*
+
+marcid extracts raw MARC records from source based on a list of ids (assumes an input file of ids named "ids") or a single id after the input file. It searches 001 and 907a based on exact match. 
 
 ## marcsearch
 **Usage:** *marcsearch [filename] [marc-tag] [regex_search_expression] [count]*  
