@@ -5,7 +5,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 1. [**marc2text**](#marc2text) -- Convert binary MARC files to text
 2. [**marc2tsv**](#marc2tsv) -- Extract MARC fields ihto TSV file 
 3. [**marcextract**](#marcsearch) -- Extract record identifier and data from MARC tag matching a pattern 
-4. [**marcfc**](#marcfc) -- Provide field counts
+4. [**marcfc**](#marcfc) -- Provide field and subfield counts
 5. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
 6. [**marcid**](#marcid) -- Extract MARC records based on list of IDs or single id supplied as an argument
 7. [**marcsearch**](#marcsearch) -- Extract MARC records containing a search patterns
@@ -54,7 +54,7 @@ The idtag parameter is optional. If left out, the record ID will be assumed to b
 **Usage:** *marcfc [filename]*  
 **Example:** *marcfc marc_file_001\*.mrc*
 
-Gives frequency count for each MARC tag along with total record count. Does not do subfields at this point. Wildcard expressions can be used to process multiple files.
+Gives frequency count for each MARC tag and subfield count. Wildcard expressions can be used to process multiple files.
 
 ## marcfix
 **Usage:** *marcfix [filename]*  
