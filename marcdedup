@@ -56,10 +56,10 @@ if (directory_check == 0) {
 	         for (subfield in subfields) {
 	            if (substr(subfields[subfield], 1, 1) == search_tag) {
 	               record_id = substr(subfields[subfield],2)
-						break
 	            }
 	            gsub(/^ *+| +$/, "", record_id)
 					if (!seen[record_id]) { good_record = 1; seen[record_id] = 1 }
+					break
 	         }
 	      }
 		} else {
