@@ -4,7 +4,8 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 # Table of Contents
 1. [**marc2text**](#marc2text) -- Convert binary MARC files to text
 2. [**marc2tsv**](#marc2tsv) -- Extract MARC fields ihto TSV file 
-3. [**marcextract**](#marcsearch) -- Extract record identifier and data from MARC tag matching a pattern 
+3. [**marcextract**](#marcextract) -- Extract record identifier and data from MARC tag matching a pattern 
+3. [**marcextractbyid**](#marcextractbyid) -- Extract records matching a list of identifiers
 4. [**marcfc**](#marcfc) -- Provide field and subfield counts
 5. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
 6. [**marcid**](#marcid) -- Extract MARC records based on list of IDs or single id supplied as an argument
@@ -49,6 +50,12 @@ Whole tags are extracted, leading subfield marker (usually a) is stripped. The s
 Outputs record identifier and MARC tag searched where MARC records where regex_search_expression was found in the MARC tag to a file named *[filename]_extract.txt*. If you want to target a specific subfield, you'll need to create an expression that involves the subfield delimiters (hex 1F)
 
 The idtag parameter is optional. If left out, the record ID will be assumed to be 001. Otherwise, the full content from the tag including all subfields will be included in the first column as the record identifier.
+
+## marcextractbyid
+**Usage:** *Usage: marcextractbyid [filename] [marcid_field]*  
+**Example:** *marcextractbyid marcfile.mrc 907a*
+
+Extracts MARC records based on a list of identifiers contained in a file named "ids." The marcid_field is optional and will be presumed to be 001 unless otherwise specified.
 
 ## marcfc
 **Usage:** *marcfc [filename]*  
