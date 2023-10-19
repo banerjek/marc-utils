@@ -13,11 +13,12 @@ else
 
    if [[ -z $idtag ]];then idtag="001";fi
 
-fi
+fi	
+
+cat ids |tr "\n" $'\x1d' > tmp_ids
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
 outfile="${fileroot}_extract.mrc"
-
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
@@ -33,6 +34,7 @@ BEGIN { records_found = 0
 
 if (NR == FNR) {
 	gsub("\\n", "", $1)
+	gsub(" *$", "", $1)
 	seen[$1] = 1
 }
 
@@ -55,7 +57,7 @@ if (directory_check == 0) {
 
 			if (length(IDTAG) == 3) {
 				if (IDTAG == "001") { 
-					id_content = substr(record_content, starting_pos, field_length - 1)
+					id_content = substr(record_content, starting_pos + 0, field_length - 1)
 				} else {
 					id_content = substr(record_content, starting_pos + 1, field_length - 2)
 				}
@@ -77,6 +79,8 @@ if (directory_check == 0) {
 		}
 	}
 
+gsub(" *$", "", id_content)
+
 if ( seen[id_content] == 1 ) { 
 	foundrecs++
 	print $0 > OUTFILE
@@ -92,12 +96,10 @@ echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
 
-awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v IDTAG=${idtag} -v OUTFILE="${outfile}" -b -f tmp_checkmarc "ids" "${infile}"
+awk -v ORS=$'\x1d' -v FS=$'\x1e' -v RS=$'\x1d' -v SFS=$'\x1f' -v IDTAG=${idtag} -v OUTFILE="${outfile}" -b -f tmp_checkmarc "tmp_ids" "${infile}"
 echo
 echo
 
-if [[ $count != "count" ]];then
-	echo "Records have been output to ${outfile}                     " 
-fi
+echo "Records have been output to ${outfile}                     " 
 
-rm -f tmp_checkmarc
+rm -f tmp_checkmarc tmp_ids
