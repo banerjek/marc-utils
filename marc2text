@@ -1,8 +1,13 @@
 filelist=("$@")
 infile="${filelist[0]}"
+
 if [[ -z ${infile} ]];then echo "You must supply a file name or expression (wildcards OK). Usage: marc2text [filename]";fi
 
-rm -f bad_*.mrc
+echo
+echo "This program generates files that Marcedit can read but which doesn't use dollar signs for subfields or provide mneumonics to increase speed and simplify analysis. If you need those features, use the text2marcedit utility"
+echo
+
+rm -f bad_*.txt
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
@@ -13,18 +18,19 @@ BEGIN {
                 printf("Your version of awk does not support marc2text -- you need a version that supports the -b switch\\n")
                 exit
         }
-
-	goodrecs=badrecs=bad001=badleader=baddirectory=0
-	bad001file="bad_missing001.txt"
-	bad008file="bad_missing008.txt"
-	bad245file="bad_missing245.txt"
-	badencodingfile="bad_encoding.txt"
-	badleaderfile="bad_leader.txt"
-	badlengthfile="bad_length.txt"
-	baddirectoryfile="bad_directory.txt"
 }
 
-function build_fields() {
+{
+   leader=substr($0,1,24)
+   baseaddress=substr(leader,13, 5) + 0
+   record_content=substr($0, baseaddress + 1)
+   directory=substr($0,25, baseaddress - 25)
+   directory_length=length(directory)
+   directory_check=(directory_length % 12)
+   record_length = length($0) + 0
+
+	record = "=LDR  "leader
+
 	for (i=1; i<=directory_length; i=i+12) {
 		directory_entry = substr(directory, i, 12)
 		marc_tag = substr(directory, i, 3)
@@ -34,71 +40,13 @@ function build_fields() {
 		field_content = substr(record_content, starting_pos, field_length)
 		record = record"\\n="marc_tag"  "field_content
 	}
+	print record > OUTFILE
+	if (NR % 10000 == 0){ printf "Records processed: "NR"\r" }
 
-}
-
-function build_record() {
-	record = "=LDR  "leader
-	build_fields()
-}
-
-function check_fields() {
-
-	if (directory ~ /[^0-9]/){directory_check = 1}
-
-	if (directory_check == 0) {
-		for (i=1; i<=directory_length; i=i+12) {
-			if (substr(directory, i, 3) == "001") {found001 = 1}
-			if (substr(directory, i, 3) == "008") {found008 = 1}
-			if (substr(directory, i, 3) == "245") {found245 = 1}
-			if (substr(directory, i, 3) ~ /[^0-9a-zA-Z]/) {goodrec = 0}
-			if (bibrec == 0 && substr(directory, i, 3) == "852") {found852 = 1}
-		}
-	}
-
-	if ( goodrec == 1 && found001 == 1 && found008 == 1 && found245 == 1 && found852 == 1 && directory_check == 0){good_directory=1} else
-		{goodrec=0;good_directory=0}
-}
-
-function check_leader() {
-	leader=substr($0,1,24)
-	baseaddress=substr(leader,13, 5) + 0
-	record_content=substr($0, baseaddress + 1)
-	directory=substr($0,25, baseaddress - 25)
-	directory_length=length(directory) 
-	directory_check=(directory_length % 12)
-	record_length = length($0) + 0
-	reported_length = substr($0, 1, 5) - 1
-	
-	if (reported_length != record_length){good_length = 0}
-	if (substr(leader, 21,4) != "4500"){good_leader = 0}
-	if (substr(leader, 7, 1)  ~ /[uvxy]/){bibrec = 0;found245 = 1}else{found852 = 1}
-	if (substr(leader, 6, 1)  !~ /[acdnp]/){good_leader = 0}
-	if (bibrec == 1 && substr(leader,8,1) !~ /[abcdims]/){good_leader = 0}
-
-}
-{
-goodrec=good_directory=good_leader=good_encoding=good_length=bibrec=1
-found001=found008=found245=found852=0
-
-check_leader()
-check_fields()
-if ( goodrec == 1 && good_directory == 1 && good_leader == 1 && good_encoding == 1 && good_length == 1){ goodrecs++;build_record(); print record > OUTFILE }else{ badrecs++}
-if ( found001 == 0){ build_record(); print record > bad001file;bad001++;bad001text = " (001: "bad001")" }
-if ( found008 == 0){ build_record(); print record > bad008file;bad008++;bad008text = " (008: "bad008")" }
-if ( found245 == 0){ build_record(); print record > bad245file;bad245++;bad245text = " (245: "bad245")" }
-if ( good_encoding == 0){ build_record(); print record > badencodingfile;badencoding++;badencodingtext = " (encoding: "badencoding")" }
-if ( good_directory == 0){ print $0 > baddirectoryfile;baddirectory++;baddirectorytext = " (directory: "baddirectory")" }
-if ( good_leader == 0){ print $0 > badleaderfile;badleader++;badleadertext = " (leader: "badleader")" }
-if ( good_length == 0){ print $0 > badlengthfile;badlength++;badlengthtext = " (length: "badlength")" }
-if ( badrecs > 0 ){ badtext = badleadertext""baddirectorytext""bad001text""bad008text""bad245text""badencodingtext""badlengthtext }
-
-if (NR % 10000 == 0){ printf "Good records: %d Bad records: %d Issues: %s\r", goodrecs, badrecs, badtext }
 }
 END { 
 	ORS="\\n"
-	print "";print goodrecs " records were output to "OUTFILE
-	if (badrecs > 0){print badrecs" records were output to the files listed below and prefixed with bad_" }
+	print "";print NR " records were output to "OUTFILE
 }
 
 ENDOFAWK
@@ -114,4 +62,4 @@ done
 
 sleep 1
 ls bad_*.mrc 2> /dev/null 
-rm -f tmp_checkmarc
+rm -f tmp_*
