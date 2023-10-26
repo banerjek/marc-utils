@@ -1,5 +1,5 @@
 
-knownsystems=("sierra" "wms" "eos")
+knownsystems=("sierra" "wms" "eos" "sirsi")
 
 if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] "
@@ -35,6 +35,23 @@ if [[ ${foundsystem} -eq 0 ]];then
 fi
 
 ## be sure to map call number and location to holdid
+
+if [[ ${system} == "eos" ]];then
+	identifier="001"
+	item_field="949"
+	item_call_subfield="k"
+	location_subfield="b"
+
+	tags[1]="p"
+	tags[2]="k"
+	tags[3]="o"
+	tags[4]="b"
+
+	labels[1]="BARCODE"
+	labels[2]="CALL#"
+	labels[3]="ITYPE"
+	labels[4]="LOCATION"
+fi
 
 if [[ ${system}  == "sierra"  ]];then
 	bib_call_field="090"
@@ -88,6 +105,34 @@ if [[ ${system}  == "sierra"  ]];then
 	labels[21]="CREATED"
 fi
 
+if [[ ${system}  == "sirsi"  ]];then
+	bib_call_field="090"
+	identifier="001"
+	item_field="949"
+	item_call_subfield="k"
+	location_subfield="b"
+
+	tags[1]="b"
+	tags[2]="c"
+	tags[3]="d"
+	tags[4]="g"
+	tags[5]="k"
+	tags[6]="n"
+	tags[7]="o"
+	tags[8]="p"
+	tags[9]="v"
+
+	labels[1]="LOCATION"
+	labels[2]="COPY"
+	labels[3]="CAT_DATE"
+	labels[4]="NOTE"
+	labels[5]="CALL"
+	labels[6]="NOTE"
+	labels[7]="ITYPE"
+	labels[8]="BARCODE"
+	labels[9]="VOLUME"
+fi
+
 if [[ ${system} == "wms"  ]];then
 	identifier="004"
 	item_field="876"
@@ -105,22 +150,6 @@ if [[ ${system} == "wms"  ]];then
 	labels[4]="OPACMSG"
 fi
 
-if [[ ${system} == "eos" ]];then
-	identifier="001"
-	item_field="949"
-	item_call_subfield="k"
-	location_subfield="b"
-
-	tags[1]="p"
-	tags[2]="k"
-	tags[3]="o"
-	tags[4]="b"
-
-	labels[1]="BARCODE"
-	labels[2]="CALL#"
-	labels[3]="ITYPE"
-	labels[4]="LOCATION"
-fi
 taglist="$(echo ${tags[@]})"
 labellist="$(echo ${labels[@]})"
 
@@ -165,6 +194,7 @@ function extract_subfields() {
 
 				if (tags[j] == LOCATION) { location = item_subfield[j] }
 				if (tags[j] == CALL) { callnum = item_subfield[j] }
+				if (tags[j] == CALL_SUFFIX) { callnum = callnum" "item_subfield[j] }
 			}	
 		}
 	}
