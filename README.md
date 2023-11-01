@@ -3,7 +3,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 
 # Table of Contents
 1. [**marc2text**](#marc2text) -- Convert binary MARC files to text
-2. [**marc2tsv**](#marc2tsv) -- Extract MARC fields ihto TSV file 
+2. [**marc2tsv**](#marc2tsv) -- Extract MARC fields into TSV file 
 3. [**marcextract**](#marcextract) -- Extract record identifier and data from MARC tag matching a pattern 
 3. [**marcextractbyid**](#marcextractbyid) -- Extract records matching a list of identifiers
 4. [**marcfc**](#marcfc) -- Provide field and subfield counts
