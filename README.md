@@ -18,7 +18,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 The author has no way of knowing your needs or environment, so they may be completely unsuitable for your purposes and come without any kind of warranty or support. Use at your own risk. 
 
 # System requirements
-bash and a version of awk that understands the "-b" switch (i.e. anything from the past couple decades that's in your base linux distro should be good). 
+bash and a version of awk that understands the "-b" switch (i.e. anything from the past couple decades that's in your base linux distro should be good). However, you may need to install gawk if you're on a Mac.
 
 # The utilities
 
