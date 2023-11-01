@@ -7,17 +7,21 @@ echo
 echo "This program generates files that Marcedit can read but which doesn't use dollar signs for subfields or provide mneumonics to increase speed and simplify analysis. If you need those features, use the text2marcedit utility"
 echo
 
+rm -f bad_*.txt
+
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
 BEGIN { 
         if(length("а") != 2) {
+                badawk = 1
                 printf("Your version of awk does not support marc2text -- you need a version that supports the -b switch\\n")
                 exit
         }
 }
 
 {
+	large=0
    leader=substr($0,1,24)
    baseaddress=substr(leader,13, 5) + 0
    record_content=substr($0, baseaddress + 1)
@@ -25,6 +29,7 @@ BEGIN {
    directory_length=length(directory)
    directory_check=(directory_length % 12)
    record_length = length($0) + 0
+	if (record_length > 99999) {foundlarge++;large=1}
 
 	record = "=LDR  "leader
 
@@ -35,8 +40,15 @@ BEGIN {
 		field_length = substr(directory, i + 3, 4) - 1 
 		starting_pos = substr(directory, i + 7, 5) + 1
 		field_content = substr(record_content, starting_pos, field_length)
-		record = record"\\n="marc_tag"  "field_content
+
+		if (starting_pos > last_pos) {
+			record = record"\\n="marc_tag"  "field_content
+			last_pos = starting_pos
+		} else {
+			i = directory_length
+		}
 	}
+
 	print record > OUTFILE
 	if (NR % 10000 == 0){ printf "Records processed: "NR"\r" }
 
@@ -44,6 +56,7 @@ BEGIN {
 END { 
 	ORS="\\n"
 	print "";print NR " records were output to "OUTFILE
+	if (foundlarge > 0) { print foundlarge" oversized records were found and truncated" }
 }
 
 ENDOFAWK
