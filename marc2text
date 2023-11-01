@@ -14,7 +14,6 @@ read -r -d '' awkscript << "ENDOFAWK"
 
 BEGIN { 
         if(length("а") != 2) {
-                badawk = 1
                 printf("Your version of awk does not support marc2text -- you need a version that supports the -b switch\\n")
                 exit
         }
@@ -61,5 +60,4 @@ for file in "${filelist[@]}";do
 done
 
 sleep 1
-ls bad_*.mrc 2> /dev/null 
-rm -f tmp_*
+rm -f tmp_checkmarc
