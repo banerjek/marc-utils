@@ -52,9 +52,10 @@ function check_leader() {
 	directory_check=(directory_length % 12)
 	record_length = length($0) + 0
 	reported_length = substr($0, 1, 5) - 1
+
+	if (record_length > 99999) {oversized = 1;totaloversized++;print $0 > "tmp_oversized.mrc"}
 	
 	if (reported_length != record_length){good_length = 0}
-	if (substr(leader, 21,4) != "4500"){good_leader = 0}
 	if (substr(leader, 7, 1)  ~ /[uvxyz]/){bibrec = 0;found245 = 1}
 	#if (substr(leader, 6, 1)  !~ /[acdnpif]/){good_leader = 0}
 	#if (bibrec == 1 && substr(leader,8,1) !~ /[abcdims]/){good_leader = 0}
@@ -62,7 +63,7 @@ function check_leader() {
 }
 {
 goodrec=good_directory=good_leader=good_encoding=good_length=bibrec=1
-found001=found008=found245=0
+found001=found008=found245=oversized=0
 
 check_leader()
 check_fields()
@@ -85,7 +86,9 @@ END {
 ORS=OFS="\\n"
 close(FILENAME"_fixed")
 
-print "";print goodrecs " records were output to " FILENAME"_fixed" " and " badrecs " records were output to the files listed below and prefixed with bad_" }
+print "";print goodrecs " records were output to " FILENAME"_fixed" " and " badrecs " records were output to the files listed below and prefixed with bad_" 
+if (totaloversized > 0) {print totaloversized" oversized were truncated"}
+}
 
 ENDOFAWK
 
@@ -109,8 +112,16 @@ process_file() {
 if [[ $processType == "file" ]];then 
 	for marcfile in "${filelist[@]}";do
 		process_file "${marcfile}"
+
+		if [[ -f tmp_oversized.mrc ]];then
+			marc2text tmp_oversized.mrc
+			text2marc tmp_oversized.txt
+			cat tmp_oversized.mrc >> "${marcfile}_fixed"
+			rm -f tmp_oversized.*
+			echo "Oversized records were appended to ${marcfile}_fixed"
+		fi
 	done
-	rm tmp_checkmarc
+	rm -f tmp_checkmarc
 fi
 
 if [[ $processType == "directory" ]]; then

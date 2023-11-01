@@ -2,6 +2,14 @@ filelist=("$@")
 infile="${filelist[0]}"
 if [[ -z ${infile} ]];then echo "You must supply a file name or expression (wildcards OK). Usage: text2marc [filename]";fi
 
+if [[ ${infile} =~ \.mrk ]];then
+	echo "This appears to be a Marcedit file. Text2marc does not convert dollar signs and mnemonic symbols. To process Marcedit files, use marcedit2text instead"
+        echo
+        echo "Usage: text2marcedit [yourfile.mrk]"
+	echo
+        exit
+fi
+
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
@@ -32,16 +40,17 @@ BEGIN {
 	
 		directory_address = sprintf("%05d", base_address)
 		base_address = base_address + field_length
-	
+
 		directory = directory""tag""field_length""directory_address
 		record_content = record_content""field_content
 		field_counter++
+
+		if ((length(directory) + length(record_content)) > 99000) { field = NF;largerecs++ }
 		}
 	
 	directory = directory""OFS
 	base_data_address = sprintf("%05d", 24 + length(directory))
 	
-	record_content = record_content
 	record_length = 24 + length(directory) + length(record_content) + 1
 	
 	leader = sprintf("%05d", record_length)""leader1""base_data_address""leader2
@@ -52,6 +61,7 @@ BEGIN {
 END { 
 	if (badawk != 1) {
 		printf ("\\n\\n %d records were output to %s\\n", record_counter, OUTFILE)
+	if (largerecs > 0) {printf ("\\n\\n %d oversized records were found and truncated\\n", largerecs)}
 	}
 }
 
