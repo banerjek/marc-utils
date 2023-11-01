@@ -7,8 +7,6 @@ echo
 echo "This program generates files that Marcedit can read but which doesn't use dollar signs for subfields or provide mneumonics to increase speed and simplify analysis. If you need those features, use the text2marcedit utility"
 echo
 
-rm -f bad_*.txt
-
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
