@@ -9,6 +9,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 4. [**marcfc**](#marcfc) -- Provide field and subfield counts
 5. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
 6. [**marcid**](#marcid) -- Extract MARC records based on list of IDs or single id supplied as an argument
+6. [**marcmissingtag**](#marcmissingtag) -- Extract MARC records based absence of a specified tag
 7. [**marcsearch**](#marcsearch) -- Extract MARC records containing a search patterns
 8. [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
 9. [**text2marc**](#text2marc) -- Convert text files to MARC
@@ -24,7 +25,7 @@ bash and a version of awk that understands the "-b" switch (i.e. anything from t
 
 ## marc2text
 **Usage:** *marc2text [filename]*  
-**Example:** *marc2text marc_file_001\*.mrc*
+**Example:** *marc2text marc_file\*.mrc*
 
 Converts binary MARC to plain text. Wildcard expressions can be used to process multiple files. All *marc2text* does is interpret the directory and stick labels in front of the contents of the fields. It does NOT replace subfield markers (hex 1F) with dollar signs, translate characters into expressions in curly braces, or replace spaces with backlashes in indicator or leader fields as this slows processing and makes working with and analyzing the file with standard text utilities more awkward.
 
@@ -32,7 +33,7 @@ The text output format is not the MarcBreaker format used by MarcEdit. However, 
 
 ## marc2tsv
 **Usage:** *Usage: marc2tsv [filename] [list of MARC fields]*  
-**Example:** *marc2tsv marc_file_001\*.mrc ldr 245 337b 650a*
+**Example:** *marc2tsv marc_file\*.mrc ldr 245 337b 650a*
 
 Extracts specific MARC tags or subfields into TSV file.
 
@@ -56,22 +57,29 @@ Extracts MARC records based on a list of identifiers contained in a file named "
 
 ## marcfc
 **Usage:** *marcfc [filename]*  
-**Example:** *marcfc marc_file_001\*.mrc*
+**Example:** *marcfc marc_file\*.mrc*
 
 Gives frequency count for each MARC tag and subfield count. Wildcard expressions can be used to process multiple files.
 
 ## marcfix
 **Usage:** *marcfix [filename]*  
-**Example:** *marcfix marc_file_001\*.mrc*
+**Example:** *marcfix marc_file\*.mrc*
 
 Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good records in one file, and separates out problematic records into separate files categorized by issue. Wildcard expressions can be used to process multiple files.
 
 ## marcid 
 **Usage:** *marcid [filename] [id]*  
-**Example:** *marcid marc_file_001\*.mrc*
-**Example:** *marcid marc_file_001\*.mrc 12345678*
+**Example:** *marcid marc_file\*.mrc*
+**Example:** *marcid marc_file\*.mrc 12345678*
 
 marcid extracts raw MARC records from source based on a list of ids (assumes an input file of ids named "ids") or a single id after the input file. It searches 001 and 907a based on exact match. 
+
+## marcmissingtag
+**Usage:** *marcmissingtag [filename] [tag]*  
+**Example:** *marcmissingtag marc_file\*.mrc* 
+**Example:** *marcmissingtag marc_file\*.mrc 245a*
+
+Extracts MARC records based on absence of a 3 digit tag or 3 digit tag and one character subfield. If no tag is specified, 001 is assumed. 
 
 ## marcsearch
 **Usage:** *marcsearch [filename] [marc-tag] [regex_search_expression] [count]*  
@@ -83,13 +91,13 @@ The count parameter is optional. If the word "count" is sent, marcsearch only re
 
 ## marcssplit
 **Usage:** *marcsplit [filename] [num_records]*  
-**Example:** *marcsplit marc_file_001\*.mrc 1000"*
+**Example:** *marcsplit marc_file\*.mrc 1000"*
 
 Splits large MARC file into multiple files, each containing *num_records* records. If *num_records* isn't provided, default is 500
 
 ## text2marc
 **Usage:** *text2marc [filename]*  
-**Example:** *text2marc marc_file_001\*.mrc*
+**Example:** *text2marc marc_file\*.mrc*
 
 Converts text files created by marc2text back to MARC -- it cannot read MarcEdit files. Wildcard expressions can be used to process multiple files. 
 
