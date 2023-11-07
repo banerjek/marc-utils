@@ -9,7 +9,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 4. [**marcfc**](#marcfc) -- Provide field and subfield counts
 5. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
 6. [**marcid**](#marcid) -- Extract MARC records based on list of IDs or single id supplied as an argument
-6. [**marcmissingtag**](#marcmissingtag) -- Extract MARC records based absence of a specified tag
+6. [**marcmissing**](#marcmissing) -- Extract MARC records based absence of a specified tag
 7. [**marcsearch**](#marcsearch) -- Extract MARC records containing a search patterns
 8. [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
 9. [**text2marc**](#text2marc) -- Convert text files to MARC
@@ -74,10 +74,10 @@ Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good re
 
 marcid extracts raw MARC records from source based on a list of ids (assumes an input file of ids named "ids") or a single id after the input file. It searches 001 and 907a based on exact match. 
 
-## marcmissingtag
-**Usage:** *marcmissingtag [filename] [tag]*  
-**Example:** *marcmissingtag marc_file\*.mrc* 
-**Example:** *marcmissingtag marc_file\*.mrc 245a*
+## marcmissing
+**Usage:** *marcmissing [filename] [tag]*  
+**Example:** *marcmissing marc_file\*.mrc* 
+**Example:** *marcmissing marc_file\*.mrc 245a*
 
 Extracts MARC records based on absence of a 3 digit tag or 3 digit tag and one character subfield. If no tag is specified, 001 is assumed. 
 
