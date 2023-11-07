@@ -102,6 +102,10 @@ process_file() {
 	chmod 700 tmp_checkmarc
 
 	echo "Processing ${marcfile}"	
+	
+	grep -Pal '\x00' "${marcfile}" > /dev/null && echo "Removing null characters" && sed -i 's/\x0//g' "${marcfile}" 
+		
+
 	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -b -f tmp_checkmarc "${marcfile}"
 	sleep 1
 	
