@@ -8,8 +8,8 @@ else
 fi
 
 if [[ ! -f ${infile} ]];then
-	echo "Usage: marcmissingtag [filename] [tagfield]"
-	echo "Example: marcmissingtag myfile.mrc 907a"
+	echo "Usage: marcmissing [filename] [tagfield]"
+	echo "Example: marcmissing myfile.mrc 907a"
 	echo 
 	echo "If tagfield isn't present, 001 is assumed"
 	echo
