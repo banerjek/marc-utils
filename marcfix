@@ -16,15 +16,9 @@ read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
 BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=0
-	bad001file="bad_missing001.mrc"
-	bad008file="bad_missing008.mrc"
-	bad245file="bad_missing245.mrc"
-	badencodingfile="bad_encoding.mrc"
-	badleaderfile="bad_leader.mrc"
-	badlengthfile="bad_length.mrc"
-	baddirectoryfile="bad_directory.mrc"
 }
 function check_fields() {
+	OUTFILE = FILEROOT"_fixed.mrc"
 
 	if (directory ~ /[^0-9]/){directory_check = 1;good_directory = 0}
 
@@ -68,15 +62,15 @@ found001=found008=found245=oversized=0
 check_leader()
 check_fields()
 
-if ( goodrec == 1 && good_directory == 1 && good_leader == 1 && good_encoding == 1 && good_length == 1){ goodrecs++;print $0 > FILENAME"_fixed" }else{ badrecs++}
+if ( goodrec == 1 && good_directory == 1 && good_leader == 1 && good_encoding == 1 && good_length == 1){ goodrecs++;print $0 > OUTFILE }else{ badrecs++}
 foundbad = 0
-if ( good_length == 0){ print $0 > "bad_length_"FILENAME;badlength++;badlengthtext = " (length: "badlength")";foundbad = 1 }
-if ( good_leader == 0 && foundbad == 0){ print $0 > "bad_leader_"FILENAME;badleader++;badleadertext = " (leader: "badleader")" }
-if ( good_directory == 0 && foundbad == 0){ print $0 > "bad_directory_"FILENAME;baddirectory++;baddirectorytext = " (directory: "baddirectory")";foundbad = 1 }
-if ( good_encoding == 0 && foundbad == 0){ print $0 > "bad_encoding_"FILENAME;badencoding++;badencodingtext = " (encoding: "badencoding")";foundbad = 1 }
-if ( found001 == 0 && foundbad == 0){ print $0 > "bad_missing001_"FILENAME;bad001++;bad001text = " (001: "bad001")";foundbad = 1 }
-if ( found008 == 0 && foundbad == 0){ print $0 > "bad_missing008_"FILENAME;bad008++;bad008text = " (008: "bad008")";foundbad = 1 }
-if ( found245 == 0 && foundbad == 0){ print $0 > "bad_missing245_"FILENAME;bad245++;bad245text = " (245: "bad245")";foundbad = 1 }
+if ( good_length == 0){ print $0 > "bad_length_"FILEROOT;badlength++;badlengthtext = " (length: "badlength")";foundbad = 1 }
+if ( good_leader == 0 && foundbad == 0){ print $0 > "bad_leader_"FILEROOT;badleader++;badleadertext = " (leader: "badleader")" }
+if ( good_directory == 0 && foundbad == 0){ print $0 > "bad_directory_"FILEROOT;baddirectory++;baddirectorytext = " (directory: "baddirectory")";foundbad = 1 }
+if ( good_encoding == 0 && foundbad == 0){ print $0 > "bad_encoding_"FILEROOT;badencoding++;badencodingtext = " (encoding: "badencoding")";foundbad = 1 }
+if ( found001 == 0 && foundbad == 0){ print $0 > "bad_missing001_"FILEROOT;bad001++;bad001text = " (001: "bad001")";foundbad = 1 }
+if ( found008 == 0 && foundbad == 0){ print $0 > "bad_missing008_"FILEROOT;bad008++;bad008text = " (008: "bad008")";foundbad = 1 }
+if ( found245 == 0 && foundbad == 0){ print $0 > "bad_missing245_"FILEROOT;bad245++;bad245text = " (245: "bad245")";foundbad = 1 }
 if ( badrecs > 0 ){ badtext = badleadertext""baddirectorytext""bad001text""bad008text""bad245text""badencodingtext""badlengthtext }
 
 if (NR % 10000 == 0){ printf "Good records: %d Bad records: %d Issues: %s\r", goodrecs, badrecs, badtext }
@@ -84,9 +78,9 @@ if (NR % 10000 == 0){ printf "Good records: %d Bad records: %d Issues: %s\r", go
 }
 END { 
 ORS=OFS="\\n"
-close(FILENAME"_fixed")
+close(OUTFILE)
 
-print "";print goodrecs " records were output to " FILENAME"_fixed" " and " badrecs " records were output to the files listed below and prefixed with bad_" 
+print "";print goodrecs " records were output to "OUTFILE" and " badrecs " records were output to the files listed below and prefixed with bad_" 
 if (totaloversized > 0) {print totaloversized" oversized were truncated"}
 }
 
@@ -94,6 +88,8 @@ ENDOFAWK
 
 
 process_file() {
+	fileroot=$(echo "${marcfile}" | sed 's/\.....\?$//')
+
 	firstnum=$'\x09'
 	lastnum=$'\xFF'
 	regex="[^${firstnum}-${lastnum}]"
@@ -106,7 +102,7 @@ process_file() {
 	grep -Pal '\x00' "${marcfile}" > /dev/null && echo "Removing null characters" && sed -i 's/\x0//g' "${marcfile}" 
 		
 
-	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -b -f tmp_checkmarc "${marcfile}"
+	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v FILEROOT="${fileroot}" -b -f tmp_checkmarc "${marcfile}"
 	sleep 1
 	
 	ls bad_*"${marcfile}" 2> /dev/null
@@ -120,9 +116,9 @@ if [[ $processType == "file" ]];then
 		if [[ -f tmp_oversized.mrc ]];then
 			marc2text tmp_oversized.mrc
 			text2marc tmp_oversized.txt
-			cat tmp_oversized.mrc >> "${marcfile}_fixed"
+			cat tmp_oversized.mrc >> "${fileroot}_fixed.mrc"
 			rm -f tmp_oversized.*
-			echo "Oversized records were appended to ${marcfile}_fixed"
+			echo "Oversized records were appended to ${fileroot}_fixed.mrc"
 		fi
 	done
 	rm -f tmp_checkmarc
