@@ -2,17 +2,16 @@
 The marc-utils are a set of minimal tools to allow fast analysis of MARC and extractions from files using command line utilities. Functionality is limited to maximize speed and transparency to facilitate modification for needs at hand. They will be most useful if added to your path.
 
 # Table of Contents
-1. [**marc2text**](#marc2text) -- Convert binary MARC files to text
-2. [**marc2tsv**](#marc2tsv) -- Extract MARC fields into TSV file 
-3. [**marcextract**](#marcextract) -- Extract record identifier and data from MARC tag matching a pattern 
-3. [**marcextractbyid**](#marcextractbyid) -- Extract records matching a list of identifiers
-4. [**marcfc**](#marcfc) -- Provide field and subfield counts
-5. [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
-6. [**marcid**](#marcid) -- Extract MARC records based on list of IDs or single id supplied as an argument
-6. [**marcmissing**](#marcmissing) -- Extract MARC records based absence of a specified tag
-7. [**marcsearch**](#marcsearch) -- Extract MARC records containing a search patterns
-8. [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
-9. [**text2marc**](#text2marc) -- Convert text files to MARC
+* [**marc2text**](#marc2text) -- Convert binary MARC files to text
+* [**marc2tsv**](#marc2tsv) -- Extract MARC fields into TSV file 
+* [**marcextract**](#marcextract) -- Extract record identifier and data from MARC tag matching a pattern 
+* [**marcextractbyid**](#marcextractbyid) -- Extract records matching a list of identifiers
+* [**marcfc**](#marcfc) -- Provide field and subfield counts
+* [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
+* [**marcmissing**](#marcmissing) -- Extract MARC records based absence of a specified tag
+* [**marcsearch**](#marcsearch) -- Extract MARC records containing a search pattern
+* [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
+* [**text2marc**](#text2marc) -- Convert text files to MARC
 
 # Disclaimers
 
@@ -66,13 +65,6 @@ Gives frequency count for each MARC tag and subfield count. Wildcard expressions
 **Example:** *marcfix marc_file\*.mrc*
 
 Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good records in one file, and separates out problematic records into separate files categorized by issue. Wildcard expressions can be used to process multiple files.
-
-## marcid 
-**Usage:** *marcid [filename] [id]*  
-**Example:** *marcid marc_file\*.mrc*
-**Example:** *marcid marc_file\*.mrc 12345678*
-
-marcid extracts raw MARC records from source based on a list of ids (assumes an input file of ids named "ids") or a single id after the input file. It searches 001 and 907a based on exact match. 
 
 ## marcmissing
 **Usage:** *marcmissing [filename] [tag]*  
