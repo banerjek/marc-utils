@@ -32,7 +32,7 @@ The text output format is not the MarcBreaker format used by MarcEdit. However, 
 
 ## marc2tsv
 **Usage:** *Usage: marc2tsv [filename] [list of MARC fields]*  
-**Example:** *marc2tsv marc_file\*.mrc ldr 245 337b 650a*
+**Example:** *marc2tsv marc_file.mrc ldr 245 337b 650a*
 
 Extracts specific MARC tags or subfields into TSV file.
 
@@ -42,7 +42,7 @@ Whole tags are extracted, leading subfield marker (usually a) is stripped. The s
 
 ## marcextract
 **Usage:** *Usage: marcextract [filename] [marcfield] '[regex_search_expression]' [idtag]*  
-**Example:** *marcsearch marcfile.mrc 856 "my_proxy.edu" 907*
+**Example:** *marcextract marcfile.mrc 856 "my_proxy.edu" 907*
 
 Outputs record identifier and MARC tag searched where MARC records where regex_search_expression was found in the MARC tag to a file named *[filename]_extract.txt*. If you want to target a specific subfield, you'll need to create an expression that involves the subfield delimiters (hex 1F)
 
@@ -83,7 +83,7 @@ The count parameter is optional. If the word "count" is sent, marcsearch only re
 
 ## marcssplit
 **Usage:** *marcsplit [filename] [num_records]*  
-**Example:** *marcsplit marc_file\*.mrc 1000"*
+**Example:** *marcsplit marc_file.mrc 1000"*
 
 Splits large MARC file into multiple files, each containing *num_records* records. If *num_records* isn't provided, default is 500
 
