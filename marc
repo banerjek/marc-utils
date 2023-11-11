@@ -1,50 +1,61 @@
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
-BEGIN { 
-        if(length("а") != 2) {
-                badawk = 1
-                printf("Your version of awk does not support marc2text -- you need a version that supports the -b switch\\n")
-                exit
-        }
+BEGIN {
+	if(length("а") != 2) {
+		badawk = 1
+		printf("Your version of awk does not support text2marc -- you need a version that supports the -b switch\\n")
+		exit
+	}
 }
-
 {
-   leader=substr($0,1,24)
-   baseaddress=substr(leader,13, 5) + 0
-   record_content=substr($0, baseaddress + 1)
-   directory=substr($0,25, baseaddress - 25)
-   directory_length=length(directory)
-   directory_check=(directory_length % 12)
-   record_length = length($0) + 0
+	if (substr($1, 1, 4) == "=LDR") {
+		leader1 = substr($1, 12, 7) 
+		leader2 = substr($1, 24, 7)
+		directory = ""
+		base_address = 0
+		field_counter = 0 
+		field_length = 0
+		record_content = ""
+		record_counter++
+		}	
+	
+	for (field = 2; field <= NF; ++field) {
+		tag = substr($field, 1, 3)
+	
+		field_content = substr($field, 6)""OFS
+		field_length=sprintf("%04d", length(field_content))
+	
+		directory_address = sprintf("%05d", base_address)
+		base_address = base_address + field_length
 
-	record = "=LDR  "leader
+		directory = directory""tag""field_length""directory_address
+		record_content = record_content""field_content
+		field_counter++
 
-	for (i=1; i<=directory_length; i=i+12) {
-		directory_entry = substr(directory, i, 12)
-		marc_tag = substr(directory, i, 3)
-
-		field_length = substr(directory, i + 3, 4) - 1 
-		starting_pos = substr(directory, i + 7, 5) + 1
-		field_content = substr(record_content, starting_pos, field_length)
-
-		record = record"\\n="marc_tag"  "field_content
+		if ((length(directory) + length(record_content)) > 99000) { field = NF;largerecs++ }
 		}
-
-	print record
+	
+	directory = directory""OFS
+	base_data_address = sprintf("%05d", 24 + length(directory))
+	
+	record_length = 24 + length(directory) + length(record_content) + 1
+	
+	leader = sprintf("%05d", record_length)""leader1""base_data_address""leader2
+	print leader""directory""record_content 
+	
 }
 
 ENDOFAWK
 
-tmp_awk=$(tempfile)
-tmp_mrc=$(tempfile)
+tmp_awk=$(mktemp)
+tmp_txt=$(mktemp)
+
+cp /dev/stdin $tmp_txt
 
 echo -e "${awkscript}" > $tmp_awk
 chmod 700 $tmp_awk
 
-cp /dev/stdin $tmp_mrc
+awk -v ORS=$'\x1d' -v RS='\n\n' -v OFS=$'\x1e' -v FS='\n=' -v SUBFIELD=$'\x1f' -b -f $tmp_awk $tmp_txt
 
-awk -v RS=$'\x1d' -v ORS=$'\n\n' -v FS=$'\x1e' -v OFS='\n' -v SUBFIELD=$'\x1f' -b -f $tmp_awk $tmp_mrc
-
-sleep 1
-rm -f $tmp_mrc $tmp_awk
+rm -f $tmp_awk $tmp_txt

@@ -1,0 +1,50 @@
+read -r -d '' awkscript << "ENDOFAWK"
+#!/usr/bin/awk -f 
+
+BEGIN { 
+        if(length("а") != 2) {
+                badawk = 1
+                printf("Your version of awk does not support marc2text -- you need a version that supports the -b switch\\n")
+                exit
+        }
+}
+
+{
+   leader=substr($0,1,24)
+   baseaddress=substr(leader,13, 5) + 0
+   record_content=substr($0, baseaddress + 1)
+   directory=substr($0,25, baseaddress - 25)
+   directory_length=length(directory)
+   directory_check=(directory_length % 12)
+   record_length = length($0) + 0
+
+	record = "=LDR  "leader
+
+	for (i=1; i<=directory_length; i=i+12) {
+		directory_entry = substr(directory, i, 12)
+		marc_tag = substr(directory, i, 3)
+
+		field_length = substr(directory, i + 3, 4) - 1 
+		starting_pos = substr(directory, i + 7, 5) + 1
+		field_content = substr(record_content, starting_pos, field_length)
+
+		record = record"\\n="marc_tag"  "field_content
+		}
+
+	print record
+}
+
+ENDOFAWK
+
+tmp_awk=$(mktemp)
+tmp_mrc=$(mktemp)
+
+echo -e "${awkscript}" > $tmp_awk
+chmod 700 $tmp_awk
+
+cp /dev/stdin $tmp_mrc
+
+awk -v RS=$'\x1d' -v ORS=$'\n\n' -v FS=$'\x1e' -v OFS='\n' -v SUBFIELD=$'\x1f' -b -f $tmp_awk $tmp_mrc
+
+sleep 1
+rm -f $tmp_mrc $tmp_awk

@@ -2,7 +2,7 @@
 The marc-utils are a set of minimal tools to allow fast analysis of MARC and extractions from files using command line utilities. Functionality is limited to maximize speed and transparency to facilitate modification for needs at hand. They will be most useful if added to your path.
 
 # Table of Contents
-* [**marc**](#marc) -- Converts MARC sent to stdin to text 
+* [**marc**](#marc) -- Converts text in text2marc format sent to stdin to MARC
 * [**marc2text**](#marc2text) -- Convert binary MARC files to text
 * [**marc2tsv**](#marc2tsv) -- Extract MARC fields into TSV file 
 * [**marcextract**](#marcextract) -- Extract record identifier and data from MARC tag matching a pattern 
@@ -12,6 +12,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marcmissing**](#marcmissing) -- Extract MARC records based absence of a specified tag
 * [**marcsearch**](#marcsearch) -- Extract MARC records containing a search pattern
 * [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
+* [**text**](#text) -- Converts MARC on stdin to text
 * [**text2marc**](#text2marc) -- Convert text files to MARC
 
 # Disclaimers
