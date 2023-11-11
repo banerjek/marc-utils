@@ -2,6 +2,7 @@
 The marc-utils are a set of minimal tools to allow fast analysis of MARC and extractions from files using command line utilities. Functionality is limited to maximize speed and transparency to facilitate modification for needs at hand. They will be most useful if added to your path.
 
 # Table of Contents
+* [**marc**](#marc) -- Converts MARC sent to stdin to text 
 * [**marc2text**](#marc2text) -- Convert binary MARC files to text
 * [**marc2tsv**](#marc2tsv) -- Extract MARC fields into TSV file 
 * [**marcextract**](#marcextract) -- Extract record identifier and data from MARC tag matching a pattern 
@@ -21,6 +22,13 @@ The author has no way of knowing your needs or environment, so they may be compl
 bash and a version of awk that understands the "-b" switch (i.e. anything from the past couple decades that's in your base linux distro should be good). However, you may need to install gawk if you're on a Mac.
 
 # The utilities
+
+## marc
+**Usage:** *marc*  
+**Example:** *%! marc* (within vi subshell to view binary record as text)
+**Example:** *cat marcfile.mrc | marc > out.mrc*
+
+Lightweight conversion of MARC to text to simplify viewing binary MARC files without creating temp files. If you want to convert rather than viewfiles, marc2text is a better options
 
 ## marc2text
 **Usage:** *marc2text [filename]*  
