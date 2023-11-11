@@ -26,10 +26,10 @@ bash and a version of awk that understands the "-b" switch (i.e. anything from t
 
 ## marc
 **Usage:** *marc*  
-**Example:** *%! marc* (within vi subshell to view binary record as text)
-**Example:** *cat marcfile.mrc | marc > out.mrc*
+**Example:** *%! marc* (within vi subshell to convert text record to MARC)
+**Example:** *cat marcfile.txt | marc > out.mrc*
 
-Lightweight conversion of MARC to text to simplify viewing binary MARC files without creating temp files. If you want to convert rather than viewfiles, marc2text is a better options
+Lightweight conversion of MARC to text to simplify viewing binary MARC files without creating temp files. Handy for converting text representations from marc2text(not Marcedit) into MARC while in a vi viewing pane. 
 
 ## marc2text
 **Usage:** *marc2text [filename]*  
@@ -95,6 +95,13 @@ The count parameter is optional. If the word "count" is sent, marcsearch only re
 **Example:** *marcsplit marc_file.mrc 1000"*
 
 Splits large MARC file into multiple files, each containing *num_records* records. If *num_records* isn't provided, default is 500
+
+## text
+**Usage:** *text*  
+**Example:** *%! text* (within vi subshell to view binary record as text)
+**Example:** *cat marcfile.mrc | text > out.txt*
+
+Lightweight conversion of MARC to text to simplify viewing binary MARC files without creating temp files. Handy for converting text representations from marc2text into MARC while in a vi viewing pane. 
 
 ## text2marc
 **Usage:** *text2marc [filename]*  
