@@ -36,11 +36,15 @@ BEGIN {
 
 ENDOFAWK
 
-echo -e "${awkscript}" > tmp_checkmarc
-chmod 700 tmp_checkmarc
+tmp_awk=$(tempfile)
+tmp_mrc=$(tempfile)
 
-cp /dev/stdin tmp.mrc
-awk -v RS=$'\x1d' -v ORS=$'\n\n' -v FS=$'\x1e' -v OFS='\n' -v SUBFIELD=$'\x1f' -b -f tmp_checkmarc tmp.mrc 
+echo -e "${awkscript}" > $tmp_awk
+chmod 700 $tmp_awk
+
+cp /dev/stdin $tmp_mrc
+
+awk -v RS=$'\x1d' -v ORS=$'\n\n' -v FS=$'\x1e' -v OFS='\n' -v SUBFIELD=$'\x1f' -b -f $tmp_awk $tmp_mrc
 
 sleep 1
-rm -f tmp_checkmarc tmp.mrc
+rm -f $tmp_mrc $tmp_awk
