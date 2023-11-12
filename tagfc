@@ -1,0 +1,67 @@
+read -r -d '' awkscript << "ENDOFAWK"
+#!/usr/bin/awk -f 
+
+BEGIN { records_found = 0 }
+
+function extract_subfields() { 
+	field_length = substr(directory, i + 3, 4) + 0
+	starting_pos = substr(directory, i + 7, 5) 
+	field_content = ""
+	delete subfields
+
+	field_content = substr(record_content, starting_pos + 3, field_length - 3)
+
+	if (substr(field_content, 1, 1) == SFS) {
+		split(field_content, subfields, SFS)
+		for (subfield_index in subfields) { 
+			subfield = substr(subfields[subfield_index], 1, 1)
+			tagcount[marctag""subfield]++ 
+		}	
+	} else {
+		tagcount[marctag]++ 
+	}
+}
+
+
+{
+        if(length("а") != 2) {
+                badawk = 1
+                printf("Your version of awk does not support marcfc -- you need a version that supports the -b switch\\n")
+                exit
+        }
+
+	leader=substr($0,1,24)
+	baseaddress=substr(leader,13, 5) + 0
+	directory=substr($0,25, baseaddress - 25)
+	directory_length=length(directory) 
+	directory_check=(directory_length % 12)
+	record_content=substr($0, baseaddress + 1)
+	
+	for (i=1; i<=directory_length; i=i+12) {
+		marctag = substr(directory, i, 3)
+		extract_subfields()
+	}
+	
+}
+END {
+	n = asorti(tagcount, sorted_bytag)
+
+	print "Total records: "NR"\\n" 
+
+	for (tag=1; tag<=n; tag++) {
+		print sorted_bytag[tag] ":", tagcount[sorted_bytag[tag]] 
+	}
+}
+
+ENDOFAWK
+
+tmp_awk=$(mktemp)
+tmp_mrc=$(mktemp)
+
+echo -e "${awkscript}" > $tmp_awk
+chmod 700 $tmp_awk
+
+cp /dev/stdin $tmp_mrc
+
+awk -v RS=$'\x1d' -v ORS=$'\n' -v FS=$'\x1e' -v OFS="\t" -v SFS=$'\x1f' -b -f $tmp_awk $tmp_mrc 
+rm -f $tmp_mrc $tmp_awk
