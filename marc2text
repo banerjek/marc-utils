@@ -50,7 +50,7 @@ BEGIN {
 		}
 	}
 
-	print record > OUTFILE
+	if (length(leader) == 24) {print record > OUTFILE}
 	if (NR % 10000 == 0){ printf "Records processed: "NR"\r" }
 
 }
