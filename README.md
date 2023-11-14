@@ -10,6 +10,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marcfc**](#marcfc) -- Provide field and subfield counts
 * [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
 * [**marcmissing**](#marcmissing) -- Extract MARC records based absence of a specified tag
+* [**marcless**](#marcless) -- Page through MARC records through unix less command
 * [**marcsearch**](#marcsearch) -- Extract MARC records containing a search pattern
 * [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
 * [**tag**](#tag) -- Extracts MARC tag from stdin
@@ -83,6 +84,12 @@ Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good re
 **Example:** *marcmissing marc_file\*.mrc 245a*
 
 Extracts MARC records based on absence of a 3 digit tag or 3 digit tag and one character subfield. If no tag is specified, 001 is assumed. 
+
+## marcless
+**Usage:** *marcless [filename]*  
+**Example:** *marcmissing marc_file\*.mrc* 
+
+Page through MARC records dynamically rendered as text. Requires "text" command from this page is in the PATH 
 
 ## marcsearch
 **Usage:** *marcsearch [filename] [marc-tag] [regex_search_expression] [count]*  

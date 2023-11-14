@@ -1,0 +1,11 @@
+infile="${1}"
+
+if [[ ! -f "${infile}" ]];then
+	tmp_mrc=$(mktemp)
+	cp /dev/stdin $tmp_mrc	
+	infile=$tmp_mrc
+fi
+
+cat "${infile}" |text |less
+
+rm -f $tmp_mrc 
