@@ -9,6 +9,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marcextractbyid**](#marcextractbyid) -- Extract records matching a list of identifiers
 * [**marcfc**](#marcfc) -- Provide field and subfield counts
 * [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
+* [**marcgrep**](#marcgrep) -- Search raw file or stdin for regex and render output as text
 * [**marcmissing**](#marcmissing) -- Extract MARC records based absence of a specified tag
 * [**marcless**](#marcless) -- Page through MARC records through unix less command
 * [**marcsearch**](#marcsearch) -- Extract MARC records containing a search pattern
@@ -77,6 +78,12 @@ Gives frequency count for each MARC tag and subfield count. Wildcard expressions
 **Example:** *marcfix marc_file\*.mrc*
 
 Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good records in one file, and separates out problematic records into separate files categorized by issue. Wildcard expressions can be used to process multiple files.
+
+## marcgrep
+**Usage:** *marcgrep [filename] [regex]*  
+**Example:** *marc_file.mrc 12345*
+
+Simple regex match through binary MARC file with output to text.
 
 ## marcmissing
 **Usage:** *marcmissing [filename] [tag]*  
