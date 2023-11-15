@@ -1,0 +1,13 @@
+infile="${1}"
+search="${2}"
+
+if [[ ! -f "${infile}" ]];then
+   tmp_mrc=$(mktemp)
+   cp /dev/stdin $tmp_mrc
+   infile=$tmp_mrc
+   search="${1}"
+fi
+
+awk -v ORS=$'\x1d' -v RS=$'\x1d' -v SEARCH="${search}" '{if ($0 ~ SEARCH){print $0}}' "${infile}" | text
+
+rm -f $tmp_mrc
