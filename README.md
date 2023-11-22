@@ -13,7 +13,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marcmissing**](#marcmissing) -- Extract MARC records based absence of a specified tag
 * [**marcless**](#marcless) -- Page through MARC records through unix less command
 * [**marcsearch**](#marcsearch) -- Extract MARC records containing a search pattern
-* [**marcsort**](#marcsort) -- Sort text representation of MARC file
+* [**marcsort**](#marcsort) -- Sort text representationis of MARC files
 * [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
 * [**tag**](#tag) -- Extracts MARC tag from stdin
 * [**tagfc**](#tagfc) -- Counts MARC fields and subfields from stdin 
@@ -107,6 +107,13 @@ Extracts MARC records where regex_search_expression was found in a MARC tag and 
 
 The count parameter is optional. If the word "count" is sent, marcsearch only reports on how many records it found without extracting them.
 
+## marcsort
+**Usage:** *marcsort [filename] *  
+**Example:** *marcsort mrc_00\*.mrk*
+
+Sort text representations (Marcedit or text2marc) of MARC files in tag order
+
+The count parameter is optional. If the word "count" is sent, marcsearch only reports on how many records it found without extracting them.
 ## marcssplit
 **Usage:** *marcsplit [filename] [num_records]*  
 **Example:** *marcsplit marc_file.mrc 1000"*
