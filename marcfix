@@ -99,7 +99,9 @@ process_file() {
 
 	echo "Processing ${marcfile}"	
 	
-	grep -Pal '\x00' "${marcfile}" > /dev/null && echo "Removing null characters" && sed -i 's/\x0//g' "${marcfile}" 
+	echo "Detecting and removing nulls"
+	 tr < "${marcfile}" -d '\000' > "${marcfile}.tmp"
+	mv "${marcfile}.tmp" "${marcfile}"
 		
 
 	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v FILEROOT="${fileroot}" -b -f tmp_checkmarc "${marcfile}"
