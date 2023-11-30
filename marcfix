@@ -51,8 +51,6 @@ function check_leader() {
 	
 	if (reported_length != record_length){good_length = 0}
 	if (substr(leader, 7, 1)  ~ /[uvxyz]/){bibrec = 0;found245 = 1}
-	#if (substr(leader, 6, 1)  !~ /[acdnpif]/){good_leader = 0}
-	#if (bibrec == 1 && substr(leader,8,1) !~ /[abcdims]/){good_leader = 0}
 
 }
 {
