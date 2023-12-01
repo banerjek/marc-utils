@@ -123,13 +123,13 @@ Splits large MARC file into multiple files, each containing *num_records* record
 **Usage:** *tag [marc tag]*  
 **Example:** *%! tag 650x* (within vi subshell to view 650x)
 
-Extract a single tag from stdin. 
+Extract a single tag from raw MARC file on stdin. 
 
 ## tagfc
 **Usage:** *tagfc*  
 **Example:** *%! tagfc (within vi subshell)
 
-Get a frequency count of all tags and subfields
+Get a frequency count of all tags and subfields from raw MARC file on stdin
 
 ## text
 **Usage:** *text*  
