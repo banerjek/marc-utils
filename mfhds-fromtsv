@@ -9,7 +9,7 @@ read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
 BEGIN {
-	record_template="=LDR  00159cx  a22000733  4500"FS"=001  HOLDINGSID"FS"=004  BIBID"FS"=008  9810090p    8   4001aueng0000000"FS"=852  0"SFS"bLOCATION"SFS"hCALLNUM"
+	record_template="=LDR  00159cx  a22000733  4500"FS"=001  HOLDINGSID"FS"=004  BIBID"FS"=008  9810090p    8   4001aueng0000000"FS"=852  0"SFS"bLOCATION"SFS"kCALLPREFIX"SFS"hCALLNUM"
 
 	if(length("а") != 2) {
 		badawk = 1
@@ -33,8 +33,17 @@ function build_mfhd() {
 	gsub(/BIBID/, $bibId, text_mfhd)
 	gsub(/HOLDINGSID/, holdId, text_mfhd)
 	gsub(/CALLNUM/, callNum, text_mfhd)
+	if (callPrefix > 0) {gsub(/CALLPREFIX/, $callPrefix, text_mfhd)} else {gsub(/CALLPREFIX/, "", text_mfhd)}
 
 	### nonrequired fields must be entered here
+	if (recType > 0) {
+		switch($recType) {
+			case "s":
+				leader1 = "cy  a22"
+				break
+		}
+	}
+
 	if (publicNote > 0 && $publicNote ~ /[a-zA-Z0-9]/) {
 		split($publicNote, statements, ";")
 		for (statement in statements) { text_mfhd = text_mfhd""FS"=538    "SFS"a"statements[statement] }
@@ -99,10 +108,30 @@ function build_mfhd() {
 	sub("\r", "", $NF)
 
 	if (NR == 1) {
+
+		if ( FILENAME ~ /[Ii}[Tt][Ee][Mm]/ ){ 
+				itemfile = 1
+				printf ("\\n\\nItem file detected -- ignoring note fields\\n\\n") 
+			} else { 
+				printf ("\\n\\nCheckin or holdings file detected fields\\n\\n") 
+		}
+
 		for(i=1;i<=NF;i++) {
 
 			switch(toupper($i)) {
 				case "BIBNO":
+					bibId=i
+					printf ("Bib ID found in "$i"\\n")
+					break
+				case "BIB_NO":
+					bibId=i
+					printf ("Bib ID found in "$i"\\n")
+					break
+				case "RECORD#BIBLIOGRAPHIC":
+					bibId=i
+					printf ("Bib ID found in "$i"\\n")
+					break
+				case "RECORD#BIBLIO":
 					bibId=i
 					printf ("Bib ID found in "$i"\\n")
 					break
@@ -114,9 +143,33 @@ function build_mfhd() {
 					callNumpos=i
 					printf ("Call number found in "$i"\\n")
 					break
+				case "CALL":
+					callNumpos=i
+					printf ("Call number found in "$i"\\n")
+					break
 				case "CALL#":
 					callNumpos=i
 					printf ("Call number found in "$i"\\n")
+					break
+				case "CALL#ITEM":
+					callNumpos=i
+					printf ("Call number found in "$i"\\n")
+					break
+				case "CALLPREFIX":
+					callPrefix=i
+					printf ("Call number prefix found in "$i"\\n")
+					break
+				case "BIB_CALL":
+					callNumFallback=i
+					printf ("Call number fallback found in "$i"\\n")
+					break
+				case "CALL#BIBLIOGRAPHIC":
+					callNumFallback=i
+					printf ("Call number fallback found in "$i"\\n")
+					break
+				case "CALL#BIBLIO":
+					callNumFallback=i
+					printf ("Call number fallback found in "$i"\\n")
 					break
 				case "CALL_NONMARC":
 					callNumFallback=i
@@ -124,38 +177,59 @@ function build_mfhd() {
 					break
 				case "LIBHAS":
 					libHas=i
-					printf ("Lib was found in "$i"\\n")
+					printf ("Lib has was found in "$i"\\n")
+					break
+				case "LIBHAS.HASCHECKIN":
+					libHas=i
+					printf ("Lib has was found in "$i"\\n")
 					break
 				case "HOLDID":
 					holdIdpos=i
 					holdId=i
 					printf ("Holdings ID fallback found in "$i"\\n")
 					break
+				case "INT.NOTE":
+					if (itemfile != 1) {
+						actionNote=i
+						printf ("Action note was found in "$i"\\n")
+					}
+					break
 				case "ACTIONNOTE":
-					actionNote=i
-					printf ("Action note was found in "$i"\\n")
+					if (itemfile != 1) {
+						actionNote=i
+						printf ("Action note was found in "$i"\\n")
+					}
 					break
 				case "BINDINGNOTE":
-					bindingNote=i
-					printf ("Binding note was found in "$i"\\n")
+					if (itemfile != 1) {
+						bindingNote=i
+						printf ("Binding note was found in "$i"\\n")
+					}
 					break
 				case "COPYNOTE":
-					copyNote=i
-					printf ("Copy note was found in "$i"\\n")
+					if (itemfile != 1) {
+						copyNote=i
+						printf ("Copy note was found in "$i"\\n")
+					}
 					break
 				case "OWNERSHIPNOTE":
-					ownershipNote=i
-					printf ("Ownership note was found in "$i"\\n")
+					if (itemfile != 1) {
+						ownershipNote=i
+						printf ("Ownership note was found in "$i"\\n")
+					}
 					break
 				case "PUBLICNOTE":
-					publicNote=i
-					printf ("Public note was found in "$i"\\n")
+					if (itemfile != 1) {
+						publicNote=i
+						printf ("Public note was found in "$i"\\n")
+					}
 					break
 			}
 		}
 	if (! bibId) {  printf ("\\nNo valid bib ID field could be found\\n"); exit }
 	if (! location ) {  printf ("\\nNo valid location field could be found\\n"); exit }
 	if (! callNumpos ) {  printf ("\\nNo valid call number field could be found\\n"); exit }
+	printf("\\n\\n")
 	}
 
 	gsub(/^ */, "", $location) 
