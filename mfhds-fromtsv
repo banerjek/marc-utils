@@ -3,7 +3,14 @@ infile="${1}"
 if [[ -z ${infile} ]];then echo "You must supply a file name for a tab delimited file\nYou will need to modify the fields in the awk script to match the headers of your input file";fi
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
-outfile="mfhds_fromitems.mrc"
+
+if [[ "${fileroot}" =~ [Ii}[Tt][Ee][Mm] ]];then
+	echo  "\nItem file detected -- ignoring note fields\n"
+	outfile="mfhds_fromitems.mrc"
+else
+	echo  "\nCheckin file assumed. Place the string \"item\" in your source file name if this is not intended\n"
+	outfile="mfhds_fromcheckins.mrc"
+fi
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
@@ -109,12 +116,7 @@ function build_mfhd() {
 
 	if (NR == 1) {
 
-		if ( FILENAME ~ /[Ii}[Tt][Ee][Mm]/ ){ 
-				itemfile = 1
-				printf ("\\n\\nItem file detected -- ignoring note fields\\n\\n") 
-			} else { 
-				printf ("\\n\\nCheckin or holdings file detected fields\\n\\n") 
-		}
+		if ( FILENAME ~ /[Ii}[Tt][Ee][Mm]/ ){ itemfile = 1 }
 
 		for(i=1;i<=NF;i++) {
 
@@ -228,16 +230,19 @@ function build_mfhd() {
 		}
 	if (! bibId) {  printf ("\\nNo valid bib ID field could be found\\n"); exit }
 	if (! location ) {  printf ("\\nNo valid location field could be found\\n"); exit }
-	if (! callNumpos ) {  printf ("\\nNo valid call number field could be found\\n"); exit }
+	if (! callNumpos && ! callNumFallback ) {  emptyCall = 1 } else { emptyCall = 0 }
 	printf("\\n\\n")
 	}
 
 	gsub(/^ */, "", $location) 
 	gsub(/ *$/, "", $location) 
 
-	callNum = $callNumpos
-
-	if (callNumFallback && length($callNumpos) == 0) { callNum = $callNumFallback }
+	if (emptyCall == 0) {
+		callNum = $callNumpos
+		if (callNumFallback && length($callNumpos) == 0) { callNum = $callNumFallback }
+	} else {
+		if (NR == 1) { callNum = "callNum" } else { callNum = "" }
+	}
 
 	if (! holdIdpos) {holdId = $bibId""$location""callNum; gsub(/[^a-zA-Z0-9]/, "", holdId)} else { holdId = $holdIdpos }
 
