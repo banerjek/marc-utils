@@ -38,7 +38,7 @@ fi
 
 if [[ ${system} == "eos" ]];then
 	identifier="001"
-	item_field="949"
+	item_field="949p"
 	item_call_subfield="k"
 	location_subfield="b"
 
@@ -56,7 +56,7 @@ fi
 if [[ ${system}  == "sierra"  ]];then
 	bib_call_field="090"
 	identifier="907a"
-	item_field="945"
+	item_field="945y"
 	item_call_subfield="a"
 	location_subfield="l"
 
@@ -108,7 +108,7 @@ fi
 if [[ ${system}  == "sirsi"  ]];then
 	bib_call_field="090"
 	identifier="001"
-	item_field="949"
+	item_field="949p
 	item_call_subfield="k"
 	location_subfield="b"
 
@@ -135,9 +135,26 @@ if [[ ${system}  == "sirsi"  ]];then
 	labels[10]="VOLUME"
 fi
 
+if [[ ${system}  == "softlink"  ]];then
+	identifier="907a"
+	item_field="995a"
+	item_call_subfield="k"
+	location_subfield="a"
+
+	tags[1]="a"
+	tags[2]="j"
+	tags[3]="y"
+	tags[4]="Z"
+	
+	labels[1]="LOCATION"
+	labels[2]="CALL"
+	labels[3]="BARCODE"
+	labels[4]="ITYPE"
+fi
+
 if [[ ${system} == "wms"  ]];then
 	identifier="004"
-	item_field="876"
+	item_field="876p"
 	item_call_subfield=""
 	location_subfield=""
 
@@ -173,11 +190,13 @@ BEGIN { records_found = 0
 		split(TAGLIST, tags, " ")
 		split(LABELLIST, labels, " ")
 		num_tags = length(tags)
-	
+		required_item_subfield = substr(ITEMFIELD, 4, 1)
+		ITEMFIELD = substr(ITEMFIELD, 1, 3)
 	}
 }
 
 function extract_subfields() { 
+	real_item = 0
 	for (j=1;j<=num_tags;j++) { item_subfield[j] = "" }
 
 	split(field_content, subfields, SFS)
@@ -185,6 +204,7 @@ function extract_subfields() {
 	for (j=1;j<=num_tags;j++) {
 		for (subfield in subfields) {
 			if (substr(subfields[subfield], 1, 1) == tags[j]) {
+				if (tags[j] == required_item_subfield) {real_item = 1}
 				if (item_subfield[j] == "") {
 					item_subfield[j] = substr(subfields[subfield],2)
 					gsub(/^[ \\-]*$/, "", item_subfield[j])
@@ -210,13 +230,13 @@ function extract_subfields() {
 
 	gsub(/[^a-zA-Z0-9]/, "", holdid)
 
-	lineout = tag001"\t"bibno"\t"holdid"\t"bib_call
+	lineout = tag001"\t"bibno"\t"holdid"\t"bib_call"\t"rec_type
 
 	for (j=1;j<=num_tags;j++) {
 		lineout = lineout"\t"item_subfield[j]
 	}
 	
-	if (bibno != "") { print lineout >> OUTFILE }
+	if (bibno != "" && real_item == 1) { print lineout >> OUTFILE }
 	lineout = ""
 }
 
@@ -301,10 +321,11 @@ directory=substr($0,25, baseaddress - 25)
 directory_length=length(directory) 
 directory_check=(directory_length % 12)
 record_content=substr($0, baseaddress + 1)
+rec_type=substr(leader, 8, 1)
 
 if (directory_check == 0) {
 	if (NR == 1) { 
-		lineout = "tag001\tBIB_NO\tHOLDID\tBIB_CALL"
+		lineout = "tag001\tBIB_NO\tHOLDID\tBIB_CALL\tRECTYPE"
 		for (i=1;i<=num_tags;i++) {
 			lineout = lineout"\t"labels[i]
 		}
