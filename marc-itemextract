@@ -1,5 +1,5 @@
 
-knownsystems=("sierra" "wms" "eos" "sirsi")
+knownsystems=("sierra" "wms" "eos" "sirsi" "softlink")
 
 if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] "
@@ -138,7 +138,7 @@ fi
 if [[ ${system}  == "softlink"  ]];then
 	identifier="907a"
 	item_field="995a"
-	item_call_subfield="k"
+	item_call_subfield="j"
 	location_subfield="a"
 
 	tags[1]="a"
