@@ -147,7 +147,8 @@ if [[ ${system}  == "softlink"  ]];then
 	tags[4]="Z"
 	tags[5]="h"
 	tags[6]="e"
-	tags[6]="u"
+	tags[7]="u"
+	tags[8]="J"
 	
 	labels[1]="LOCATION"
 	labels[2]="CALL"
@@ -155,7 +156,8 @@ if [[ ${system}  == "softlink"  ]];then
 	labels[4]="ITYPE"
 	labels[5]="COPY"
 	labels[6]="ACCESSION"
-	labels[6]="STATUS"
+	labels[7]="STATUS"
+	labels[8]="NOTE"
 fi
 
 if [[ ${system} == "wms"  ]];then
