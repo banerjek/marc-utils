@@ -1,5 +1,5 @@
 
-knownsystems=("sierra" "wms" "eos" "sirsi")
+knownsystems=("sierra" "wms" "eos" "sirsi" "softlink")
 
 if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] "
@@ -53,7 +53,7 @@ if [[ ${system} == "eos" ]];then
 	labels[4]="LOCATION"
 fi
 
-if [[ ${system}  == "sierra"  ]];then
+if [[ ${system} == "sierra" ]];then
 	bib_call_field="090"
 	identifier="907a"
 	item_field="945l"
@@ -105,10 +105,10 @@ if [[ ${system}  == "sierra"  ]];then
 	labels[21]="CREATED"
 fi
 
-if [[ ${system}  == "sirsi"  ]];then
+if [[ ${system} == "sirsi" ]];then
 	bib_call_field="090"
 	identifier="001"
-	item_field="949p
+	item_field="949p"
 	item_call_subfield="k"
 	location_subfield="b"
 
@@ -135,7 +135,7 @@ if [[ ${system}  == "sirsi"  ]];then
 	labels[10]="VOLUME"
 fi
 
-if [[ ${system}  == "softlink"  ]];then
+if [[ ${system} == "softlink" ]];then
 	identifier="200a"
 	item_field="995a"
 	item_call_subfield="k"
@@ -295,7 +295,6 @@ function extract_identifiers() {
 function extract_items() {
 	for (i=1; i<=directory_length; i=i+12) {
 
-		####
       if (substr(directory, i, 3) == BIB_CALL_FIELD) {
 
          field_length = substr(directory, i + 3, 4) + 0
