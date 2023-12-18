@@ -136,7 +136,7 @@ if [[ ${system}  == "sirsi"  ]];then
 fi
 
 if [[ ${system}  == "softlink"  ]];then
-	identifier="907a"
+	identifier="200a"
 	item_field="995a"
 	item_call_subfield="k"
 	location_subfield="a"
