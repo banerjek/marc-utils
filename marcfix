@@ -51,6 +51,8 @@ function check_leader() {
 	
 	if (reported_length != record_length){good_length = 0}
 	if (substr(leader, 7, 1)  ~ /[uvxyz]/){bibrec = 0;found245 = 1}
+	#if (substr(leader, 6, 1)  !~ /[acdnpif]/){good_leader = 0}
+	#if (bibrec == 1 && substr(leader,8,1) !~ /[abcdims]/){good_leader = 0}
 
 }
 {
@@ -78,6 +80,7 @@ END {
 ORS=OFS="\\n"
 close(OUTFILE)
 
+printf "Good records: %d Bad records: %d Issues: %s\r", goodrecs, badrecs, badtext
 print "";print goodrecs " records were output to "OUTFILE" and " badrecs " records were output to the files listed below and prefixed with bad_" 
 if (totaloversized > 0) {print totaloversized" oversized were truncated"}
 }
@@ -97,6 +100,7 @@ process_file() {
 
 	echo "Processing ${marcfile}"	
 	
+	grep -Pal '\x00' "${marcfile}" > /dev/null && echo "Removing null characters" && sed -i 's/\x0//g' "${marcfile}" 
 	echo "Detecting and removing nulls"
 	 tr < "${marcfile}" -d '\000' > "${marcfile}.tmp"
 	mv "${marcfile}.tmp" "${marcfile}"
