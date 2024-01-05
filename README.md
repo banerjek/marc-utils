@@ -3,6 +3,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 
 # Table of Contents
 * [**marc**](#marc) -- Converts text in text2marc format sent to stdin to MARC
+* [**marc2bibsandholdings**](#marc2bibsandholdings) -- Separate bib from holdings records
 * [**marc2text**](#marc2text) -- Convert binary MARC files to text
 * [**marc2tsv**](#marc2tsv) -- Extract MARC fields into TSV file 
 * [**marcextract**](#marcextract) -- Extract record identifier and data from MARC tag matching a pattern 
@@ -35,6 +36,12 @@ bash and a version of awk that understands the "-b" switch (i.e. anything from t
 **Example:** *cat marcfile.txt | marc > out.mrc*
 
 Lightweight conversion of MARC to text to simplify viewing binary MARC files without creating temp files. Handy for converting text representations from marc2text(not Marcedit) into MARC while in a vi viewing pane. 
+
+## marc2bibsandholdings
+**Usage:** *marc2bibsandholdings [filename]*  
+**Example:** *marc2bibsandholdings marc_file\*.mrc*
+
+Separates bibs and holdings records from an integrated file. No processing is performed on either record type.
 
 ## marc2text
 **Usage:** *marc2text [filename]*  
