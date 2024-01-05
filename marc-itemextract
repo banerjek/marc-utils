@@ -1,5 +1,5 @@
 
-knownsystems=("sierra" "wms" "eos" "sirsi" "softlink")
+knownsystems=("destiny" "eos" "sierra" "sirsi" "wms")
 
 if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] "
@@ -23,8 +23,8 @@ fi
 
 foundsystem=0
 
-for system in "${knownsystems[@]}";do
-	if [[ ${system} == $system ]];then foundsystem=1;fi
+for checksystem in "${knownsystems[@]}";do
+	if [[ ${system} == $checksystem ]];then foundsystem=1;fi
 done
 
 
@@ -35,6 +35,33 @@ if [[ ${foundsystem} -eq 0 ]];then
 fi
 
 ## be sure to map call number and location to holdid
+
+if [[ ${system} == "destiny" ]];then
+	special[1]="852"
+
+	identifier="001"
+	item_field="852p"
+	item_call_subfield="h"
+	location_subfield="b"
+
+	tags[1]="p"
+	tags[2]="h"
+	tags[3]="u"
+	tags[4]="b"
+	tags[5]="j"
+	tags[6]="t"
+	tags[7]="z"
+	tags[8]="r"
+
+	labels[1]="barcode"
+	labels[2]="call#"
+	labels[3]="itype"
+	labels[4]="location"
+	labels[5]="volume"
+	labels[6]="copy"
+	labels[7]="note"
+	labels[7]="catdate"
+fi
 
 if [[ ${system} == "eos" ]];then
 	identifier="001"
@@ -47,13 +74,13 @@ if [[ ${system} == "eos" ]];then
 	tags[3]="o"
 	tags[4]="b"
 
-	labels[1]="BARCODE"
-	labels[2]="CALL#"
-	labels[3]="ITYPE"
-	labels[4]="LOCATION"
+	labels[1]="barcode"
+	labels[2]="call#"
+	labels[3]="itype"
+	labels[4]="location"
 fi
 
-if [[ ${system} == "sierra" ]];then
+if [[ ${system}  == "sierra"  ]];then
 	bib_call_field="090"
 	identifier="907a"
 	item_field="945l"
@@ -82,30 +109,30 @@ if [[ ${system} == "sierra" ]];then
 	tags[20]="y"
 	tags[21]="z"
 
-	labels[1]="CALL_MARC"
-	labels[2]="CALL_NONMARC"
-	labels[3]="VOLUME"
-	labels[4]="COPY"
-	labels[5]="BARCODE"
-	labels[6]="AGENCY"
-	labels[7]="LOCATION"
-	labels[8]="MSG"
-	labels[9]="NOTE"
-	labels[10]="ICODE2"
-	labels[11]="PRICE"
-	labels[12]="IMSG"
-	labels[13]="OPACMSG"
-	labels[14]="STATUS"
-	labels[15]="ITYPE"
-	labels[16]="TOTCHK"
-	labels[17]="TOTRENWL"
-	labels[18]="YTDCIRC"
-	labels[19]="LYCIRC"
-	labels[20]="RECORD#ITEM"
-	labels[21]="CREATED"
+	labels[1]="call_marc"
+	labels[2]="call_nonmarc"
+	labels[3]="volume"
+	labels[4]="copy"
+	labels[5]="barcode"
+	labels[6]="agency"
+	labels[7]="location"
+	labels[8]="msg"
+	labels[9]="note"
+	labels[10]="icode2"
+	labels[11]="price"
+	labels[12]="imsg"
+	labels[13]="opacmsg"
+	labels[14]="status"
+	labels[15]="itype"
+	labels[16]="totchk"
+	labels[17]="totrenwl"
+	labels[18]="ytdcirc"
+	labels[19]="lycirc"
+	labels[20]="record#item"
+	labels[21]="created"
 fi
 
-if [[ ${system} == "sirsi" ]];then
+if [[ ${system}  == "sirsi"  ]];then
 	bib_call_field="090"
 	identifier="001"
 	item_field="949p"
@@ -123,20 +150,20 @@ if [[ ${system} == "sirsi" ]];then
 	tags[9]="p"
 	tags[10]="v"
 	
-	labels[1]="LOCATION"
-	labels[2]="COPY"
-	labels[3]="CAT_DATE"
-	labels[4]="NOTE"
-	labels[5]="CALLPREFIX"
-	labels[6]="CALL"
-	labels[7]="NOTE"
-	labels[8]="ITYPE"
-	labels[9]="BARCODE"
-	labels[10]="VOLUME"
+	labels[1]="location"
+	labels[2]="copy"
+	labels[3]="cat_date"
+	labels[4]="note"
+	labels[5]="callprefix"
+	labels[6]="call"
+	labels[7]="note"
+	labels[8]="itype"
+	labels[9]="barcode"
+	labels[10]="volume"
 fi
 
-if [[ ${system} == "softlink" ]];then
-	identifier="200a"
+if [[ ${system}  == "softlink"  ]];then
+	identifier="907a"
 	item_field="995a"
 	item_call_subfield="k"
 	location_subfield="a"
@@ -150,14 +177,14 @@ if [[ ${system} == "softlink" ]];then
 	tags[7]="u"
 	tags[8]="J"
 	
-	labels[1]="LOCATION"
-	labels[2]="CALL"
-	labels[3]="BARCODE"
-	labels[4]="ITYPE"
-	labels[5]="COPY"
-	labels[6]="ACCESSION"
-	labels[7]="STATUS"
-	labels[8]="NOTE"
+	labels[1]="location"
+	labels[2]="call"
+	labels[3]="barcode"
+	labels[4]="itype"
+	labels[5]="copy"
+	labels[6]="accession"
+	labels[7]="status"
+	labels[8]="note"
 fi
 
 if [[ ${system} == "wms"  ]];then
@@ -171,14 +198,15 @@ if [[ ${system} == "wms"  ]];then
 	tags[3]="x"
 	tags[4]="z"
 
-	labels[1]="BARCODE"
-	labels[2]="VOLUME"
-	labels[3]="IMSG"
-	labels[4]="OPACMSG"
+	labels[1]="barcode"
+	labels[2]="volume"
+	labels[3]="imsg"
+	labels[4]="opacmsg"
 fi
 
 taglist="$(echo ${tags[@]})"
 labellist="$(echo ${labels[@]})"
+speciallist="$(echo ${special[@]})"
 
 echo "Starting processing. Please wait"
 
@@ -197,10 +225,30 @@ BEGIN { records_found = 0
 
 		split(TAGLIST, tags, " ")
 		split(LABELLIST, labels, " ")
+		split(SPECIALLIST, special, " ")
+
 		num_tags = length(tags)
+
 		required_item_subfield = substr(ITEMFIELD, 4, 1)
 		ITEMFIELD = substr(ITEMFIELD, 1, 3)
 	}
+}
+
+function destiny_852() { 
+	# material type
+	sub("@a", SFS"u", field_content)
+
+	# cat date
+	sub("@c", SFS"r", field_content)
+
+	# extract enumeration, first level only
+	sub("@j", SFS"j", field_content)
+	gsub("(@i)*"SFS, SFS, field_content)
+	sub("@j@j", "", field_content)
+	gsub("@[ij]", " ", field_content)
+
+	# pitch all subfield b's
+	sub("@b", SFS"8", field_content)
 }
 
 function extract_subfields() { 
@@ -249,6 +297,7 @@ function extract_subfields() {
 }
 
 function extract_identifiers() {
+
 	tag001=tag004=tag007=bibno=bib_call=holdid=callnum=location=""
 	tagid = substr(IDENTIFIER, 4, 1)
 
@@ -260,6 +309,7 @@ function extract_identifiers() {
 
 			tag001 = substr(record_content, starting_pos, field_length - 1)
 			gsub(/^ *+| +$/, "", tag001)
+			gsub(FS, "", tag001)
 		}
 		if (substr(directory, i, 3) == "004") {
 
@@ -286,7 +336,8 @@ function extract_identifiers() {
 						bibno = substr(subfields[subfield],2)
 					}	
 				}
-			gsub(/^ *+| +$/, "", bibno)
+			#gsub(/^ *+| +$/, "", bibno)
+			gsub(/[^a-zA-Z0-9]/, "", bibno)
 			}
 		}
 	}
@@ -294,8 +345,10 @@ function extract_identifiers() {
 
 function extract_items() {
 	for (i=1; i<=directory_length; i=i+12) {
+		marc_tag = substr(directory, i, 3)
 
-      if (substr(directory, i, 3) == BIB_CALL_FIELD) {
+		####
+      if (marc_tag == BIB_CALL_FIELD) {
 
          field_length = substr(directory, i + 3, 4) + 0
          starting_pos = substr(directory, i + 7, 5)
@@ -304,7 +357,7 @@ function extract_items() {
          gsub(subfield_regex, " ", bib_call)
          }
 
-		if (substr(directory, i, 3) == ITEMFIELD) {
+		if (marc_tag == ITEMFIELD) {
 
 			field_length = substr(directory, i + 3, 4) + 0
 			starting_pos = substr(directory, i + 7, 5) 
@@ -315,6 +368,15 @@ function extract_items() {
 			} else {
 				field_content = substr(record_content, starting_pos + 1, field_length - 1)
 			}
+
+			for (special_iter in special) { 
+				if (marc_tag == special[special_iter]) { 
+					functionByVariable=SYSTEM"_"marc_tag
+
+					@functionByVariable()		
+				} 
+			}
+
 			extract_subfields()
 		}
 	}
@@ -332,7 +394,7 @@ rec_type=substr(leader, 8, 1)
 
 if (directory_check == 0) {
 	if (NR == 1) { 
-		lineout = "tag001\tBIB_NO\tHOLDID\tBIB_CALL\tRECTYPE"
+		lineout = "tag001\tbib_no\tholdid\tbib_call\trectype"
 		for (i=1;i<=num_tags;i++) {
 			lineout = lineout"\t"labels[i]
 		}
@@ -353,7 +415,7 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
-awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${identifier}" -v ITEMFIELD="${item_field}" -v CALL="${item_call_subfield}" -v BIB_CALL_FIELD="${bib_call_field}" -v LOCATION="${location_subfield}" -v TAGLIST="${taglist}" -v LABELLIST="${labellist}" -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${identifier}" -v ITEMFIELD="${item_field}" -v CALL="${item_call_subfield}" -v BIB_CALL_FIELD="${bib_call_field}" -v LOCATION="${location_subfield}" -v TAGLIST="${taglist}" -v LABELLIST="${labellist}" -v SPECIALLIST="${speciallist}" -v SYSTEM="${system}" -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
 echo
 
 rm -f tmp_checkmarc
