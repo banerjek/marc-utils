@@ -1,5 +1,5 @@
 
-knownsystems=("destiny" "eos" "opals" "opals" "sierra" "sirsi" "wms")
+knownsystems=("destiny" "eos" "opals" "sierra" "sirsi" "softlink" "wms")
 
 if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] "
