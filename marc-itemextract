@@ -1,5 +1,5 @@
 
-knownsystems=("destiny" "eos" "sierra" "sirsi" "wms")
+knownsystems=("destiny" "eos" "opals" "opals" "sierra" "sirsi" "wms")
 
 if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] "
@@ -78,6 +78,33 @@ if [[ ${system} == "eos" ]];then
 	labels[2]="call#"
 	labels[3]="itype"
 	labels[4]="location"
+fi
+
+if [[ ${system} == "opals" ]];then
+	identifier="001"
+	item_field="852p"
+	item_call_subfield="h"
+	location_subfield="b"
+
+	tags[1]="p"
+	tags[2]="k"
+	tags[3]="h"
+	tags[4]="i"
+	tags[5]="m"
+	tags[6]="v"
+	tags[7]="t"
+	tags[8]="3"
+	tags[9]="9"
+
+	labels[1]="barcode"
+	labels[2]="call#prefix"
+	labels[3]="call#"
+	labels[4]="call#"
+	labels[5]="call#suffix"
+	labels[6]="volume"
+	labels[7]="copy"
+	labels[8]="mattype"
+	labels[9]="price"
 fi
 
 if [[ ${system}  == "sierra"  ]];then
