@@ -279,7 +279,7 @@ function destiny_852() {
 	for (i in volume_info) {
 		sub(/^[ij]/, "", volume_info[i])
 	}
-	vol_subfield = volume_info[2]""volume_info[5]", "volume_info[3]""volume_info[6]", "volume_info[4]""volume_info[7]
+	vol_subfield = volume_info[2]" "volume_info[5]", "volume_info[3]" "volume_info[6]", "volume_info[4]" "volume_info[7]
 	sub("[ ,]*$", "", vol_subfield)
 	field_content = field_content""SFS"j"vol_subfield
 
