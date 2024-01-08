@@ -243,7 +243,6 @@ read -r -d '' awkscript << "ENDOFAWK"
 BEGIN { records_found = 0 
 
 		subfield_regex=SFS"."
-		not_SFS="[^"SFS"]*"
 
       if (length("а") != 2) {
                 badawk = 1
@@ -279,13 +278,15 @@ function destiny_852() {
 	for (i in volume_info) {
 		sub(/^[ij]/, "", volume_info[i])
 	}
-	vol_subfield = volume_info[2]" "volume_info[5]", "volume_info[3]" "volume_info[6]", "volume_info[4]" "volume_info[7]
-	sub("[ ,]*$", "", vol_subfield)
+	vol_subfield = volume_info[2]" "volume_info[5]" "volume_info[3]" "volume_info[6]" "volume_info[4]" "volume_info[7]
+	sub(" *$", "", vol_subfield)
 	field_content = field_content""SFS"j"vol_subfield
 
 	# pitch all subfield b's
 	sub("@b", SFS"8", field_content)
-	gsub("@"not_SFS, "", field_content)
+
+	# pitch all remaining @fields
+	gsub("@[^"SFS"]*", "", field_content)
 }
 
 function extract_subfields() { 
