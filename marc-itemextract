@@ -243,6 +243,7 @@ read -r -d '' awkscript << "ENDOFAWK"
 BEGIN { records_found = 0 
 
 		subfield_regex=SFS"."
+		not_SFS="[^"SFS"]*"
 
       if (length("а") != 2) {
                 badawk = 1
@@ -264,18 +265,27 @@ BEGIN { records_found = 0
 function destiny_852() { 
 	# material type
 	sub("@a", SFS"u", field_content)
+	vol_subfield=""
 
 	# cat date
 	sub("@c", SFS"r", field_content)
 
-	# extract enumeration, first level only
-	sub("@j", SFS"j", field_content)
-	gsub("(@i)*"SFS, SFS, field_content)
-	sub("@j@j", "", field_content)
-	gsub("@[ij]", " ", field_content)
+	# volume info is in @j@j@j@i@i@i with label in j
+	# and enum in @i. Pair things up and string it together
+
+	match(field_content, "@j[^"SFS"]*", val)
+	split(val[0], volume_info, "@")
+
+	for (i in volume_info) {
+		sub(/^[ij]/, "", volume_info[i])
+	}
+	vol_subfield = volume_info[2]""volume_info[5]", "volume_info[3]""volume_info[6]", "volume_info[4]""volume_info[7]
+	sub("[ ,]*$", "", vol_subfield)
+	field_content = field_content""SFS"j"vol_subfield
 
 	# pitch all subfield b's
 	sub("@b", SFS"8", field_content)
+	gsub("@"not_SFS, "", field_content)
 }
 
 function extract_subfields() { 
