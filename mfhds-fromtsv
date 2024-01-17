@@ -116,6 +116,8 @@ function build_mfhd() {
 
 	if (NR == 1) {
 
+		itemfile = 0
+
 		if ( FILENAME ~ /[Ii}[Tt][Ee][Mm]/ ){ itemfile = 1 }
 
 		for(i=1;i<=NF;i++) {
@@ -126,6 +128,10 @@ function build_mfhd() {
 					printf ("Bib ID found in "$i"\\n")
 					break
 				case "BIB_NO":
+					bibId=i
+					printf ("Bib ID found in "$i"\\n")
+					break
+				case "BIB_ID":
 					bibId=i
 					printf ("Bib ID found in "$i"\\n")
 					break
@@ -146,6 +152,10 @@ function build_mfhd() {
 					printf ("Call number found in "$i"\\n")
 					break
 				case "CALL":
+					callNumpos=i
+					printf ("Call number found in "$i"\\n")
+					break
+				case "CALL_NUMBER":
 					callNumpos=i
 					printf ("Call number found in "$i"\\n")
 					break
@@ -190,38 +200,49 @@ function build_mfhd() {
 					holdId=i
 					printf ("Holdings ID fallback found in "$i"\\n")
 					break
+				case "HOLDINGS_ID":
+					holdIdpos=i
+					holdId=i
+					printf ("Holdings ID fallback found in "$i"\\n")
+					break
 				case "INT.NOTE":
-					if (itemfile != 1) {
+					if (itemfile == 0) {
+						actionNote=i
+						printf ("Action note was found in "$i"\\n")
+					}
+					break
+				case "ACQUISITION_STATUS":
+					if (itemfile == 0) {
 						actionNote=i
 						printf ("Action note was found in "$i"\\n")
 					}
 					break
 				case "ACTIONNOTE":
-					if (itemfile != 1) {
+					if (itemfile == 0) {
 						actionNote=i
 						printf ("Action note was found in "$i"\\n")
 					}
 					break
 				case "BINDINGNOTE":
-					if (itemfile != 1) {
+					if (itemfile == 0) {
 						bindingNote=i
 						printf ("Binding note was found in "$i"\\n")
 					}
 					break
 				case "COPYNOTE":
-					if (itemfile != 1) {
+					if (itemfile == 0) {
 						copyNote=i
 						printf ("Copy note was found in "$i"\\n")
 					}
 					break
 				case "OWNERSHIPNOTE":
-					if (itemfile != 1) {
+					if (itemfile == 0) {
 						ownershipNote=i
 						printf ("Ownership note was found in "$i"\\n")
 					}
 					break
 				case "PUBLICNOTE":
-					if (itemfile != 1) {
+					if (itemfile == 0) {
 						publicNote=i
 						printf ("Public note was found in "$i"\\n")
 					}
