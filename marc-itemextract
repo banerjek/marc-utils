@@ -1,5 +1,5 @@
 
-knownsystems=("destiny" "eos" "opals" "sierra" "sirsi" "softlink" "wms")
+knownsystems=("destiny" "eos" "janium" "opals" "sierra" "sirsi" "softlink" "wms")
 
 if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] "
@@ -78,6 +78,45 @@ if [[ ${system} == "eos" ]];then
 	labels[2]="call#"
 	labels[3]="itype"
 	labels[4]="location"
+fi
+
+if [[ ${system} == "janium" ]];then
+	identifier="001"
+	item_field="999"
+	item_call_subfield="a"
+	location_subfield="l"
+
+	tags[1]="m"
+	tags[2]="l"
+	tags[3]="r"
+	tags[4]="i"
+	tags[5]="m"
+	tags[6]="t"
+	tags[7]="u"
+	tags[8]="v"
+	tags[9]="x"
+	tags[10]="z"
+	tags[11]="0"
+	tags[12]="r"
+	tags[13]="f"
+	tags[14]="g"
+	tags[15]="k"
+
+	labels[1]="library"
+	labels[2]="location"
+	labels[3]="call"
+	labels[4]="barcode2"
+	labels[5]="barcode"
+	labels[6]="mattype"
+	labels[7]="staff_note"
+	labels[8]="volume"
+	labels[9]="staff_note2"
+	labels[10]="staff_note3"
+	labels[11]="copy"
+	labels[12]="loan_type"
+	labels[13]="note"
+	labels[14]="note_inventory"
+	labels[15]="cat_date"
 fi
 
 if [[ ${system} == "opals" ]];then
@@ -162,7 +201,7 @@ fi
 if [[ ${system}  == "sirsi"  ]];then
 	bib_call_field="092"
 	identifier="001"
-	item_field="999p"
+	item_field="999i"
 	item_call_subfield="a"
 	location_subfield="l"
 
@@ -472,7 +511,7 @@ if (directory_check == 0) {
 	extract_items()
 }
 
-if (NR % 10000 == 0){ printf "Records processed: "NR"\r" }
+if (NR % 1000 == 0){ printf "Records processed: "NR"\r" }
 
 }
 END { print NR" records have been processed and sent to "OUTFILE }
