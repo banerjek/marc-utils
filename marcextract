@@ -1,6 +1,5 @@
-if [[ -z $1 || -z $2 || -z $3 ]];then
-	echo "Usage: marcextract [filename] [marcfield] '[searchexpression]' [idtag]"
-	echo "Whole tags including are extracted -- use regular expressions to extract subfields"
+if [[ -z $1 || -z $2 ]];then
+	echo "Usage: marcextract [filename] [marcfield] [idtag]"
 	echo "Subfield delimiter in MARC is hex 1F"
 	echo
 	echo "By default, 001 will be output with the field. Specify 3 character id tag to specify an alternate identifier (whole field will be output)"
@@ -9,8 +8,7 @@ if [[ -z $1 || -z $2 || -z $3 ]];then
 else
 	infile="${1}"
 	marctag=${2}
-	search="${3}"
-	idtag="${4}"
+	idtag="${3}"
 
 	if [[ -z $idtag ]];then idtag="001";fi
 
@@ -22,17 +20,23 @@ outfile="${fileroot}_extract.txt"
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
-
 BEGIN { records_found = 0 
-        if (length("а") != 2) {
-                badawk = 1
-                printf("Your version of awk does not support marcextract -- you need a version that supports the -b switch\\n")
-                exit
-        }
-}
-{
-record_id=wantedfields=alreadyfound=""
 
+	if (length("а") != 2) {
+		printf("Your version of awk does not support marcsearch -- you need a version that supports the -b switch\\n")
+		exit
+	}
+
+	id_field = IDTAG
+	id_subfield = ""
+
+	marc_field = substr(MARCTAG, 1, 3)
+	marc_subfield = substr(MARCTAG, 4, 1)
+}
+
+{
+
+record_id=search_field=search_subfield=""
 leader=substr($0,1,24)
 baseaddress=substr(leader,13, 5) + 0
 directory=substr($0,25, baseaddress - 25)
@@ -40,35 +44,72 @@ directory_length=length(directory)
 directory_check=(directory_length % 12)
 record_content=substr($0, baseaddress + 1)
 
-if (directory_check == 0) {
-	## get the id
-	for (i=1; i<=directory_length; i=i+12) {
-		if (substr(directory, i, 3) == IDTAG) {
-			field_length = substr(directory, i + 3, 4) + 0
-			starting_pos = substr(directory, i + 7, 5) + 1 
-			field_content = substr(record_content, starting_pos, field_length - 1)
-			
-			record_id = field_content
-			i = directory_length
-		}
-	}
-	## get the content
-	for (i=1; i<=directory_length; i=i+12) {
-	if (substr(directory, i, 3) == MARCTAG) {
-		field_length = substr(directory, i + 3, 4) + 0
-		starting_pos = substr(directory, i + 7, 5) 
-		field_content = substr(record_content, starting_pos + 1, field_length - 1)
+########### extract the id
+if (directory_check == 0 && record_id == "") {
 
-		if (field_content ~ SEARCH) { 
-			foundrecs++
-			print record_id,field_content > OUTFILE
-			}
-		}
+	if (length(IDTAG) == 4) {
+		id_field = substr(marc_tag, 1, 3)
+		id_subfield = substr(marc_tag, 4, 1)
+	}
+
+	for (i=1; i<=directory_length; i=i+12) {
+	     if (substr(directory, i, 3) == id_field) {
+	
+	         field_length = substr(directory, i + 3, 4) + 0
+	         starting_pos = substr(directory, i + 7, 5)
+	
+	         split(field_content, subfields, SFS)
+	
+	         bibno = substr(record_content, starting_pos, field_length - 1)
+				record_id = bibno
+
+				if (id_subfield != "") {
+	         	split(bibno, subfields, SFS)
+	
+	         	for (subfield in subfields) {
+	            	if (substr(subfields[subfield], 1, 1) == search_tag) {
+	               	record_id = substr(subfields[subfield],2)
+	            	}
+						break
+	         	}	
+	      	}
+	      	gsub(/^ *+| +$/, "", record_id)
+		} 
 	}
 }
 
-if (NR % 10000 == 0){ printf "Records searched: "NR" Records found: %d \r", foundrecs }
+########### extract the content 
+if (directory_check == 0 && record_id != "") {
+	for (i=1; i<=directory_length; i=i+12) {
+	   if (substr(directory, i, 3) == marc_field) {
+	   	field_length = substr(directory, i + 3, 4) + 0
+	      starting_pos = substr(directory, i + 7, 5)
+	
+		   split(field_content, subfields, SFS)
+	
+	   	field_content = substr(record_content, starting_pos, field_length - 1)
+	      split(field_content, subfields, SFS)
 
+			if (marc_subfield == "") {
+				print record_id"\t"field_content > OUTFILE
+				foundrecs++
+			} else {
+	      	for (subfield in subfields) {
+	        		if (substr(subfields[subfield], 1, 1) == marc_subfield) {
+	           		field_content = substr(subfields[subfield],2)
+						print record_id"\t"field_content > OUTFILE
+						foundrecs++
+	        		}		
+	      	}
+	   	}
+		}
+	}		
+}
+if (NR % 10000 == 0){ printf("Records searched: "NR" Fields found: %d \r"), foundrecs }
+
+}
+END {
+	print "Records searched: "NR" Fields found: "foundrecs" and output to "OUTFILE
 }
 
 ENDOFAWK
@@ -77,12 +118,8 @@ echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
 
-awk -v RS=$'\x1d' -v ORS="\n" -v FS=$'\x1e' -v OFS="\t" -v MARCTAG=${marctag} -v SEARCH="${search}" -v OUTFILE="${outfile}" -v IDTAG="${idtag}" -b -f tmp_checkmarc "${infile}"
+awk -v RS=$'\x1d' -v ORS="\n" -v FS=$'\x1e' -v SFS=$'\x1f' -v OFS="\t" -v MARCTAG=${marctag} -v OUTFILE="${outfile}" -v IDTAG="${idtag}" -b -f tmp_checkmarc "${infile}"
 echo
 echo
-
-if [[ $count != "count" ]];then
-	echo "Records have been output to ${outfile}                     " 
-fi
 
 rm -f tmp_checkmarc
