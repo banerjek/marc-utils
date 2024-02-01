@@ -3,6 +3,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 
 # Table of Contents
 * [**marc**](#marc) -- Converts text in text2marc format sent to stdin to MARC
+* [**marccount**](#marccount) -- Simple count of MARC records
 * [**marc2bibsandholdings**](#marc2bibsandholdings) -- Separate bib from holdings records
 * [**marc2text**](#marc2text) -- Convert binary MARC files to text
 * [**marc2tsv**](#marc2tsv) -- Extract MARC fields into TSV file 
@@ -61,6 +62,12 @@ Extracts specific MARC tags or subfields into TSV file.
 Whole tags are extracted, leading subfield marker (usually a) is stripped. The subfield delimiter (hex 1F) is left in all but first field.
 
 001 is output by default, and repeated fields are subdelimited with a semicolon. Use "ldr" to extract the leader. Add a single subfield after tags to extract specific subfields
+
+## marccount
+**Usage:** *marccount [filename]*  
+**Example:** *marccount myfile.mrc
+
+Counts MARC records based on detection of end of record markers
 
 ## marcextract
 **Usage:** *Usage: marcextract [filename] [marcfield] '[regex_search_expression]' [idtag]*  

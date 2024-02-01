@@ -1,0 +1,1 @@
+awk -v RS=$'\x1d' '{if (NR % 10000 == 0){printf("Records: "NR"\r")}}END{print "Records: "NR}' "${1}"
