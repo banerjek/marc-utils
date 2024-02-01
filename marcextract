@@ -48,29 +48,33 @@ record_content=substr($0, baseaddress + 1)
 if (directory_check == 0 && record_id == "") {
 
 	if (length(IDTAG) == 4) {
-		id_field = substr(marc_tag, 1, 3)
-		id_subfield = substr(marc_tag, 4, 1)
+		id_field = substr(IDTAG, 1, 3)
+		id_subfield = substr(IDTAG, 4, 1)
 	}
 
 	for (i=1; i<=directory_length; i=i+12) {
 	     if (substr(directory, i, 3) == id_field) {
-	
 	         field_length = substr(directory, i + 3, 4) + 0
 	         starting_pos = substr(directory, i + 7, 5)
+		 field_content = ""
 	
-	         split(field_content, subfields, SFS)
-	
-	         bibno = substr(record_content, starting_pos, field_length - 1)
-				record_id = bibno
 
-				if (id_subfield != "") {
-	         	split(bibno, subfields, SFS)
+		if (substr(record_content, starting_pos + 3, 1) == SFS) {
+			field_content = substr(record_content, starting_pos + 3, field_length - 3)
+		} else {
+			field_content = substr(record_content, starting_pos + 1, field_length - 1)
+		}
 	
-	         	for (subfield in subfields) {
-	            	if (substr(subfields[subfield], 1, 1) == search_tag) {
-	               	record_id = substr(subfields[subfield],2)
-	            	}
-						break
+		record_id = field_content
+
+		if (id_subfield != "") {
+	         	split(record_id, subfields, SFS)
+	
+	         	for (subfield = 2; subfield <= length(subfields); subfield++) {
+	            		if (substr(subfields[subfield], 1, 1) == id_subfield) {
+	               			record_id = substr(subfields[subfield],2)
+	            		}
+				break
 	         	}	
 	      	}
 	      	gsub(/^ *+| +$/, "", record_id)
