@@ -4,11 +4,16 @@ infile="${filelist[0]}"
 if [[ -z ${infile} ]];then echo "You must supply a file name, wildcards ok";fi
 
 if [[ ${infile} =~ \.mrc ]];then
-	echo "This appears to be a MARC file. You must convert it to text before sorting"
-        echo
-        echo "Usage: marcsort [yourfile.mrk]"
-	echo
-        exit
+	infile=$(sed 's/\.mrc$/.txt/' <<< ${infile})
+	numfiles=${#filelist[@]}
+
+	echo "MARC files detected. Converting to text before processing"
+
+	for ((i=0; i<${numfiles}; i++));do
+		filename="${filelist[$i]}"
+		marc2text "${filename}"
+		filelist[$i]=$(sed 's/\.mrc$/.txt/' <<< "${filename}")
+	done
 fi
 
 read -r -d '' awkscript << "ENDOFAWK"
@@ -42,9 +47,11 @@ echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
 for file in "${filelist[@]}";do
-        fileroot=$(echo "${file}" | sed 's/\.....\?$//')
-        outfile="${fileroot}_sorted.txt"
-        awk  -v OUTFILE="${outfile}" -f tmp_checkmarc "${file}"
+	fileroot=$(echo "${file}" | sed 's/\.....\?$//')
+	outfile="${fileroot}_sorted.txt"
+	awk  -v OUTFILE="${outfile}" -f tmp_checkmarc "${file}"
+	echo "Building sorted MARC file"
+	text2marc "${outfile}"
 done
 
 rm -f tmp_checkmarc
