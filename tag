@@ -1,3 +1,5 @@
+
+
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
@@ -75,7 +77,14 @@ tmp_mrc=$(mktemp)
 echo -e "${awkscript}" > $tmp_awk
 chmod 700 $tmp_awk
 
-cp /dev/stdin $tmp_mrc
+infile="${2}"
+
+if [[ -f "${infile}" ]];then
+	echo balp
+	cp "${infile}" $tmp_mrc
+else
+	cp /dev/stdin $tmp_mrc
+fi
 
 awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v marc_tag="${1}" -b -f $tmp_awk $tmp_mrc
 

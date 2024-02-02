@@ -18,7 +18,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marcsearch**](#marcsearch) -- Extract MARC records containing a search pattern
 * [**marcsort**](#marcsort) -- Sort MARC files by field
 * [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
-* [**tag**](#tag) -- Extracts MARC tag from stdin
+* [**tag**](#tag) -- Extract single MARC tag
 * [**tagfc**](#tagfc) -- Counts MARC fields and subfields from stdin 
 * [**text**](#text) -- Converts MARC on stdin to text
 * [**text2marc**](#text2marc) -- Convert text files to MARC
@@ -139,7 +139,8 @@ Sort text representations (Marcedit or text2marc) of MARC files in tag order
 Splits large MARC file into multiple files, each containing *num_records* records. If *num_records* isn't provided, default is 500
 
 ## tag
-**Usage:** *tag [marc tag]*  
+**Usage:** *tag [marc tag] [filename]*  
+**Example:** *tag 650x marc_file.mrc*
 **Example:** *%! tag 650x* (within vi subshell to view 650x)
 
 Extract a single tag from raw MARC file on stdin. 
