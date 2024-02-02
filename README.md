@@ -65,7 +65,7 @@ Whole tags are extracted, leading subfield marker (usually a) is stripped. The s
 
 ## marccount
 **Usage:** *marccount [filename]*  
-**Example:** *marccount myfile.mrc
+**Example:** *marccount myfile.mrc*
 
 Counts MARC records based on detection of end of record markers
 
@@ -94,8 +94,8 @@ Gives frequency count for each MARC tag and subfield count. Wildcard expressions
 Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good records in one file, and separates out problematic records into separate files categorized by issue. Wildcard expressions can be used to process multiple files.
 
 ## marcgrep
-**Usage:** *marcgrep [filename] [regex]*  
-**Example:** *marc_file.mrc 12345*
+**Usage:** *marcgrep [regex] [filename]*  
+**Example:** *marcgrep 12345 marc_file.mrc*
 
 Simple regex match through binary MARC file with output to text.
 
