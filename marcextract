@@ -53,31 +53,31 @@ if (directory_check == 0 && record_id == "") {
 	}
 
 	for (i=1; i<=directory_length; i=i+12) {
-	     if (substr(directory, i, 3) == id_field) {
-	         field_length = substr(directory, i + 3, 4) + 0
-	         starting_pos = substr(directory, i + 7, 5)
-		 field_content = ""
+		if (substr(directory, i, 3) == id_field) {
+			field_length = substr(directory, i + 3, 4) + 0
+			starting_pos = substr(directory, i + 7, 5)
+			field_content = ""
 	
 
-		if (substr(record_content, starting_pos + 3, 1) == SFS) {
-			field_content = substr(record_content, starting_pos + 3, field_length - 3)
-		} else {
-			field_content = substr(record_content, starting_pos + 1, field_length - 1)
-		}
+			if (substr(record_content, starting_pos + 3, 1) == SFS) {
+				field_content = substr(record_content, starting_pos + 3, field_length - 3)
+			} else {
+				field_content = substr(record_content, starting_pos + 1, field_length - 1)
+			}
 	
-		record_id = field_content
+			record_id = field_content
 
-		if (id_subfield != "") {
-	         	split(record_id, subfields, SFS)
+			if (id_subfield != "") {
+	      	split(record_id, subfields, SFS)
 	
-	         	for (subfield = 2; subfield <= length(subfields); subfield++) {
-	            		if (substr(subfields[subfield], 1, 1) == id_subfield) {
-	               			record_id = substr(subfields[subfield],2)
-	            		}
+				for (subfield = 2; subfield <= length(subfields); subfield++) {
+					if (substr(subfields[subfield], 1, 1) == id_subfield) {
+						record_id = substr(subfields[subfield],2)
+					}
 				break
-	         	}	
-	      	}
-	      	gsub(/^ *+| +$/, "", record_id)
+				}	
+	     	}
+	     	gsub(/^ *+| +$/, "", record_id)
 		} 
 	}
 }
