@@ -16,7 +16,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marcless**](#marcless) -- Page through MARC records through unix less command
 * [**marcremap**](#marcremap) -- Remap one MARC field to another 
 * [**marcsearch**](#marcsearch) -- Extract MARC records containing a search pattern
-* [**marcsort**](#marcsort) -- Sort text representationis of MARC files
+* [**marcsort**](#marcsort) -- Sort MARC files by field
 * [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
 * [**tag**](#tag) -- Extracts MARC tag from stdin
 * [**tagfc**](#tagfc) -- Counts MARC fields and subfields from stdin 
