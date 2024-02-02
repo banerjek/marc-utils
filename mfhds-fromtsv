@@ -5,7 +5,7 @@ if [[ -z ${infile} ]];then echo "You must supply a file name for a tab delimited
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
 
 if [[ "${fileroot}" =~ [Ii}[Tt][Ee][Mm] ]];then
-	echo  "\nItem file detected -- ignoring note fields\n"
+	echo -e "\nItem file detected -- ignoring note fields\n"
 	outfile="mfhds_fromitems.mrc"
 else
 	echo  "\nCheckin file assumed. Place the string \"item\" in your source file name if this is not intended\n"
@@ -47,6 +47,12 @@ function build_mfhd() {
 		switch($recType) {
 			case "s":
 				leader1 = "cy  a22"
+				break
+			case "v":
+				leader1 = "cv  a22"
+				break
+			case "u":
+				leader1 = "cu  a22"
 				break
 		}
 	}
@@ -260,11 +266,18 @@ function build_mfhd() {
 						printf ("Public note was found in "$i"\\n")
 					}
 					break
+				case "holdingsType":
+					if (itemfile == 0) {
+						recType=i
+						printf ("Record type was found in "$i"\\n")
+					}
+					break
 			}
 		}
 	if (! bibId) {  printf ("\\nNo valid bib ID field could be found\\n"); exit }
 	if (! location ) {  printf ("\\nNo valid location field could be found\\n"); exit }
 	if (! callNumpos && ! callNumFallback ) {  emptyCall = 1 } else { emptyCall = 0 }
+	if (! recType) {  printf ("\\nNo record type field detected, defaulting to Single part holdings\\n") }
 	printf("\\n\\n")
 	}
 
