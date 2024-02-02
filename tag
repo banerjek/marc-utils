@@ -80,7 +80,6 @@ chmod 700 $tmp_awk
 infile="${2}"
 
 if [[ -f "${infile}" ]];then
-	echo balp
 	cp "${infile}" $tmp_mrc
 else
 	cp /dev/stdin $tmp_mrc
