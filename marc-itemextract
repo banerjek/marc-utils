@@ -1,5 +1,5 @@
 
-knownsystems=("destiny" "eos" "janium" "opals" "sierra" "sirsi" "softlink" "wms")
+knownsystems=("destiny" "eos" "janium" "koha" "opals" "sierra" "sirsi" "softlink" "wms")
 
 if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] "
@@ -117,6 +117,31 @@ if [[ ${system} == "janium" ]];then
 	labels[13]="note"
 	labels[14]="note_inventory"
 	labels[15]="cat_date"
+fi
+
+if [[ ${system} == "koha" ]];then
+	identifier="001"
+	item_field="952p"
+	item_call_subfield="o"
+	location_subfield="b"
+
+	tags[1]="p"
+	tags[2]="8"
+	tags[3]="o"
+	tags[4]="t"
+	tags[5]="y"
+	tags[6]="g"
+	tags[7]="z"
+	tags[8]="d"
+
+	labels[1]="barcode"
+	labels[2]="call#prefix"
+	labels[3]="call#"
+	labels[4]="copy"
+	labels[5]="mattype"
+	labels[6]="price"
+	labels[7]="public_note"
+	labels[8]="inventory_date"
 fi
 
 if [[ ${system} == "opals" ]];then
