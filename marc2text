@@ -22,13 +22,13 @@ BEGIN {
 
 {
 	large=last_pos=0
-   leader=substr($0,1,24)
-   baseaddress=substr(leader,13, 5) + 0
-   record_content=substr($0, baseaddress + 1)
-   directory=substr($0,25, baseaddress - 25)
-   directory_length=length(directory)
-   directory_check=(directory_length % 12)
-   record_length = length($0) + 0
+	leader=substr($0,1,24)
+	baseaddress=substr(leader,13, 5) + 0
+	record_content=substr($0, baseaddress + 1)
+	directory=substr($0,25, baseaddress - 25)
+	directory_length=length(directory)
+	directory_check=(directory_length % 12)
+	record_length = length($0) + 0
 
 	record = "=LDR  "leader
 
@@ -40,7 +40,7 @@ BEGIN {
 		starting_pos = substr(directory, i + 7, 5) + 1
 		field_content = substr(record_content, starting_pos, field_length)
 
-		if (starting_pos > last_pos && ((directory_length + starting_pos + field_length) < 98000)) {
+		if (starting_pos > last_pos && ((directory_length + starting_pos + field_length) < 99000)) {
 			record = record"\\n="marc_tag"  "field_content
 			last_pos = starting_pos
 		} else {
