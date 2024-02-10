@@ -25,6 +25,7 @@ function check_fields() {
 	if (directory_check == 0) {
 		for (i=1; i<=directory_length; i=i+12) {
 			if (substr(directory, i, 3) == "001") {found001 = 1}
+			if (substr(directory, i, 3) == "004") {found245 = 1}
 			if (substr(directory, i, 3) == "008") {found008 = 1}
 			if (substr(directory, i, 3) == "245") {found245 = 1}
 			if (substr(directory, i, 3) ~ /[^0-9a-zA-Z]/) {goodrec = 0}
@@ -100,10 +101,13 @@ process_file() {
 
 	echo "Processing ${marcfile}"	
 	
-	grep -Pal '\x00' "${marcfile}" > /dev/null && echo "Removing null characters" && sed -i 's/\x0//g' "${marcfile}" 
 	echo "Detecting and removing nulls"
-	 tr < "${marcfile}" -d '\000' > "${marcfile}.tmp"
-	mv "${marcfile}.tmp" "${marcfile}"
+	tr < "${marcfile}" -d '\000' > "${marcfile}.1.tmp"
+	echo "Detecting and converting carriage returns and newlines to spaces"
+	tr < "${marcfile}.1.tmp" $'\n' ' ' > "${marcfile}.2.tmp"
+	tr < "${marcfile}.2.tmp" $'\r' ' ' > "${marcfile}.3.tmp"
+	mv "${marcfile}.3.tmp" "${marcfile}"
+	rm ${marcfile}.*.tmp
 		
 
 	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v FILEROOT="${fileroot}" -b -f tmp_checkmarc "${marcfile}"
