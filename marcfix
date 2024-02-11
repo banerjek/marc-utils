@@ -102,13 +102,9 @@ process_file() {
 	echo "Processing ${marcfile}"	
 	
 	echo "Detecting and removing nulls"
-	tr < "${marcfile}" -d '\000' > "${marcfile}.1.tmp"
+	tr < "${marcfile}" -d '\000' > "${marcfile}.tmp"
 	echo "Detecting and converting carriage returns and newlines to spaces"
-	tr < "${marcfile}.1.tmp" $'\n' ' ' > "${marcfile}.2.tmp"
-	tr < "${marcfile}.2.tmp" $'\r' ' ' > "${marcfile}.3.tmp"
-	mv "${marcfile}.3.tmp" "${marcfile}"
-	rm ${marcfile}.*.tmp
-		
+	tr '\r\n' '  ' < "${marcfile}.tmp" $'\r' ' ' > "${marcfile}"
 
 	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v FILEROOT="${fileroot}" -b -f tmp_checkmarc "${marcfile}"
 	sleep 1
