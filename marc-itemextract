@@ -52,6 +52,7 @@ if [[ ${system} == "destiny" ]];then
 	tags[6]="t"
 	tags[7]="z"
 	tags[8]="r"
+	tags[9]="n"
 
 	labels[1]="barcode"
 	labels[2]="call#"
@@ -60,7 +61,8 @@ if [[ ${system} == "destiny" ]];then
 	labels[5]="volume"
 	labels[6]="copy"
 	labels[7]="note"
-	labels[7]="catdate"
+	labels[8]="catdate"
+	labels[9]="note"
 fi
 
 if [[ ${system} == "eos" ]];then
@@ -361,6 +363,9 @@ function destiny_852() {
 
 	# cat date
 	sub("@c", SFS"r", field_content)
+
+	# remap first $x to item note $n 
+	sub(SFS"x", SFS"n", field_content)
 
 	# volume info is in @j@j@j@i@i@i with label in j
 	# and enum in @i. Pair things up and string it together
