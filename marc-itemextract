@@ -62,7 +62,7 @@ if [[ ${system} == "destiny" ]];then
 	labels[6]="copy"
 	labels[7]="note"
 	labels[8]="catdate"
-	labels[9]="note"
+	labels[9]="staffnote"
 fi
 
 if [[ ${system} == "eos" ]];then
