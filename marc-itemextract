@@ -422,7 +422,7 @@ function extract_subfields() {
 
 	gsub(/[^a-zA-Z0-9]/, "", holdid)
 
-	lineout = tag001"\t"bibno"\t"holdid"\t"bib_call"\t"rec_type
+	lineout = tag001"\t"bibno"\t"holdid"\t"bib_call"\t"rec_type"\t"tag007
 
 	for (j=1;j<=num_tags;j++) {
 		lineout = lineout"\t"item_subfield[j]
@@ -454,6 +454,13 @@ function extract_identifiers() {
 
 			tag004 = substr(record_content, starting_pos, field_length - 1)
 			gsub(/^ *+| +$/, "", tag004)
+		}
+		if (substr(directory, i, 3) == "007") {
+
+			field_length = substr(directory, i + 3, 4) + 0
+			starting_pos = substr(directory, i + 7, 5) 
+
+			tag007 = substr(record_content, starting_pos + 1, field_length - 1)
 		}
 
 		if (bibno == "") {
