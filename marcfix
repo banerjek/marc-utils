@@ -15,7 +15,7 @@ if [[ -z $processType ]];then echo "No files or directory matching the input can
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
-BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=0
+BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=bibcount=holdingscount=authoritycount=0
 }
 function check_fields() {
 	OUTFILE = FILEROOT"_fixed.mrc"
@@ -25,17 +25,16 @@ function check_fields() {
 	if (directory_check == 0) {
 		for (i=1; i<=directory_length; i=i+12) {
 			if (substr(directory, i, 3) == "001") {found001 = 1}
-			if (substr(directory, i, 3) == "004") {found245 = 1}
 			if (substr(directory, i, 3) == "008") {found008 = 1}
+			if (substr(directory, i, 3) == "010") {found010 = 1}
 			if (substr(directory, i, 3) == "245") {found245 = 1}
 			if (substr(directory, i, 3) ~ /[^0-9a-zA-Z]/) {goodrec = 0}
 		}
 	} else {
 		good_directory = 0
 	}
-	found001 = 1
 
-	if ( goodrec == 1 && found001 == 1 && found008 == 1 && found245 == 1 && directory_check == 0){good_directory=1} else
+	if ( goodrec == 1 && found008 == 1 && found010 == 1 && found245 == 1 && directory_check == 0){good_directory=1} else
 		{goodrec=0}
 }
 
@@ -51,14 +50,34 @@ function check_leader() {
 	if (record_length > 99999) {oversized = 1;totaloversized++;print $0 > "tmp_oversized.mrc"}
 	
 	if (reported_length != record_length){good_length = 0}
-	if (substr(leader, 7, 1)  ~ /[uvxyz]/){bibrec = 0;found245 = 1}
-	#if (substr(leader, 6, 1)  !~ /[acdnpif]/){good_leader = 0}
-	#if (bibrec == 1 && substr(leader,8,1) !~ /[abcdims]/){good_leader = 0}
+
+	rectype_indicator=substr(leader, 7, 1)
+
+	switch(rectype_indicator) {
+		case /^[acdefngijkmoprt@]$/:
+			found010 = 1
+			rectype="bib"
+			bibcount++
+			break
+		case /^[uvxyz]$/:
+			rectype="holdings"
+			found010 = 1
+			found245 = 1
+			holdingscount++
+			break
+		case "z":
+			rectype="authority"
+			found245 = 1
+			authoritycount++
+			break
+		default:
+			good_leader = 0;
+	}
 
 }
 {
-goodrec=good_directory=good_leader=good_encoding=good_length=bibrec=1
-found001=found008=found245=oversized=0
+goodrec=good_directory=good_leader=good_encoding=good_length=1
+found008=found010=found245=oversized=0
 
 check_leader()
 check_fields()
@@ -71,8 +90,9 @@ if ( good_directory == 0 && foundbad == 0){ print $0 > "bad_directory_"FILEROOT;
 if ( good_encoding == 0 && foundbad == 0){ print $0 > "bad_encoding_"FILEROOT;badencoding++;badencodingtext = " (encoding: "badencoding")";foundbad = 1 }
 if ( found001 == 0 && foundbad == 0){ print $0 > "bad_missing001_"FILEROOT;bad001++;bad001text = " (001: "bad001")";foundbad = 1 }
 if ( found008 == 0 && foundbad == 0){ print $0 > "bad_missing008_"FILEROOT;bad008++;bad008text = " (008: "bad008")";foundbad = 1 }
+if ( found010 == 0 && foundbad == 0){ print $0 > "bad_missing010_"FILEROOT;bad010++;bad008text = " (010: "bad010")";foundbad = 1 }
 if ( found245 == 0 && foundbad == 0){ print $0 > "bad_missing245_"FILEROOT;bad245++;bad245text = " (245: "bad245")";foundbad = 1 }
-if ( badrecs > 0 ){ badtext = badleadertext""baddirectorytext""bad001text""bad008text""bad245text""badencodingtext""badlengthtext }
+if ( badrecs > 0 ){ badtext = badleadertext""baddirectorytext""bad001text""bad008text""bad010text""bad245text""badencodingtext""badlengthtext }
 
 if (NR % 10000 == 0){ printf "Good records: %d Bad records: %d Issues: %s\r", goodrecs, badrecs, badtext }
 
@@ -81,7 +101,8 @@ END {
 ORS=OFS="\\n"
 close(OUTFILE)
 
-printf "Good records: %d Bad records: %d Issues: %s\r", goodrecs, badrecs, badtext
+printf "Good records: %d Bad records: %d Issues: %s\\n\\n", goodrecs, badrecs, badtext
+printf "Bib records: %d Holdings records: %d Authority records: %s\\n", bibcount, holdingscount, authoritycount 
 print "";print goodrecs " records were output to "OUTFILE" and " badrecs " records were output to the files listed below and prefixed with bad_" 
 if (totaloversized > 0) {print totaloversized" oversized were truncated"}
 }
