@@ -266,10 +266,10 @@ function build_mfhd() {
 						printf ("Public note was found in "$i"\\n")
 					}
 					break
-				case "holdingsType":
+				case "holdingstype":
 					if (itemfile == 0) {
 						recType=i
-						printf ("Record type was found in "$i"\\n")
+						printf ("Holdings type was found in "$i"\\n")
 					}
 					break
 			}
