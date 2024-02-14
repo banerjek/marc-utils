@@ -56,7 +56,7 @@ function check_leader() {
 			rectype="bib"
 			bibcount++
 			break
-		case /^[uvxyz]$/:
+		case /^[uvxy]$/:
 			rectype="holdings"
 			found245 = 1
 			holdingscount++
