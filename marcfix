@@ -32,8 +32,7 @@ function check_fields() {
 		good_directory = 0
 	}
 
-	if ( goodrec == 1 && found008 == 1 && found245 == 1 && directory_check == 0){good_directory=1} else
-		{goodrec=0}
+	if ( goodrec == 1 && found245 == 1 && directory_check == 0){good_directory=1} else {goodrec=0}
 }
 
 function check_leader() {
@@ -64,7 +63,6 @@ function check_leader() {
 		case "z":
 			rectype="authority"
 			found245 = 1
-			found008 = 1
 			authoritycount++
 			break
 		default:
@@ -79,14 +77,20 @@ found008=found245=oversized=0
 check_leader()
 check_fields()
 
-if ( goodrec == 1 && good_directory == 1 && good_leader == 1 && good_encoding == 1 && good_length == 1){ goodrecs++;print $0 > OUTFILE }else{ badrecs++}
+skip=0
+
+if ( goodrec == 1 && good_directory == 1 && good_leader == 1 && good_encoding == 1 && good_length == 1 && found008 == 0){ goodrecs++;skip = 1;missing_008++; print $0 > "tmp_"rectype"_008.mrc" }
+
+if ( goodrec == 1 && good_directory == 1 && good_leader == 1 && good_encoding == 1 && good_length == 1 && skip == 0){ goodrecs++;print $0 > OUTFILE }else{ badrecs++}
+
+
 foundbad = 0
 if ( good_length == 0){ print $0 > "bad_length_"FILEROOT;badlength++;badlengthtext = " (length: "badlength")";foundbad = 1 }
 if ( good_leader == 0 && foundbad == 0){ print $0 > "bad_leader_"FILEROOT;badleader++;badleadertext = " (leader: "badleader")" }
 if ( good_directory == 0 && foundbad == 0){ print $0 > "bad_directory_"FILEROOT;baddirectory++;baddirectorytext = " (directory: "baddirectory")";foundbad = 1 }
 if ( good_encoding == 0 && foundbad == 0){ print $0 > "bad_encoding_"FILEROOT;badencoding++;badencodingtext = " (encoding: "badencoding")";foundbad = 1 }
-if ( found008 == 0 && foundbad == 0){ print $0 > "bad_missing008_"FILEROOT;bad008++;bad008text = " (008: "bad008")";foundbad = 1 }
 if ( found245 == 0 && foundbad == 0){ print $0 > "bad_missing245_"FILEROOT;bad245++;bad245text = " (245: "bad245")";foundbad = 1 }
+if ( found008 == 0 && foundbad == 0 && skip == 1){ bad008++;bad008text = " (008: "bad008")"}
 if ( badrecs > 0 ){ badtext = badleadertext""baddirectorytext""bad001text""bad008text""bad010text""bad245text""badencodingtext""badlengthtext }
 
 if (NR % 10000 == 0){ printf "Good records: %d Bad records: %d Issues: %s\r", goodrecs, badrecs, badtext }
@@ -134,6 +138,37 @@ process_file() {
 if [[ $processType == "file" ]];then 
 	for marcfile in "${filelist[@]}";do
 		process_file "${marcfile}"
+
+		
+		temproot="tmp_bib_008"
+		if [[ -f ${temproot}.mrc ]];then
+			marc2text ${temproot}.mrc 
+			sed -i 's/^\(=LDR.*$\)/\1\n=008  780615s19uu    xx a                    d/' ${temproot}.txt
+			text2marc ${temproot}.txt
+			cat ${temproot}.mrc  >> "${fileroot}_fixed.mrc"
+			rm -f ${temproot}.*
+			echo "Bib records lacking 008 were fixed and appended to ${fileroot}_fixed.mrc"
+		fi
+		
+		temproot="tmp_authority_008"
+		if [[ -f ${temproot}.mrc ]];then
+			marc2text ${temproot}.mrc 
+			sed -i 's/^\(=LDR.*$\)/\1\n=008  780615|| |||||aa||          |n aaa      /' ${temproot}.txt
+			text2marc ${temproot}.txt
+			cat ${temproot}.mrc  >> "${fileroot}_fixed.mrc"
+			rm -f ${temproot}.*
+			echo "Authority records lacking 008 were fixed and appended to ${fileroot}_fixed.mrc"
+		fi
+		
+		temproot="tmp_holdings_008"
+		if [[ -f ${temproot}.mrc ]];then
+			marc2text ${temproot}.mrc 
+			sed -i 's/^\(=LDR.*$\)/\1\n=008  7806150p    8   4001uu   0000000/' ${temproot}.txt
+			text2marc ${temproot}.txt
+			cat ${temproot}.mrc  >> "${fileroot}_fixed.mrc"
+			rm -f ${temproot}.*
+			echo "Holdings records lacking 008 were fixed and appended to ${fileroot}_fixed.mrc"
+		fi
 
 		if [[ -f tmp_oversized.mrc ]];then
 			marc2text tmp_oversized.mrc
