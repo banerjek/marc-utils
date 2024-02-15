@@ -24,8 +24,9 @@ function check_fields() {
 
 	if (directory_check == 0) {
 		for (i=1; i<=directory_length; i=i+12) {
+			if (substr(directory, i, 3) == "004") {rectype="holdings"}
 			if (substr(directory, i, 3) == "008") {found008 = 1}
-			if (substr(directory, i, 3) == "245") {found245 = 1}
+			if (substr(directory, i, 3) == "245") {found245 = 1;rectype="bib"}
 			if (substr(directory, i, 3) ~ /[^0-9a-zA-Z]/) {goodrec = 0}
 		}
 	} else {
@@ -131,7 +132,7 @@ process_file() {
 	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v FILEROOT="${fileroot}" -b -f tmp_checkmarc "${marcfile}"
 	sleep 1
 	
-	ls bad_*"${marcfile}" 2> /dev/null
+	ls bad_*"${fileroot}" 2> /dev/null
 	echo
 }
 
