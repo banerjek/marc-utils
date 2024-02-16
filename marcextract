@@ -85,27 +85,27 @@ if (directory_check == 0 && record_id == "") {
 ########### extract the content 
 if (directory_check == 0 && record_id != "") {
 	for (i=1; i<=directory_length; i=i+12) {
-	   if (substr(directory, i, 3) == marc_field) {
-	   	field_length = substr(directory, i + 3, 4) + 0
-	      starting_pos = substr(directory, i + 7, 5)
+		if (substr(directory, i, 3) == marc_field) {
+		   	field_length = substr(directory, i + 3, 4) + 0
+			starting_pos = substr(directory, i + 7, 5)
+		
+			split(field_content, subfields, SFS)
+		
+		   	field_content = substr(record_content, starting_pos, field_length)
+			split(field_content, subfields, SFS)
 	
-		   split(field_content, subfields, SFS)
-	
-	   	field_content = substr(record_content, starting_pos, field_length - 1)
-	      split(field_content, subfields, SFS)
-
 			if (marc_subfield == "") {
 				print record_id"\t"field_content > OUTFILE
 				foundrecs++
-			} else {
-	      	for (subfield in subfields) {
-	        		if (substr(subfields[subfield], 1, 1) == marc_subfield) {
-	           		field_content = substr(subfields[subfield],2)
+				} else {
+		      		for (subfield in subfields) {
+		        		if (substr(subfields[subfield], 1, 1) == marc_subfield) {
+		           			field_content = substr(subfields[subfield],2)
 						print record_id"\t"field_content > OUTFILE
 						foundrecs++
-	        		}		
-	      	}
-	   	}
+		        		}		
+		      		}
+		   	}
 		}
 	}		
 }
