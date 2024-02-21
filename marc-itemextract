@@ -1,3 +1,4 @@
+# sirsi was inadvertantly modified to accommodate NALIS -- must be modified
 
 knownsystems=("destiny" "eos" "janium" "koha" "opals" "sierra" "sirsi" "softlink" "wms")
 
@@ -125,7 +126,7 @@ if [[ ${system} == "koha" ]];then
 	identifier="001"
 	item_field="952p"
 	item_call_subfield="o"
-	location_subfield="b"
+	location_subfield="c"
 
 	tags[1]="p"
 	tags[2]="8"
@@ -135,6 +136,16 @@ if [[ ${system} == "koha" ]];then
 	tags[6]="g"
 	tags[7]="z"
 	tags[8]="d"
+	tags[9]="a"
+	tags[10]="b"
+	tags[11]="c"
+	tags[12]="x"
+	tags[13]="0"
+	tags[14]="1"
+	tags[15]="4"
+	tags[16]="5"
+	tags[17]="7"
+	tags[18]="8"
 
 	labels[1]="barcode"
 	labels[2]="call#prefix"
@@ -144,6 +155,17 @@ if [[ ${system} == "koha" ]];then
 	labels[6]="price"
 	labels[7]="public_note"
 	labels[8]="inventory_date"
+	labels[9]="owning_library"
+	labels[10]="holding_branch"
+	labels[11]="location"
+	labels[12]="staff_note"
+	labels[13]="serial_enumeration"
+	labels[13]="status_withdrawn"
+	labels[14]="status_lost"
+	labels[15]="status_damaged"
+	labels[16]="restricted"
+	labels[17]="not_for_loan"
+	labels[18]="collection_code"
 fi
 
 if [[ ${system} == "opals" ]];then
@@ -230,7 +252,7 @@ if [[ ${system}  == "sirsi"  ]];then
 	identifier="001"
 	item_field="999i"
 	item_call_subfield="a"
-	location_subfield="l"
+	location_subfield="m"
 
 	tags[1]="a"
 	tags[2]="v"
@@ -245,7 +267,7 @@ if [[ ${system}  == "sirsi"  ]];then
 	tags[11]="g"
 	tags[12]="j"
 	tags[13]="k"
-	tags[14]="l"
+	tags[14]="m"
 	tags[15]="n"
 	tags[16]="o"
 	tags[17]="p"
@@ -256,6 +278,7 @@ if [[ ${system}  == "sirsi"  ]];then
 	tags[22]="u"
 	tags[23]="x"
 	tags[24]="z"
+	tags[25]="l"
 
 	
 	labels[1]="call"
@@ -265,7 +288,7 @@ if [[ ${system}  == "sirsi"  ]];then
 	labels[5]="holdingCode"
 	labels[6]="barcode"
 	labels[7]="library"
-	labels[8]="mattype"
+	labels[8]="catDate"
 	labels[9]="lastActivity"
 	labels[10]="lastCharged"
 	labels[11]="dateInventoried"
@@ -282,6 +305,7 @@ if [[ ${system}  == "sirsi"  ]];then
 	labels[22]="acqDate"
 	labels[23]="itemCat1"
 	labels[24]="itemCat2"
+	labels[25]="callPrefix"
 fi
 
 if [[ ${system}  == "softlink"  ]];then
@@ -349,6 +373,8 @@ BEGIN { records_found = 0
 		split(LABELLIST, labels, " ")
 		split(SPECIALLIST, special, " ")
 
+		for (j=1;j<=length(tags);j++) {value=tags[j];tag_index[value]=j}
+
 		num_tags = length(tags)
 
 		required_item_subfield = substr(ITEMFIELD, 4, 1)
@@ -393,24 +419,27 @@ function extract_subfields() {
 
 	split(field_content, subfields, SFS)
 	
-	for (j=1;j<=num_tags;j++) {
-		for (subfield in subfields) {
-			if (substr(subfields[subfield], 1, 1) == tags[j]) {
-				if (tags[j] == required_item_subfield) {real_item = 1}
-				if (item_subfield[j] == "") {
-					item_subfield[j] = substr(subfields[subfield],2)
-					gsub(/^[ \\-]*$/, "", item_subfield[j])
-				} else { 
-					item_subfield[j] = item_subfield[j]";"substr(subfields[subfield],2) 
-				}
+	for (subfield=1;subfield<=length(subfields);subfield++) {
+		extracted_tag=substr(subfields[subfield], 1, 1)
+		index_position=tag_index[extracted_tag]
 
-				gsub(/^ *+| +$/, "", item_subfield[j])
+		if (index_position > 0) {
+		if (substr(subfields[subfield], 1, 1) == extracted_tag) {
+			if (extracted_tag == required_item_subfield) {real_item = 1}
+			if (item_subfield[index_position] == "") {
+				item_subfield[index_position] = substr(subfields[subfield],2)
+				gsub(/^[ \\-]*$/, "", item_subfield[index_position])
+			} else { 
+				item_subfield[index_position] = item_subfield[index_position]";"substr(subfields[subfield],2) 
+			}
 
-				if (tags[j] == LOCATION) { location = item_subfield[j] }
-				if (tags[j] == CALL) { callnum = item_subfield[j] }
-				if (tags[j] == CALL_SUFFIX) { callnum = callnum" "item_subfield[j] }
-			}	
-		}
+			gsub(/^ *+| +$/, "", item_subfield[index_position])
+
+			if (tags[index_position] == LOCATION) { location = item_subfield[index_position] }
+			if (tags[index_position] == CALL) { callnum = item_subfield[index_position] }
+			if (tags[index_position] == CALL_SUFFIX) { callnum = callnum" "item_subfield[index_position] }
+		}	
+	}
 	}
 
 	if (IDENTIFIER == "004") {
@@ -443,7 +472,7 @@ function extract_identifiers() {
 			field_length = substr(directory, i + 3, 4) + 0
 			starting_pos = substr(directory, i + 7, 5) 
 
-			tag001 = substr(record_content, starting_pos, field_length - 1)
+			tag001 = substr(record_content, starting_pos, field_length)
 			gsub(/^ *+| +$/, "", tag001)
 			gsub(FS, "", tag001)
 		}
