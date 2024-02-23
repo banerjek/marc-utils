@@ -54,6 +54,7 @@ if [[ ${system} == "destiny" ]];then
 	tags[7]="z"
 	tags[8]="r"
 	tags[9]="n"
+	tags[10]="f"
 
 	labels[1]="barcode"
 	labels[2]="call#"
@@ -64,6 +65,7 @@ if [[ ${system} == "destiny" ]];then
 	labels[7]="note"
 	labels[8]="catdate"
 	labels[9]="staffnote"
+	labels[10]="collectionnote"
 fi
 
 if [[ ${system} == "eos" ]];then
@@ -126,7 +128,7 @@ if [[ ${system} == "koha" ]];then
 	identifier="001"
 	item_field="952p"
 	item_call_subfield="o"
-	location_subfield="c"
+	location_subfield="b"
 
 	tags[1]="p"
 	tags[2]="8"
@@ -136,16 +138,6 @@ if [[ ${system} == "koha" ]];then
 	tags[6]="g"
 	tags[7]="z"
 	tags[8]="d"
-	tags[9]="a"
-	tags[10]="b"
-	tags[11]="c"
-	tags[12]="x"
-	tags[13]="0"
-	tags[14]="1"
-	tags[15]="4"
-	tags[16]="5"
-	tags[17]="7"
-	tags[18]="8"
 
 	labels[1]="barcode"
 	labels[2]="call#prefix"
@@ -155,17 +147,6 @@ if [[ ${system} == "koha" ]];then
 	labels[6]="price"
 	labels[7]="public_note"
 	labels[8]="inventory_date"
-	labels[9]="owning_library"
-	labels[10]="holding_branch"
-	labels[11]="location"
-	labels[12]="staff_note"
-	labels[13]="serial_enumeration"
-	labels[13]="status_withdrawn"
-	labels[14]="status_lost"
-	labels[15]="status_damaged"
-	labels[16]="restricted"
-	labels[17]="not_for_loan"
-	labels[18]="collection_code"
 fi
 
 if [[ ${system} == "opals" ]];then
@@ -390,6 +371,9 @@ function destiny_852() {
 	# cat date
 	sub("@c", SFS"r", field_content)
 
+	# collection 
+	sub("@f", SFS"f", field_content)
+
 	# remap first $x to item note $n 
 	sub(SFS"x", SFS"n", field_content)
 
@@ -472,7 +456,7 @@ function extract_identifiers() {
 			field_length = substr(directory, i + 3, 4) + 0
 			starting_pos = substr(directory, i + 7, 5) 
 
-			tag001 = substr(record_content, starting_pos, field_length)
+			tag001 = substr(record_content, starting_pos, field_length - 1)
 			gsub(/^ *+| +$/, "", tag001)
 			gsub(FS, "", tag001)
 		}
