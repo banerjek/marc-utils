@@ -32,6 +32,7 @@ BEGIN { records_found = 0
 
 	marc_field = substr(MARCTAG, 1, 3)
 	marc_subfield = substr(MARCTAG, 4, 1)
+	field_cleaning_regex = "^["FS" ]+|["FS"]+$"
 }
 
 {
@@ -92,6 +93,7 @@ if (directory_check == 0 && record_id != "") {
 			split(field_content, subfields, SFS)
 		
 		   	field_content = substr(record_content, starting_pos, field_length)
+			gsub(field_cleaning_regex, "", field_content)
 			split(field_content, subfields, SFS)
 	
 			if (marc_subfield == "") {
