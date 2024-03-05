@@ -502,14 +502,13 @@ function extract_identifiers() {
 }
 
 function extract_items() {
-	for (i=1; i<=directory_length; i=i+12) {
-		marc_tag = substr(directory, i, 3)
-
+	for (d_iter=1; d_iter<=directory_length; d_iter=d_iter+12) {
+		marc_tag = substr(directory, d_iter, 3)
 		####
       if (marc_tag == BIB_CALL_FIELD) {
 
-         field_length = substr(directory, i + 3, 4) + 0
-         starting_pos = substr(directory, i + 7, 5)
+         field_length = substr(directory, d_iter + 3, 4) + 0
+         starting_pos = substr(directory, d_iter + 7, 5)
 
          bib_call = substr(record_content, starting_pos + 5, field_length - 5)
          gsub(subfield_regex, " ", bib_call)
@@ -517,8 +516,8 @@ function extract_items() {
 
 		if (marc_tag == ITEMFIELD) {
 
-			field_length = substr(directory, i + 3, 4) + 0
-			starting_pos = substr(directory, i + 7, 5) 
+			field_length = substr(directory, d_iter + 3, 4) + 0
+			starting_pos = substr(directory, d_iter + 7, 5) 
 			field_content = ""
 
 			if (substr(record_content, starting_pos + 3, 1) == SFS) {
