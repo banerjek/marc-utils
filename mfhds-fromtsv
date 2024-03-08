@@ -40,6 +40,7 @@ function build_mfhd() {
 	gsub(/BIBID/, $bibId, text_mfhd)
 	gsub(/HOLDINGSID/, holdId, text_mfhd)
 	gsub(/CALLNUM/, callNum, text_mfhd)
+
 	if (callPrefix > 0) {gsub(/CALLPREFIX/, $callPrefix, text_mfhd)} else {gsub(/CALLPREFIX/, "", text_mfhd)}
 
 	### nonrequired fields must be entered here
@@ -75,6 +76,10 @@ function build_mfhd() {
 	}
 	if (actionNote > 0 && $actionNote ~ /[a-zA-Z0-9]/) {
 		split($actionNote, statements, ";")
+		for (statement in statements) { text_mfhd = text_mfhd""FS"=583    "SFS"a"statements[statement] }
+	}
+	if (actionNote2 > 0 && $actionNote2 ~ /[a-zA-Z0-9]/) {
+		split($actionNote2, statements, ";")
 		for (statement in statements) { text_mfhd = text_mfhd""FS"=583    "SFS"a"statements[statement] }
 	}
 	if (libHas > 0 && $libHas ~ /[a-zA-Z0-9]/) {
@@ -212,6 +217,12 @@ function build_mfhd() {
 						printf ("Action note was found in "$i"\\n")
 					}
 					break
+				case "notecheckin":
+					if (itemfile == 0) {
+						actionNote2=i
+						printf ("Action note was found in "$i"\\n")
+					}
+					break
 				case "staffnote":
 					if (itemfile == 0) {
 						actionNote=i
@@ -285,8 +296,8 @@ function build_mfhd() {
 	gsub(/ *$/, "", $location) 
 
 	if (emptyCall == 0) {
-		callNum = $callNumpos
-		if (callNumFallback && length($callNumpos) == 0) { callNum = $callNumFallback }
+		if (callNumPos != "") {callNum = $callNumpos}
+		if (callNumFallback > 0 && length($callNumpos) == 0) {callNum = $callNumFallback }
 	} else {
 		if (NR == 1) { callNum = "callNum" } else { callNum = "" }
 	}
