@@ -78,8 +78,20 @@ function build_mfhd() {
 		split($actionNote, statements, ";")
 		for (statement in statements) { text_mfhd = text_mfhd""FS"=583    "SFS"a"statements[statement] }
 	}
-	if (actionNote2 > 0 && $actionNote2 ~ /[a-zA-Z0-9]/) {
-		split($actionNote2, statements, ";")
+	if (notecheckin > 0 && $notecheckin ~ /[a-zA-Z0-9]/) {
+		split($notecheckin, statements, ";")
+		for (statement in statements) { text_mfhd = text_mfhd""FS"=583    "SFS"a"statements[statement] }
+	}
+	if (staffnote > 0 && $staffnote ~ /[a-zA-Z0-9]/) {
+		split($staffnote, statements, ";")
+		for (statement in statements) { text_mfhd = text_mfhd""FS"=583    "SFS"a"statements[statement] }
+	}
+	if (staffnote2 > 0 && $staffnote2 ~ /[a-zA-Z0-9]/) {
+		split($staffnote2, statements, ";")
+		for (statement in statements) { text_mfhd = text_mfhd""FS"=583    "SFS"a"statements[statement] }
+	}
+	if (acquisitionstatus > 0 && $acquisitionstatus ~ /[a-zA-Z0-9]/) {
+		split($acquisitionstatus, statements, ";")
 		for (statement in statements) { text_mfhd = text_mfhd""FS"=583    "SFS"a"statements[statement] }
 	}
 	if (libHas > 0 && $libHas ~ /[a-zA-Z0-9]/) {
@@ -157,20 +169,20 @@ function build_mfhd() {
 					printf ("Location found in "$i"\\n")
 					break
 				case "callmarc":
-					callNumpos=i
+					callNumPos=i
 					printf ("Call number found in "$i"\\n")
 					break
 				case "call":
-					callNumpos=i
+					callNumPos=i
 					printf ("Call number found in "$i"\\n")
 					break
 				case "callnumber":
-					callNumpos=i
+					callNumPos=i
 					printf ("Call number found in "$i"\\n")
 					break
 					break
 				case "callitem":
-					callNumpos=i
+					callNumPos=i
 					printf ("Call number found in "$i"\\n")
 					break
 				case "callprefix":
@@ -213,44 +225,38 @@ function build_mfhd() {
 					break
 				case "intnote":
 					if (itemfile == 0) {
-						actionNote=i
-						printf ("Action note was found in "$i"\\n")
+						intnote=i
+						printf ("Internal note was found in "$i"\\n")
 					}
 					break
 				case "notecheckin":
 					if (itemfile == 0) {
-						actionNote2=i
-						printf ("Action note was found in "$i"\\n")
+						notecheckin=i
+						printf ("Checkin note was found in "$i"\\n")
 					}
 					break
 				case "staffnote":
 					if (itemfile == 0) {
-						actionNote=i
-						printf ("Action note was found in "$i"\\n")
+						staffnote=i
+						printf ("Staff note was found in "$i"\\n")
 					}
 					break
 				case "staffnote2":
 					if (itemfile == 0) {
-						actionNote=i
-						printf ("Action note was found in "$i"\\n")
+						staffnote2=i
+						printf ("Staff note was found in "$i"\\n")
 					}
 					break
 				case "acquisitionstatus":
 					if (itemfile == 0) {
-						actionNote=i
-						printf ("Action note was found in "$i"\\n")
+						acquisitionstatus=i
+						printf ("Acq status note was found in "$i"\\n")
 					}
 					break
 				case "actionnote":
 					if (itemfile == 0) {
 						actionNote=i
 						printf ("Action note was found in "$i"\\n")
-					}
-					break
-				case "staffnote3":
-					if (itemfile == 0) {
-						bindingNote=i
-						printf ("Binding note was found in "$i"\\n")
 					}
 					break
 				case "bindingnote":
@@ -287,7 +293,10 @@ function build_mfhd() {
 		}
 	if (! bibId) {  printf ("\\nNo valid bib ID field could be found\\n"); exit }
 	if (! location ) {  printf ("\\nNo valid location field could be found\\n"); exit }
-	if (! callNumpos && ! callNumFallback ) {  emptyCall = 1 } else { emptyCall = 0 }
+
+	if (! callNumPos && ! callNumFallback ) {  emptyCall = 1 } else { emptyCall = 0 }
+	if (! callNumPos && callNumFallback > 0 ) { callNumPos = callNumFallback; callNumFallback = "" }
+
 	if (! recType) {  printf ("\\nNo record type field detected, defaulting to Single part holdings\\n") }
 	printf("\\n\\n")
 	}
@@ -296,8 +305,8 @@ function build_mfhd() {
 	gsub(/ *$/, "", $location) 
 
 	if (emptyCall == 0) {
-		if (callNumPos != "") {callNum = $callNumpos}
-		if (callNumFallback > 0 && length($callNumpos) == 0) {callNum = $callNumFallback }
+		callNum = $callNumPos
+		if (callNumFallback > 0 && length($callNumPos) == 0) {callNum = $callNumFallback }
 	} else {
 		if (NR == 1) { callNum = "callNum" } else { callNum = "" }
 	}
