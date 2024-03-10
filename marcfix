@@ -1,6 +1,4 @@
 filelist=("$@")
-rm -f "bad_*${infile}.mrc"
-rm -f "${infile}_fixed"
 
 
 infile="${filelist[0]}"
@@ -18,22 +16,18 @@ read -r -d '' awkscript << "ENDOFAWK"
 BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=bibcount=holdingscount=authoritycount=0
 }
 function check_fields() {
-	OUTFILE = FILEROOT"_fixed.mrc"
-
 	if (directory ~ /[^0-9]/){directory_check = 1;good_directory = 0}
 
 	if (directory_check == 0) {
 		for (i=1; i<=directory_length; i=i+12) {
 			if (substr(directory, i, 3) == "004") {rectype="holdings"}
 			if (substr(directory, i, 3) == "008") {found008 = 1}
-			if (substr(directory, i, 3) == "245") {found245 = 1;rectype="bib"}
+			if (substr(directory, i, 3) == "245") {found245 = 1}
 			if (substr(directory, i, 3) ~ /[^0-9a-zA-Z]/) {goodrec = 0}
 		}
 	} else {
 		good_directory = 0
 	}
-
-	if ( goodrec == 1 && found245 == 1 && directory_check == 0){good_directory=1} else {goodrec=0}
 }
 
 function check_leader() {
@@ -49,12 +43,16 @@ function check_leader() {
 	
 	if (reported_length != record_length){good_length = 0}
 
+	status_indicator=substr(leader, 6, 1)
+	if (status_indicator !~ /[acdnosx]/) { $0 = substr($0, 1, 5)"c"substr($0, 7); }
+
 	rectype_indicator=substr(leader, 7, 1)
+
+	rectype="bib"
 
 	switch(rectype_indicator) {
 		case /^[acdefngijkmoprt@]$/:
 			rectype="bib"
-			bibcount++
 			break
 		case /^[uvxy]$/:
 			rectype="holdings"
@@ -67,12 +65,15 @@ function check_leader() {
 			authoritycount++
 			break
 		default:
-			good_leader = 0;
+			$0 = substr($0, 1, 6)"a"substr($0, 8);
 	}
 
+	if (rectype == "bib") { bibcount++ }
+
+	OUTFILE = FILEROOT"_"rectype"_fixed.mrc"
 }
 {
-goodrec=good_directory=good_leader=good_encoding=good_length=1
+goodrec=good_directory=good_length=1
 found008=found245=oversized=0
 
 check_leader()
@@ -80,19 +81,18 @@ check_fields()
 
 skip=0
 
-if ( goodrec == 1 && good_directory == 1 && good_leader == 1 && good_encoding == 1 && good_length == 1 && found008 == 0){ goodrecs++;skip = 1;missing_008++; print $0 > "tmp_"rectype"_008.mrc" }
+if ( goodrec == 1 && good_directory == 1 && good_length == 1 && found008 == 0){ goodrecs++;skip = 1;missing_008++; print $0 > "tmp_"rectype"_008.mrc" }
 
-if ( goodrec == 1 && good_directory == 1 && good_leader == 1 && good_encoding == 1 && good_length == 1 && skip == 0){ goodrecs++;print $0 > OUTFILE }else{ badrecs++}
+if ( goodrec == 1 && good_directory == 1 && good_length == 1 && skip == 0 && found008 == 1){ goodrecs++;print $0 > OUTFILE }
 
 
 foundbad = 0
 if ( good_length == 0){ print $0 > "bad_length_"FILEROOT;badlength++;badlengthtext = " (length: "badlength")";foundbad = 1 }
-if ( good_leader == 0 && foundbad == 0){ print $0 > "bad_leader_"FILEROOT;badleader++;badleadertext = " (leader: "badleader")" }
 if ( good_directory == 0 && foundbad == 0){ print $0 > "bad_directory_"FILEROOT;baddirectory++;baddirectorytext = " (directory: "baddirectory")";foundbad = 1 }
-if ( good_encoding == 0 && foundbad == 0){ print $0 > "bad_encoding_"FILEROOT;badencoding++;badencodingtext = " (encoding: "badencoding")";foundbad = 1 }
 if ( found245 == 0 && foundbad == 0){ print $0 > "bad_missing245_"FILEROOT;bad245++;bad245text = " (245: "bad245")";foundbad = 1 }
-if ( found008 == 0 && foundbad == 0 && skip == 1){ bad008++;bad008text = " (008: "bad008")"}
-if ( badrecs > 0 ){ badtext = badleadertext""baddirectorytext""bad001text""bad008text""bad010text""bad245text""badencodingtext""badlengthtext }
+
+if (foundbad == 1) { badrecs++ }
+if ( badrecs > 0 ){ baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext }
 
 if (NR % 10000 == 0){ printf "Good records: %d Bad records: %d Issues: %s\r", goodrecs, badrecs, badtext }
 
@@ -112,6 +112,9 @@ ENDOFAWK
 
 process_file() {
 	fileroot=$(echo "${marcfile}" | sed 's/\.....\?$//')
+
+	rm -f "bad_*${fileroot}.mrc"
+	rm -f "${fileroot}_fixed.mrc"
 
 	firstnum=$'\x09'
 	lastnum=$'\xFF'
@@ -146,9 +149,9 @@ if [[ $processType == "file" ]];then
 			marc2text ${temproot}.mrc 
 			sed -i 's/^\(=LDR.*$\)/\1\n=008  780615s19uu    xx a                    d/' ${temproot}.txt
 			text2marc ${temproot}.txt
-			cat ${temproot}.mrc  >> "${fileroot}_fixed.mrc"
+			cat ${temproot}.mrc  >> "${fileroot}_bib_fixed.mrc"
 			rm -f ${temproot}.*
-			echo "Bib records lacking 008 were fixed and appended to ${fileroot}_fixed.mrc"
+			echo "Bib records lacking 008 were fixed and appended to ${fileroot}_bib_fixed.mrc"
 		fi
 		
 		temproot="tmp_authority_008"
@@ -156,9 +159,9 @@ if [[ $processType == "file" ]];then
 			marc2text ${temproot}.mrc 
 			sed -i 's/^\(=LDR.*$\)/\1\n=008  780615|| |||||aa||          |n aaa      /' ${temproot}.txt
 			text2marc ${temproot}.txt
-			cat ${temproot}.mrc  >> "${fileroot}_fixed.mrc"
+			cat ${temproot}.mrc  >> "${fileroot}_authority_fixed.mrc"
 			rm -f ${temproot}.*
-			echo "Authority records lacking 008 were fixed and appended to ${fileroot}_fixed.mrc"
+			echo "Authority records lacking 008 were fixed and appended to ${fileroot}_authority_fixed.mrc"
 		fi
 		
 		temproot="tmp_holdings_008"
@@ -166,17 +169,17 @@ if [[ $processType == "file" ]];then
 			marc2text ${temproot}.mrc 
 			sed -i 's/^\(=LDR.*$\)/\1\n=008  7806150p    8   4001uu   0000000/' ${temproot}.txt
 			text2marc ${temproot}.txt
-			cat ${temproot}.mrc  >> "${fileroot}_fixed.mrc"
+			cat ${temproot}.mrc  >> "${fileroot}_bib_fixed.mrc"
 			rm -f ${temproot}.*
-			echo "Holdings records lacking 008 were fixed and appended to ${fileroot}_fixed.mrc"
+			echo "Holdings records lacking 008 were fixed and appended to ${fileroot}_holdings_fixed.mrc"
 		fi
 
 		if [[ -f tmp_oversized.mrc ]];then
 			marc2text tmp_oversized.mrc
 			text2marc tmp_oversized.txt
-			cat tmp_oversized.mrc >> "${fileroot}_fixed.mrc"
+			cat tmp_oversized.mrc  >> "${fileroot}_bib_fixed.mrc"
 			rm -f tmp_oversized.*
-			echo "Oversized records were appended to ${fileroot}_fixed.mrc"
+			echo "Oversized records were appended to ${fileroot}_bib_fixed.mrc"
 		fi
 	done
 	rm -f tmp_checkmarc
