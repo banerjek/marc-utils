@@ -13,7 +13,7 @@ if [[ -z $processType ]];then echo "No files or directory matching the input can
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
-BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=bibcount=holdingscount=authoritycount=0
+BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=bibcount=holdingscount=authoritycount=override245=0
 }
 function check_fields() {
 	if (directory ~ /[^0-9]/){directory_check = 1;good_directory = 0}
@@ -22,7 +22,7 @@ function check_fields() {
 		for (i=1; i<=directory_length; i=i+12) {
 			if (substr(directory, i, 3) == "004") {rectype="holdings"}
 			if (substr(directory, i, 3) == "008") {found008 = 1}
-			if (substr(directory, i, 3) == "245") {found245 = 1}
+			if (substr(directory, i, 3) == "245") {override245 = 1}
 			if (substr(directory, i, 3) ~ /[^0-9a-zA-Z]/) {goodrec = 0}
 		}
 	} else {
@@ -69,6 +69,7 @@ function check_leader() {
 	}
 
 	if (rectype == "bib") { bibcount++ }
+	if (override245 == 1) { rectype = "bib" }
 
 	OUTFILE = FILEROOT"_"rectype"_fixed.mrc"
 }
