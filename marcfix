@@ -22,7 +22,7 @@ function check_fields() {
 		for (i=1; i<=directory_length; i=i+12) {
 			if (substr(directory, i, 3) == "004") {rectype="holdings"}
 			if (substr(directory, i, 3) == "008") {found008 = 1}
-			if (substr(directory, i, 3) == "245") {override245 = 1}
+			if (substr(directory, i, 3) == "245") {override245=found245=1}
 			if (substr(directory, i, 3) ~ /[^0-9a-zA-Z]/) {goodrec = 0}
 		}
 	} else {
@@ -93,7 +93,7 @@ if ( good_directory == 0 && foundbad == 0){ print $0 > "bad_directory_"FILEROOT;
 if ( found245 == 0 && foundbad == 0){ print $0 > "bad_missing245_"FILEROOT;bad245++;bad245text = " (245: "bad245")";foundbad = 1 }
 
 if (foundbad == 1) { badrecs++ }
-if ( badrecs > 0 ){ baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext }
+if ( badrecs > 0 ){ badtext=baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext }
 
 if (NR % 10000 == 0){ printf "Good records: %d Bad records: %d Issues: %s\r", goodrecs, badrecs, badtext }
 
