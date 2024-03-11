@@ -170,7 +170,7 @@ if [[ $processType == "file" ]];then
 			marc2text ${temproot}.mrc 
 			sed -i 's/^\(=LDR.*$\)/\1\n=008  7806150p    8   4001uu   0000000/' ${temproot}.txt
 			text2marc ${temproot}.txt
-			cat ${temproot}.mrc  >> "${fileroot}_bib_fixed.mrc"
+			cat ${temproot}.mrc  >> "${fileroot}_holdings_fixed.mrc"
 			rm -f ${temproot}.*
 			echo "Holdings records lacking 008 were fixed and appended to ${fileroot}_holdings_fixed.mrc"
 		fi
