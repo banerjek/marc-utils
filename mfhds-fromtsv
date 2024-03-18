@@ -8,7 +8,7 @@ if [[ "${fileroot}" =~ [Ii}[Tt][Ee][Mm] ]];then
 	echo -e "\nItem file detected -- ignoring note fields\n"
 	outfile="mfhds_fromitems.mrc"
 else
-	echo  "\nCheckin file assumed. Place the string \"item\" in your source file name if this is not intended\n"
+	echo -e  "\nCheckin file assumed. Place the string \"item\" in your source file name if this is not intended\n"
 	outfile="mfhds_fromcheckins.mrc"
 fi
 
@@ -163,6 +163,10 @@ function build_mfhd() {
 				case "recordbiblio":
 					bibId=i
 					printf ("Bib ID found in "$i"\\n")
+					break
+				case "loc":
+					location=i
+					printf ("Location found in "$i"\\n")
 					break
 				case "location":
 					location=i
