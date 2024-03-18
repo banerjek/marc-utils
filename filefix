@@ -1,0 +1,278 @@
+filelist=("$@")
+infile="${filelist[0]}"
+
+if [[ ${filelist[-1]} == "us-single" ]]; then
+	unset 'filelist[${#filelist[@]}-1]'
+	dateformat="us-single"
+fi
+if [[ ${filelist[-1]} == "uk-single" ]]; then
+	unset 'filelist[${#filelist[@]}-1]'
+	dateformat="uk-single"
+fi
+
+if [[ -z ${infile} ]];then echo "You must supply a file name or expression (wildcards OK). Usage: filefix [filename]";fi
+
+if [[ -z $1 ]];then
+	echo "This tool converts csv data to tsv, performs basic cleaning, and does field frequency counts "
+	echo "It detects date formats and converts MM-DD-YYYY and DD-MM-YYYY dates to YYYY-MM-DD. "
+	echo 
+	echo "Usage: filefix [filename]"
+	echo
+	echo "You will be prompted for optional functionality"
+	echo
+	exit
+else
+	infile=${1}
+fi
+
+function fix_file() {
+infile="${1}"
+filedetect="${infile,,}"
+filecontent=""
+
+[[ "${filedetect}" =~ loan ]] && filecontent="loan"
+
+outfile=$(sed 's/\.....\?$//' <<< "${infile}")
+
+if [[ "${infile: -4}" == "xlsx" ]];then
+	/home/ssm-user/.local/bin/xlsx2csv -d "\t" --skipemptycolumns "${infile}" > "${outfile}.tsv"
+	if [[ $(head -1 "${outfile}.tsv") =~ ^$'\t' ]];then
+		cut -f2- "${outfile}.tsv" > tmp
+		mv tmp "${outfile}.tsv"
+	fi
+
+	infile="${outfile}.tsv"
+	foundExcel=1
+	echo "Excel file detected -- converting"
+fi
+
+echo
+echo "################ Processing ${infile} #####################"
+echo
+echo "Detecting and removing trailing carriage returns"
+echo
+
+if [[ -z $dateformat ]]; then
+	head -50 "${infile}" |grep -o "\b[0|1]\?[0-9][/\-][0-3]\?[0-9][/\-][27-9][0-9]\b" > /dev/null && echo "Six digit date with trailing year detected."
+	head -50 "${infile}" |grep -o "\b[78-9][0-9][/\-][0-3]\?[0-9][/\-][0|1]\?[0-9]\b" > /dev/null && echo "Six digit date with leading year detected."
+
+	head -50 "${infile}" |grep -o "\b[0-9][23][/\-][0-9][0-9][/\-][12][09][0-9][0-9]\b" > /dev/null &&  dateformat="us"
+	head -50 "${infile}" |grep -o "\b[0-9][/\-][23][0-9][/\-][12][09][0-9][0-9]\b" > /dev/null &&  dateformat="us-single"
+	head -50 "${infile}" |grep -o "\b[23][0-9][/\-][0-9][0-9][/\-][12][09][0-9][0-9]\b" > /dev/null && dateformat="uk"
+	head -50 "${infile}" |grep -o "\b[23][0-9][/\-][0-9][/\-][12][09][0-9][0-9]\b" > /dev/null && dateformat="uk-single"
+	head -50 "${infile}" |grep -o "\b[12][01239][0-9][0-9]\/[0-9][0-9]\/[0-9][0-9]\b" > /dev/null && dateformat="slashes"
+fi
+
+
+if [[ ${dateformat} == "uk" ]];then echo "UK dates detected. DD-MM-YYYY dates will be converted to YYYY-MM-DD";fi
+if [[ ${dateformat} == "uk-single" ]];then echo "UK dates with single digits detected. D-M-YYYY dates will be converted to YYYY-MM-DD";fi
+if [[ ${dateformat} == "us" ]];then echo "US dates detected. MM-DD-YYYY dates will be converted to YYYY-MM-DD";fi
+if [[ ${dateformat} == "us-single" ]];then echo "US dates with single digits detected. M-D-YYYY dates will be converted to YYYY-MM-DD";fi
+
+
+if [[ ! -f "${infile}" ]];then echo "The input file ${infile} could not be found";exit;fi
+
+cp "${infile}" tmp_infile
+
+# make sure dos files look like dos all the way through so newlines in fields don't confuse the script
+head -1 tmp_infile | grep -q $'\r' && awk 'BEGIN{FS="\t";RS=ORS="\n"}{if (NR==1){numfields=NF;print $0}else{if (NF == numfields && $numfields !~ /\r$/){print $0"\r"}else print $0}}' tmp_infile > "${infile}"
+
+# normalize out newlines within fields in dos files
+head -1 "${infile}" | grep -q $'\r' && awk -v ORS=$'\x1d' -v RS="\r\n" '{gsub("\n", " ", $0); print $0}' "${infile}" |tr $'\x1d' "\n" > tmp_infile
+
+iconv -f utf-8 -t utf-8 -c tmp_infile -o tmp_outfile
+
+# detect file characteristics. First line is assumed to contain either tabs or commas
+
+firstline="$(head -1 tmp_outfile)"
+
+echo "${firstline}" | grep -qP "\t" && filetype="tab"
+echo "${firstline}" | grep -q "|" && filetype="pipe"
+echo "${firstline}" | grep -q "," && filetype="comma"
+
+if [[ ${filetype} == "pipe" ]];then
+		echo "Pipe delimited file detected. Converting ${infile} to tab delimited."
+		echo "Please be patient."
+		sed -i 's/|/\t/g' tmp_outfile
+		echo "Conversion to tab delimited complete"
+fi
+
+if [[ ${filetype} == "comma" ]];then
+		echo "Comma delimited file detected. Converting ${infile} to tab delimited."
+		echo "Please be patient."
+		csvformat -T tmp_outfile > tmp_outfile1
+		mv tmp_outfile1 tmp_outfile
+		echo "Conversion to tab delimited complete"
+		echo
+fi
+
+if [[ ! $filetype ]];then
+	echo "${infile} doesn't appear to be comma or tab delimited."
+	echo "Please supply a different file or correct the first line."
+	echo
+	exit
+fi
+
+read -r fieldnames < tmp_outfile
+
+numrecs=$(wc -l tmp_outfile |cut -d " " -f1)
+numfields=$(awk 'BEGIN{FS="\t"}{print NF;exit}' tmp_outfile)
+num_labeled_fields=$(head -1 tmp_outfile |tr '\t' '\n' |grep -i [a-z0-9])
+
+echo
+echo "$numfields fields $numrecs lines were detected."
+
+echo
+echo "Problematic characters will be removed from fieldnames"
+echo
+
+num_labeled_fields=$(head -1 tmp_outfile |tr '\t' '\n' |grep -i [a-z0-9] |wc -l)
+
+if [[ $numfields != $num_labeled_fields ]];then
+	echo
+	echo "$numfields fields detected but $num_labeled_fields fields with labels were detected."
+	echo
+	echo "WARNING: DISPARITY BETWEEN NUMBER OF FIELDS AND NUMBER OF LABELS USUALLY INDICATES DATA PROBLEMS -- INSPECT FILE."
+	echo
+fi
+
+head -50 "${infile}" |grep -o "\b[1-9]\.[0-9]\+E+[0-9]\+\b" > /dev/null && echo "WARNING: POSSIBLE EXCEL CORRUPTION -- INSPECT FILE"
+
+# normalize fieldnames in file
+if [[ ${filecontent} == "loan" ]];then
+sed -i '
+1 s/[^0-9A-Za-z_\-#)(\.\t]//g
+1 s/\bp[^\t]*barcode\b/patron_barcode/i
+1 s/\bbarcode[^\t]*p[^\t]*\b/patron_barcode/i
+1 s/\bi[^\t]*barcode\b/item_barcode/i
+1 s/\bbarcode[^\t]*i[^\t]*\b/item_barcode/i
+1 s/\bout[^\t]*date\b/out_date/i
+1 s/\bdue[^\t]*date\b/due_date/i
+1 s/\btot[^\t]*renew[^\t]*\b/renewal_count/i
+1 s/\b[^\tp]*tatus\b/next_item_status/i
+1 s/\b[^p\t][^\t]*arcode/item_barcode/i
+s/ [0-9]*:[0-9]*\($\|[\t]\)/\1/g
+' tmp_outfile 
+
+echo 
+echo "Loan file detected. Attempting to standardize headers"
+echo
+
+else
+	sed -i '1 s/[^0-9A-Za-z_\-#)(\.\t]//g' tmp_outfile 
+fi
+
+read -r fieldnames < tmp_outfile
+
+fieldnames=$(tr -dc "[[A-Za-z0-9]]_	\-#." <<< "${fieldnames}")
+echo "The following fields were detected in ${infile}"
+echo
+echo "${fieldnames}" |tr "\t" "\n" |grep -n .
+echo
+
+
+echo
+echo "Converting smartquotes and hard spaces, and removing control characters from fields"
+echo
+
+SINGLE=$(echo -ne '\u00B4\u2018\u2019')
+DOUBLE=$(echo -ne '\u201C\u201D')
+NBSP=$(echo -ne '\uc2a0\u00a0\ufeff')
+CONTROL=$(echo -ne '\u001b\u0007\u0001')
+
+sed -i "
+s/['\"];['\"]/;/g
+s/[$SINGLE]/'/g
+s/[$DOUBLE]/\"/g
+s/[$NBSP]/ /g
+s/[$CONTROL]/ /g
+" tmp_outfile
+
+echo 
+
+if [[ ${dateformat} == "us" ]]; then
+	echo "No UK formatted dates detected in first 50 lines"
+	echo "Converting MM-DD-YYYY dates to YYYY-MM-DD and stripping blank dates"
+	sed -i 's/\b\([0-9][0-9][/\-][0-9][0-9][/\-]\)\([89][0-9]\)\b/\119\2/g;s/\b\([0-9][0-9]\)[/\-]\([0-9][0-9]\)[/\-]\([0-9][0-9][0-9][0-9]\)\b/\3-\1-\2/g;s/ \+-  -\( \+\)\?//g' tmp_outfile
+fi
+	if [[ ${dateformat} == "us-single" ]]; then
+	echo "Converting US dates with single digits to to YYYY-MM-DD and stripping blank dates"
+	sed -i -r -e 'sx([^0-9]|\b)([0-9][/\-])x\10\2xg;sx/([0-9][/\-])x/0\1xg' tmp_outfile
+	sed -i  's/\b\([0-9][0-9][/\-][0-9][0-9][/\-]\)\([7-9][0-9]\)\b/\119\2/g;s/\b\([0-9][0-9][/\-][0-9][0-9][/\-]\)\([012][0-9]\)\b/\120\2/g;s/\b\([0-9][0-9]\)[/\-]\([0-9][0-9]\)[/\-]\([0-9][0-9][0-9][0-9]\)\b/\3-\1-\2/g;s/ \+-  -\( \+\)\?//g' tmp_outfile
+fi
+if [[ ${dateformat} == "uk" ]]; then
+	echo "Converting DD-MM-YYYY dates to YYYY-MM-DD and stripping blank dates"
+	sed -i 's/\b\([0-9][0-9][/\-][0-9][0-9][/\-]\)\([7-9][0-9]\)\b/\119\2/g;s/\b\([0-9][0-9]\)[/\-]\([0-9][0-9]\)[/\-]\([0-9][0-9][0-9][0-9]\)\b/\3-\2-\1/g;s/ \+-  -\( \+\)\?//g;' tmp_outfile 
+fi
+if [[ ${dateformat} == "uk-single" ]]; then
+	echo "Converting UK dates with single digits to YYYY-MM-DD and stripping blank dates"
+	sed -i -r -e 'sx([^0-9]|\b)([0-9][/\-])x\10\2xg;sx/([0-9][/\-])x/0\1xg' tmp_outfile
+	sed -i 's/\b\([0-9][0-9][/\-][0-9][0-9][/\-]\)\([7-9][0-9]\)\b/\119\2/g;s/\b\([0-9][0-9][/\-][0-9][0-9][/\-]\)\([0-2][0-9]\)\b/\120\2/g;s/\b\([0-9][0-9]\)[/\-]\([0-9][0-9]\)[/\-]\([0-9][0-9][0-9][0-9]\)\b/\3-\2-\1/g;s/ \+-  -\( \+\)\?//g;' tmp_outfile 
+fi
+if [[ ${dateformat} == "slashes" ]]; then
+	echo "Reformatting dates to YYYY-MM-DD"
+	sed -i 's#\b\([12][1230][0-9][0-9]\)/\([0-9][0-9]\)/\([0-9][0-9]\)\b#\1-\2-\3#g' tmp_outfile 
+fi
+
+fieldcounters="${fieldcounters// /}"
+
+
+read -r -d '' awkscript << "ENDOFAWK"
+#!/usr/bin/awk -f
+
+BEGIN {
+	FS=OFS="\t"
+	goodrecs=badrecs=0
+}
+
+{
+	if (NR == 1) {
+		print header > outfile
+	} else {
+		if (NF == numfields) {
+			goodrecs++
+			for(i=1;i<=NF;i++) {
+				$i = gensub(/^"(.*)"$/, "\\\1", 1, $i)
+				gsub(/ +$/, "", $i)
+				printf("%s%s",$i,i==NF?RS:OFS) > outfile
+			}
+	
+		} else {
+			badrecs++
+			print $0 > badfile
+		}
+	
+		if(NR % 10000 == 0 ) {printf ("Processed %d items\r", NR)}
+	}
+}
+END {
+	print "Processed " NR - 1 " items."
+	print goodrecs " good records were output to " outfile " and" 
+	print badrecs " records with the wrong number of fields were output to " badfile
+	print ""
+
+}
+ENDOFAWK
+
+echo -e "${awkscript}" > tmp_awk
+chmod 700 tmp_awk
+
+if [[ "${infile}" =~ \....$ ]];then
+	outfile=$(echo "${infile}" |sed 's/\(.*\)\(\....$\)/\1_fixed\2/')
+else
+	outfile="${infile}_fixed"
+fi
+badfile="${infile}_error"
+
+awk -v numrecs=$numrecs -v numfields=$numfields -v header="${fieldnames}" -v outfile="${outfile}" -v badfile="${badfile}" -v fieldcounters=$fieldcounters -f tmp_awk tmp_outfile
+rm tmp_awk tmp_infile tmp_outfile
+
+if [[ foundExcel -eq 1 ]];then
+	rm "${infile}"
+fi
+foundExcel=0
+}
+
+for file in "${filelist[@]}";do
+	fix_file "${file}"
+done
