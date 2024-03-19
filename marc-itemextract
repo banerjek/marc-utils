@@ -316,28 +316,33 @@ fi
 
 if [[ ${system} == "virtua" ]];then
 	identifier="001"
-	item_field="990q"
-	item_call_subfield="o"
-	location_subfield="q"
-	bib_call_field="900"
+	item_field="949D"
+	item_call_subfield="a"
+	location_subfield="D"
+	bib_call_field="090"
+	bib_call_fallback="050"
 
 	tags[1]="a"
 	tags[2]="b"
-	tags[3]="c"
-	tags[4]="d"
-	tags[5]="i"
-	tags[6]="q"
-	tags[7]="r"
-	tags[8]="o"
+	tags[3]="6"
+	tags[4]="F"
+	tags[5]="D"
+	tags[6]="x"
+	tags[7]="o"
+	tags[8]="p"
+	tags[9]="q"
+	tags[10]="G"
 
 	labels[1]="call#"
 	labels[2]="call#cutter"
-	labels[3]="volume"
+	labels[3]="barcode"
 	labels[4]="copy"
-	labels[5]="barcode"
-	labels[6]="location"
-	labels[7]="call_prefix"
-	labels[8]="call_suffix"
+	labels[5]="location"
+	labels[6]="itype"
+	labels[7]="staff_note"
+	labels[8]="public_note"
+	labels[9]="checkin_note"
+	labels[10]="temp_location"
 fi
 
 if [[ ${system} == "wms"  ]];then
@@ -540,6 +545,16 @@ function extract_items() {
          gsub(subfield_regex, " ", bib_call)
          }
 
+      if (marc_tag == BIB_CALL_FALLBACK) {
+			if (bib_call == "") {
+         	field_length = substr(directory, d_iter + 3, 4) + 0
+         	starting_pos = substr(directory, d_iter + 7, 5)
+
+         	bib_call = substr(record_content, starting_pos + 5, field_length - 5)
+         	gsub(subfield_regex, " ", bib_call)
+				}
+         }
+
 		if (marc_tag == ITEMFIELD) {
 
 			field_length = substr(directory, d_iter + 3, 4) + 0
@@ -599,7 +614,7 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
-awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${identifier}" -v ITEMFIELD="${item_field}" -v CALL="${item_call_subfield}" -v BIB_CALL_FIELD="${bib_call_field}" -v LOCATION="${location_subfield}" -v TAGLIST="${taglist}" -v LABELLIST="${labellist}" -v SPECIALLIST="${speciallist}" -v SYSTEM="${system}" -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${identifier}" -v ITEMFIELD="${item_field}" -v CALL="${item_call_subfield}" -v BIB_CALL_FIELD="${bib_call_field}" -v BIB_CALL_FALLBACK="${bib_call_fallback}" -v LOCATION="${location_subfield}" -v TAGLIST="${taglist}" -v LABELLIST="${labellist}" -v SPECIALLIST="${speciallist}" -v SYSTEM="${system}" -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
 echo
 
 rm -f tmp_checkmarc
