@@ -13,14 +13,18 @@ if [[ -z $processType ]];then echo "No files or directory matching the input can
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
-BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=bibcount=holdingscount=authoritycount=override245=0
+BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=bibcount=holdingscount=authoritycount=eound245=override245=0
 }
 function check_fields() {
 	if (directory ~ /[^0-9]/){directory_check = 1;good_directory = 0}
 
 	if (directory_check == 0) {
 		for (i=1; i<=directory_length; i=i+12) {
-			if (substr(directory, i, 3) == "004") {rectype="holdings"}
+			if (substr(directory, i, 3) == "004") {
+				if (rectype !~ "holdings" ) { $0 = substr($0, 1, 6)"y"substr($0, 8); }
+				rectype="holdings"
+				found245=1
+			}
 			if (substr(directory, i, 3) == "008") {found008 = 1}
 			if (substr(directory, i, 3) == "245") {override245=found245=1}
 			if (substr(directory, i, 3) ~ /[^0-9a-zA-Z]/) {goodrec = 0}
@@ -70,17 +74,17 @@ function check_leader() {
 
 	if (rectype == "bib") { bibcount++ }
 	if (override245 == 1) { rectype = "bib" }
-
-	OUTFILE = FILEROOT"_"rectype"_fixed.mrc"
 }
 {
 goodrec=good_directory=good_length=1
-found008=found245=oversized=0
+found008=found245=override245=oversized=0
 
 check_leader()
 check_fields()
 
 skip=0
+
+OUTFILE = FILEROOT"_"rectype"_fixed.mrc"
 
 if ( goodrec == 1 && good_directory == 1 && good_length == 1 && found008 == 0){ goodrecs++;skip = 1;missing_008++; print $0 > "tmp_"rectype"_008.mrc" }
 
@@ -128,8 +132,8 @@ process_file() {
 	
 	echo "Detecting and removing nulls"
 	tr < "${marcfile}" -d '\000' > "${marcfile}.tmp"
-	echo "Detecting and converting carriage returns and newlines to spaces"
-	tr < "${marcfile}.tmp" '\n\r' '  ' > "${marcfile}"
+	echo "Detecting and converting carriage returns, newlines, and tabs to spaces"
+	tr < "${marcfile}.tmp" '\n\r\t' '   ' > "${marcfile}"
 	rm ${marcfile}.tmp
 		
 
