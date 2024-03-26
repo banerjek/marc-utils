@@ -13,7 +13,7 @@ if [[ -z $processType ]];then echo "No files or directory matching the input can
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
-BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=bibcount=holdingscount=authoritycount=eound245=override245=0
+BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=bibcount=holdingscount=authoritycount=found245=override245=0
 }
 function check_fields() {
 	if (directory ~ /[^0-9]/){directory_check = 1;good_directory = 0}
