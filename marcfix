@@ -61,18 +61,15 @@ function check_leader() {
 		case /^[uvxy]$/:
 			rectype="holdings"
 			found245 = 1
-			holdingscount++
 			break
 		case "z":
 			rectype="authority"
 			found245 = 1
-			authoritycount++
 			break
 		default:
 			$0 = substr($0, 1, 6)"a"substr($0, 8);
 	}
 
-	if (rectype == "bib") { bibcount++ }
 	if (override245 == 1) { rectype = "bib" }
 }
 {
@@ -98,6 +95,10 @@ if ( found245 == 0 && foundbad == 0){ print $0 > "bad_missing245_"FILEROOT;bad24
 
 if (foundbad == 1) { badrecs++ }
 if ( badrecs > 0 ){ badtext=baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext }
+
+if (rectype == "bib") { bibcount++ }
+if (rectype == "holdings") { holdingscount++ }
+if (rectype == "authority") { authoritycount++ }
 
 if (NR % 10000 == 0){ printf "Good records: %d Bad records: %d Issues: %s\r", goodrecs, badrecs, badtext }
 
