@@ -134,7 +134,7 @@ Sort text representations (Marcedit or text2marc) of MARC files in tag order
 
 ## marcssplit
 **Usage:** *marcsplit [filename] [num_records]*  
-**Example:** *marcsplit marc_file.mrc 1000"*
+**Example:** *marcsplit marc_file.mrc 1000*
 
 Splits large MARC file into multiple files, each containing *num_records* records. If *num_records* isn't provided, default is 500
 
