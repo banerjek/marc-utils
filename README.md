@@ -132,7 +132,7 @@ The count parameter is optional. If the word "count" is sent, marcsearch only re
 
 Sort text representations (Marcedit or text2marc) of MARC files in tag order
 
-## marcssplit
+## marcsplit
 **Usage:** *marcsplit [filename] [num_records]*  
 **Example:** *marcsplit marc_file.mrc 1000*
 
