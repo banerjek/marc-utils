@@ -24,7 +24,15 @@ BEGIN { records_found = 0
                 printf("Your version of awk does not support marcsearch -- you need a version that supports the -b switch\\n")
                 exit
         }
+	
+	NOT = 0
+
+	if (substr(SEARCH, length(SEARCH), 1) == "!") {
+		NOT = 1
+		SEARCH = substr(SEARCH, 1, length(SEARCH) - 1)
+	}
 }
+
 {
 good_record=0
 
@@ -42,7 +50,8 @@ if (directory_check == 0) {
 			starting_pos = substr(directory, i + 7, 5) 
 			field_content = substr(record_content, starting_pos, field_length)
 
-			if (field_content ~ SEARCH) { good_record = 1 }
+			if (field_content ~ SEARCH && NOT == 0) { good_record = 1 }
+			if (field_content !~ SEARCH && NOT == 1) { good_record = 1 }
 		}
 	}
 }

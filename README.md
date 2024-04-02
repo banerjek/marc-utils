@@ -124,6 +124,8 @@ Remaps one MARC field to another. Currently only does whole field content, not i
 
 Extracts MARC records where regex_search_expression was found in a MARC tag and directs them to a file named *[filename]_found.mrc*. If you want to target a specific subfield, you'll need to create an expression that involves the subfield delimiters (hex 1F)
 
+To negate a search, add an exclamation point to the end of the regex, e.g. *marcsearch marcfile.mrc 856 "my_proxy.edu!"*
+
 The count parameter is optional. If the word "count" is sent, marcsearch only reports on how many records it found without extracting them.
 
 ## marcsort
