@@ -48,15 +48,21 @@ function check_leader() {
 	if (reported_length != record_length){good_length = 0}
 
 	status_indicator=substr(leader, 6, 1)
-	if (status_indicator !~ /[acdnosx]/) { $0 = substr($0, 1, 5)"c"substr($0, 7); }
+	if (status_indicator !~ /[acdnopsx]/) { $0 = substr($0, 1, 5)"c"substr($0, 7); }
 
-	rectype_indicator=substr(leader, 7, 1)
+	control_indicator=substr(leader, 9, 1)
+	if (control_indicator != "a" && control_indicator != " ") { $0 = substr($0, 1, 8)" "substr($0, 10) }
+
+	form_indicator=substr(leader, 17, 1)
+	if (form_indicator !~ /[ acinu]/) { $0 = substr($0, 1, 8)" "substr($0, 10) }
 
 	rectype="bib"
 
+	rectype_indicator=substr(leader, 7, 1)
+
 	switch(rectype_indicator) {
 		case /^[acdefngijkmoprt@]$/:
-			rectype="bib"
+			rectype = "bib"
 			break
 		case /^[uvxy]$/:
 			rectype="holdings"
