@@ -91,13 +91,14 @@ OUTFILE = FILEROOT"_"rectype"_fixed.mrc"
 
 if ( goodrec == 1 && good_directory == 1 && good_length == 1 && found008 == 0){ goodrecs++;skip = 1;missing_008++; print $0 > "tmp_"rectype"_008.mrc" }
 
-if ( goodrec == 1 && good_directory == 1 && good_length == 1 && skip == 0 && found008 == 1){ goodrecs++;print $0 > OUTFILE }
-
 
 foundbad = 0
 if ( good_length == 0){ print $0 > "bad_length_"FILEROOT;badlength++;badlengthtext = " (length: "badlength")";foundbad = 1 }
 if ( good_directory == 0 && foundbad == 0){ print $0 > "bad_directory_"FILEROOT;baddirectory++;baddirectorytext = " (directory: "baddirectory")";foundbad = 1 }
+
 if ( found245 == 0 && foundbad == 0){ print $0 > "bad_missing245_"FILEROOT;bad245++;bad245text = " (245: "bad245")";foundbad = 1 }
+
+if ( goodrec == 1 && good_directory == 1 && good_length == 1 && skip == 0 && found008 == 1 && found245 == 1){ goodrecs++;print $0 > OUTFILE }
 
 if (foundbad == 1) { badrecs++ }
 if ( badrecs > 0 ){ badtext=baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext }
