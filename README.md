@@ -12,12 +12,14 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marcfc**](#marcfc) -- Provide field and subfield counts
 * [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
 * [**marcgrep**](#marcgrep) -- Search raw file or stdin for regex and render output as text
+* [**marchead**](#marchead) -- Extract first part of MARC files 
 * [**marcmissing**](#marcmissing) -- Extract MARC records based absence of a specified tag
 * [**marcless**](#marcless) -- Page through MARC records through unix less command
 * [**marcremap**](#marcremap) -- Remap one MARC field to another 
 * [**marcsearch**](#marcsearch) -- Extract MARC records containing a search pattern
 * [**marcsort**](#marcsort) -- Sort MARC files by field
 * [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
+* [**marctail**](#marctail) -- Extract last part of MARC files 
 * [**tag**](#tag) -- Extract single MARC tag
 * [**tagfc**](#tagfc) -- Counts MARC fields and subfields from stdin 
 * [**text**](#text) -- Converts MARC on stdin to text
@@ -99,6 +101,12 @@ Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good re
 
 Simple regex match through binary MARC file with output to text.
 
+## marchead
+**Usage:** *marchead [numlines] [filename]*  
+**Example:** *marchead -1000 marc_file.mrc*
+
+Output first [numlines] records, *nix head style
+
 ## marcmissing
 **Usage:** *marcmissing [filename] [tag]*  
 **Example:** *marcmissing marc_file\*.mrc* 
@@ -139,6 +147,12 @@ Sort text representations (Marcedit or text2marc) of MARC files in tag order
 **Example:** *marcsplit marc_file.mrc 1000*
 
 Splits large MARC file into multiple files, each containing *num_records* records. If *num_records* isn't provided, default is 500
+
+## marctail
+**Usage:** *marctail [numlines] [filename]*  
+**Example:** *marctail -1000 marc_file.mrc*
+
+Output last [numlines] records, *nix head style
 
 ## tag
 **Usage:** *tag [marc tag] [filename]*  
