@@ -95,6 +95,8 @@ function build_mfhd() {
 		for (statement in statements) { text_mfhd = text_mfhd""FS"=583    "SFS"a"statements[statement] }
 	}
 	if (libHas > 0 && $libHas ~ /[a-zA-Z0-9]/) {
+		gsub(/^1\.[1-9]?[0-9] /, "", $libHas)
+		gsub(/;1\.[1-9]?[0-9] /, "", $libHas)
 		split($libHas, statements, ";") 
 		for (statement in statements) { text_mfhd = text_mfhd""FS"=866    "SFS"a"statements[statement]
 		}
@@ -213,7 +215,7 @@ function build_mfhd() {
 					libHas=i
 					printf ("Lib has was found in "$i"\\n")
 					break
-				case "libhashascheckin":
+				case "libhascheckin":
 					libHas=i
 					printf ("Lib has was found in "$i"\\n")
 					break
@@ -305,6 +307,7 @@ function build_mfhd() {
 	printf("\\n\\n")
 	}
 
+	gsub(/"/, "", $0) 
 	gsub(/^ */, "", $location) 
 	gsub(/ *$/, "", $location) 
 
