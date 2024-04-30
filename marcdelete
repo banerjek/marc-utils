@@ -1,0 +1,32 @@
+if [[ -z $1 || -z $2  ]];then
+	echo "Deletes all specified tags or tags matching a regex"
+	echo
+	echo "Usage: marcdelete [filename] [marcfield] '[regex]'"
+	echo "Regular expresions are supported for searchexpression"
+	echo "Subfields must be targeted by using hex 31 as part of the optional regex"
+	exit
+else
+	infile="${1}"
+	marctag=${2}
+	regex="${3}"
+
+fi
+
+fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
+
+cp "${infile}" "${fileroot}_fixed.mrc"
+
+echo "Converting file to text to facilitate processing"
+marc2text "${fileroot}_fixed.mrc"
+
+sed -i "/^=${marctag}.*${regex}/d" "${fileroot}_fixed.txt"
+
+echo "Rebuilding MARC file"
+text2marc "${fileroot}_fixed.txt"
+
+rm -f "${fileroot}_fixed.txt"
+
+echo "Temporary files have been removed"
+
+
+

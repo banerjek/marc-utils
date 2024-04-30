@@ -7,6 +7,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marc2bibsandholdings**](#marc2bibsandholdings) -- Separate bib from holdings records
 * [**marc2text**](#marc2text) -- Convert binary MARC files to text
 * [**marc2tsv**](#marc2tsv) -- Extract MARC fields into TSV file 
+* [**marcdelete**](#marcdelete) -- Delete MARC field based on tag with optional regex
 * [**marcextract**](#marcextract) -- Extract record identifier and data from MARC tag 
 * [**marcextractbyid**](#marcextractbyid) -- Extract records matching a list of identifiers
 * [**marcfc**](#marcfc) -- Provide field and subfield counts
@@ -70,6 +71,12 @@ Whole tags are extracted, leading subfield marker (usually a) is stripped. The s
 **Example:** *marccount myfile.mrc*
 
 Counts MARC records based on detection of end of record markers
+
+## marcdelete
+**Usage:** *marcdelete [filename] [tag] [regex]*  
+**Example:** *marcdelete myfile.mrc 856 ezproxy*
+
+Delete MARC tag based on optional regex
 
 ## marcextract
 **Usage:** *Usage: marcextract [filename] [marcfield] [idtag]*  
