@@ -149,6 +149,7 @@ process_file() {
 	echo "Detecting and removing nulls"
 	tr < "${marcfile}" -d '\000' > "${marcfile}.tmp"
 	echo "Detecting and converting carriage returns, newlines, and tabs to spaces"
+	echo
 	tr < "${marcfile}.tmp" '\n\r\t' '   ' > "${marcfile}"
 	rm ${marcfile}.tmp
 		
