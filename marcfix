@@ -114,9 +114,17 @@ END {
 ORS=OFS="\\n"
 close(OUTFILE)
 
+bibmsg=holdingsmsg=authoritymsg=""
+
+if (bibcount > 0) { bibmsg = bibcount" records output to "FILEROOT"_bib_fixed.mrc\\n" }
+if (holdingscount > 0) { holdingsmsg = holdingscount" records output to "FILEROOT"_holdings_fixed.mrc\\n" }
+if (authoritycount > 0) { authoritymsg = authoritycount" records output to "FILEROOT"_authority_fixed.mrc\\n" }
+
 printf "Good records: %d Bad records: %d Issues: %s\\n\\n", goodrecs, badrecs, badtext
-printf "Bib records: %d Holdings records: %d Authority records: %s\\n", bibcount, holdingscount, authoritycount 
-print "";print goodrecs " records were output to "OUTFILE" and " badrecs " records were output to the files listed below and prefixed with bad_" 
+printf "Bib records: %d Holdings records: %d Authority records: %s\\n\\n", bibcount, holdingscount, authoritycount 
+print bibmsg""holdingsmsg""authoritymsg""
+
+if (badrecs > 0) { print badrecs" records were output to the files listed below and prefixed with bad_" }
 if (totaloversized > 0) {print totaloversized" oversized were truncated"}
 }
 
