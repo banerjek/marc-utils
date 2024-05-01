@@ -12,6 +12,7 @@ else
 
 fi
 
+
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
 
 cp "${infile}" "${fileroot}_fixed.mrc"
@@ -19,7 +20,15 @@ cp "${infile}" "${fileroot}_fixed.mrc"
 echo "Converting file to text to facilitate processing"
 marc2text "${fileroot}_fixed.mrc"
 
-sed -i "s/^\(=${marctag}.*\)${search}/\1${replace}/" "${fileroot}_fixed.txt"
+tag=${marctag:0:3}
+delim=$'\x1f'
+
+if [[ ${#marctag} == 4 ]];then 
+	subfield=${marctag:3:1}
+	sed -i "s/^\(=${tag}.*${delim}${subfield}[^${delim}]*\)${search}/\1${replace}/" "${fileroot}_fixed.txt"
+else
+	sed -i "s/^\(=${tag}.*\)${search}/\1${replace}/" "${fileroot}_fixed.txt"
+fi
 
 echo "Rebuilding MARC file"
 text2marc "${fileroot}_fixed.txt"
