@@ -1,5 +1,8 @@
 filelist=("$@")
 
+rm -f bad_length*
+rm -f bad_directory*
+rm -f bad_missing*
 
 infile="${filelist[0]}"
 
