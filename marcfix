@@ -93,10 +93,10 @@ if ( goodrec == 1 && good_directory == 1 && good_length == 1 && found008 == 0){ 
 
 
 foundbad = 0
-if ( good_length == 0){ print $0 > "bad_length_"FILEROOT;badlength++;badlengthtext = " (length: "badlength")";foundbad = 1 }
-if ( good_directory == 0 && foundbad == 0){ print $0 > "bad_directory_"FILEROOT;baddirectory++;baddirectorytext = " (directory: "baddirectory")";foundbad = 1 }
+if ( good_length == 0){ print $0 > "bad_length_"rectype"_"FILEROOT;badlength++;badlengthtext = " (length: "badlength")";foundbad = 1 }
+if ( good_directory == 0 && foundbad == 0){ print $0 > "bad_directory_"rectype"_"FILEROOT;baddirectory++;baddirectorytext = " (directory: "baddirectory")";foundbad = 1 }
 
-if ( found245 == 0 && foundbad == 0){ print $0 > "bad_missing245_"FILEROOT;bad245++;bad245text = " (245: "bad245")";foundbad = 1 }
+if ( found245 == 0 && foundbad == 0){ print $0 > "bad_missing245_"rectype"_"FILEROOT;bad245++;bad245text = " (245: "bad245")";foundbad = 1 }
 
 if ( goodrec == 1 && good_directory == 1 && good_length == 1 && skip == 0 && found008 == 1 && found245 == 1){ goodrecs++;print $0 > OUTFILE }
 
