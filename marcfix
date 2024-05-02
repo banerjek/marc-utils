@@ -57,6 +57,8 @@ function check_leader() {
 
 	form_indicator=substr(leader, 17, 1)
 	if (form_indicator !~ /[ acinu]/) { $0 = substr($0, 1, 8)" "substr($0, 10) }
+	
+	if (substr($0, 21, 4) != "4500") { $0 = substr($0, 1, 20)"4500"substr($0, 25) }
 
 	rectype="bib"
 
