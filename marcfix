@@ -109,7 +109,7 @@ if (rectype == "bib") { bibcount++ }
 if (rectype == "holdings") { holdingscount++ }
 if (rectype == "authority") { authoritycount++ }
 
-if (NR % 10000 == 0){ printf "Bib records: %d Holdings records: %d Authority records: %s Bad records: %d Issues: %s\r", bibcount, holdingscount, authoritycount, badrecs, badtext }
+if (NR % 10000 == 0){ printf "Bib: %d Holdings: %d Authority: %s Bad: %d Issues: %s\r", bibcount, holdingscount, authoritycount, badrecs, badtext }
 
 }
 END { 
@@ -123,7 +123,7 @@ if (holdingscount > 0) { holdingsmsg = holdingscount" records output to "FILEROO
 if (authoritycount > 0) { authoritymsg = authoritycount" records output to "FILEROOT"_authority_fixed.mrc\\n" }
 
 printf "Good records: %d Bad records: %d Issues: %s\\n\\n", goodrecs, badrecs, badtext
-printf "Bib records: %d Holdings records: %d Authority records: %s\\n\\n", bibcount, holdingscount, authoritycount 
+printf "Bib records: %d Holdings records: %d Authority records : %s\\n\\n", bibcount, holdingscount, authoritycount 
 print bibmsg""holdingsmsg""authoritymsg""
 
 if (badrecs > 0) { print badrecs" records were output to the files listed below and prefixed with bad_" }
