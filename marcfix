@@ -16,7 +16,7 @@ if [[ -z $processType ]];then echo "No files or directory matching the input can
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
-BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=bibcount=holdingscount=authoritycount=found245=override245=0
+BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=bibcount=holdingscount=authoritycount=0
 }
 function check_fields() {
 	if (directory ~ /[^0-9]/){directory_check = 1;good_directory = 0}
@@ -26,10 +26,9 @@ function check_fields() {
 			if (substr(directory, i, 3) == "004") {
 				if (rectype !~ "holdings" ) { $0 = substr($0, 1, 6)"y"substr($0, 8); }
 				rectype="holdings"
-				found245=1
 			}
 			if (substr(directory, i, 3) == "008") {found008 = 1}
-			if (substr(directory, i, 3) == "245") {override245=found245=1}
+			if (substr(directory, i, 3) == "245") {override245=found245=1;rectype="bib"}
 			if (substr(directory, i, 3) ~ /[^0-9a-zA-Z]/) {goodrec = 0}
 		}
 	} else {
@@ -69,21 +68,18 @@ function check_leader() {
 			break
 		case /^[uvxy]$/:
 			rectype="holdings"
-			found245 = 1
 			break
 		case "z":
 			rectype="authority"
-			found245 = 1
 			break
 		default:
 			$0 = substr($0, 1, 6)"a"substr($0, 8);
 	}
 
-	if (override245 == 1) { rectype = "bib" }
 }
 {
 goodrec=good_directory=good_length=1
-found008=found245=override245=oversized=0
+found004=found008=found245=override245=oversized=0
 
 check_leader()
 check_fields()
@@ -97,11 +93,14 @@ if ( goodrec == 1 && good_directory == 1 && good_length == 1 && found008 == 0){ 
 
 foundbad = 0
 if ( good_length == 0){ print $0 > "bad_length_"rectype"_"FILEROOT;badlength++;badlengthtext = " (length: "badlength")";foundbad = 1 }
+
 if ( good_directory == 0 && foundbad == 0){ print $0 > "bad_directory_"rectype"_"FILEROOT;baddirectory++;baddirectorytext = " (directory: "baddirectory")";foundbad = 1 }
 
-if ( found245 == 0 && foundbad == 0){ print $0 > "bad_missing245_"rectype"_"FILEROOT;bad245++;bad245text = " (245: "bad245")";foundbad = 1 }
+if (rectype == "bib") {
+	if ( found245 == 0 && foundbad == 0){ print $0 > "bad_missing245_"rectype"_"FILEROOT;bad245++;bad245text = " (245: "bad245")";foundbad = 1 }
+}
 
-if ( goodrec == 1 && good_directory == 1 && good_length == 1 && skip == 0 && found008 == 1 && found245 == 1){ goodrecs++;print $0 > OUTFILE }
+if ( goodrec == 1 && good_directory == 1 && good_length == 1 && foundbad == 0 && found008 == 1 ){ goodrecs++;print $0 > OUTFILE }
 
 if (foundbad == 1) { badrecs++ }
 if ( badrecs > 0 ){ badtext=baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext }
@@ -110,7 +109,7 @@ if (rectype == "bib") { bibcount++ }
 if (rectype == "holdings") { holdingscount++ }
 if (rectype == "authority") { authoritycount++ }
 
-if (NR % 10000 == 0){ printf "Good records: %d Bad records: %d Issues: %s\r", goodrecs, badrecs, badtext }
+if (NR % 10000 == 0){ printf "Bib records: %d Holdings records: %d Authority records: %s Bad records: %d Issues: %s\r", bibcount, holdingscount, authoritycount, badrecs, badtext }
 
 }
 END { 
