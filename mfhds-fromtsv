@@ -325,7 +325,7 @@ function build_mfhd() {
 }
 END { 
 	if (badawk != 1) {
-		printf ("\\n\\n %d records were output to %s\\n", record_counter, OUTFILE)
+		printf ("\\n\\n Records processed: %d Records created: %d Output file: %s\\n", record_counter, created, OUTFILE)
 	}
 }
 
