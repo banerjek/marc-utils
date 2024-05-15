@@ -55,8 +55,7 @@ for (i=1; i<=directory_length; i=i+12) {
 	newdirectory = newdirectory""newtag
 }
 
-record_content=substr(record_content,1,length(record_content) - 1)
-print leader""newdirectory""FS""record_content > OUTFILE
+print leader""newdirectory""record_content > OUTFILE
 
 if (NR % 10000 == 0){ printf "Records searched: "NR" Remapped fields: %d \r", found_fields }
 
