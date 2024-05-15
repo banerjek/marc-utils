@@ -1,11 +1,22 @@
 if [[ -z $1  ]];then
-	echo "Usage: marcsplit [filename] [num_records]"
-	echo "If num_records isn't provided, default is 500"
+	echo "Usage: marcsplit [filename] [-f] [num_records]"
+	echo "If num_records isn't provided, default is 10000"
+	echo "If -f is specified, the following values specifies the number of files created"
 	exit
 else
 	infile="${1}"
-	num_records=$2
-	if [[ $num_records == "" ]];then num_records=500;fi
+
+	if [[ $2 == "-f" ]];then 
+		numfiles=$3
+		if [[ $numfiles == "" ]];then numfiles=5;fi
+
+		numrecs=$(awk -v RS=$'\x1d' 'END{print NR}' "${infile}")
+		num_per_file=$(($numrecs / $numfiles + 1))
+
+	else
+		num_per_file=$2
+		if [[ $num_per_file == "" ]];then num_per_file=10000;fi
+	fi
 fi
 
 
@@ -28,7 +39,10 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
-awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v NUMRECS=$num_records -b -f tmp_checkmarc "${infile}"
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v NUMRECS=$num_per_file -b -f tmp_checkmarc "${infile}"
 echo
-echo "All records are processed"
+numfiles=$(ls m_split* |wc -l)
+echo "All records are processed into the following $numfiles files"
+ls m_split*
+echo
 rm tmp_checkmarc
