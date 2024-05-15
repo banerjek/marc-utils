@@ -45,7 +45,7 @@ function check_leader() {
 	record_length = length($0) + 0
 	reported_length = substr($0, 1, 5) - 1
 
-	if (record_length > 99999) {oversized = 1;totaloversized++;print $0 > "tmp_oversized.mrc"}
+	if (record_length > 99999) {oversized = 1;totaloversized++;print $0 > "tmp_"FILEROOT"_oversized.mrc"}
 	
 	if (reported_length != record_length){good_length = 0}
 
@@ -90,7 +90,7 @@ skip=0
 
 OUTFILE = FILEROOT"_"rectype"_fixed.mrc"
 
-if ( goodrec == 1 && good_directory == 1 && good_length == 1 && found008 == 0){ goodrecs++;skip = 1;missing_008++; print $0 > "tmp_"rectype"_008.mrc" }
+if ( goodrec == 1 && good_directory == 1 && good_length == 1 && found008 == 0){ goodrecs++;skip = 1;missing_008++; print $0 > "tmp_"FILEROOT"_"rectype"_008.mrc" }
 
 
 foundbad = 0
@@ -145,8 +145,8 @@ process_file() {
 	lastnum=$'\xFF'
 	regex="[^${firstnum}-${lastnum}]"
 
-	echo -e "${awkscript}" > tmp_checkmarc
-	chmod 700 tmp_checkmarc
+	echo -e "${awkscript}" > "tmp_${fileroot}_checkmarc"
+	chmod 700 "tmp_${fileroot}_checkmarc"
 
 	echo "Processing ${marcfile}"	
 	
@@ -158,7 +158,7 @@ process_file() {
 	rm ${marcfile}.tmp
 		
 
-	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v FILEROOT="${fileroot}" -b -f tmp_checkmarc "${marcfile}"
+	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v FILEROOT="${fileroot}" -b -f tmp_${fileroot}_checkmarc "${marcfile}"
 	sleep 1
 	
 	ls bad_*"${fileroot}" 2> /dev/null
@@ -170,7 +170,7 @@ if [[ $processType == "file" ]];then
 		process_file "${marcfile}"
 
 		
-		temproot="tmp_bib_008"
+		temproot="tmp_${fileroot}_bib_008"
 		if [[ -f ${temproot}.mrc ]];then
 			marc2text ${temproot}.mrc 
 			sed -i 's/^\(=LDR.*$\)/\1\n=008  780615s19uu    xx a                    d/' ${temproot}.txt
@@ -180,7 +180,7 @@ if [[ $processType == "file" ]];then
 			echo "Bib records lacking 008 were fixed and appended to ${fileroot}_bib_fixed.mrc"
 		fi
 		
-		temproot="tmp_authority_008"
+		temproot="tmp_${fileroot}_authority_008"
 		if [[ -f ${temproot}.mrc ]];then
 			marc2text ${temproot}.mrc 
 			sed -i 's/^\(=LDR.*$\)/\1\n=008  780615|| |||||aa||          |n aaa      /' ${temproot}.txt
@@ -190,7 +190,7 @@ if [[ $processType == "file" ]];then
 			echo "Authority records lacking 008 were fixed and appended to ${fileroot}_authority_fixed.mrc"
 		fi
 		
-		temproot="tmp_holdings_008"
+		temproot="tmp_${fileroot}_holdings_008"
 		if [[ -f ${temproot}.mrc ]];then
 			marc2text ${temproot}.mrc 
 			sed -i 's/^\(=LDR.*$\)/\1\n=008  7806150p    8   4001uu   0000000/' ${temproot}.txt
@@ -200,24 +200,22 @@ if [[ $processType == "file" ]];then
 			echo "Holdings records lacking 008 were fixed and appended to ${fileroot}_holdings_fixed.mrc"
 		fi
 
-		if [[ -f tmp_oversized.mrc ]];then
+		if [[ -f tmp_${fileroot}_oversized.mrc ]];then
 			marc2text tmp_oversized.mrc
 			text2marc tmp_oversized.txt
 			cat tmp_oversized.mrc  >> "${fileroot}_bib_fixed.mrc"
-			rm -f tmp_oversized.*
 			echo "Oversized records were appended to ${fileroot}_bib_fixed.mrc"
 		fi
 	done
-	rm -f tmp_checkmarc
+	rm -f "tmp_${fileroot}*"
 fi
 
 if [[ $processType == "directory" ]]; then
 	cd "${infile}"
-	ls |sed 's/^/echo;marcfix /' > tmp_process
+	ls |sed 's/^/echo;marcfix /' > "tmp_${infile}_process"
 	chmod 700 ./tmp_process
-	./tmp_process
-	rm -f tmp_process
-	rm -f tmp_checkmarc
+	./tmp_${infile}_process
+	rm -f tmp_${infile}_process
 	cd ..
 fi
 
