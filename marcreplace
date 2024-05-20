@@ -1,14 +1,22 @@
 if [[ -z $3 ]];then
-	echo "Replaces values in a marc field based on regex match"
+	echo "Replaces first occurrence of expression in a marc field based on regex match"
 	echo
 	echo "Usage: marcreplace [filename] [marcfield] '[searchexpression]' '[replaceexpression]'"
-	echo "Subfields must be targeted by using hex 31 "
+	echo 
+	echo "To target subfields, append the subfield to the marcfield, e.g. "marcreplace filename 245a '[searchexpression]' '[replaceexpression]'
+	echo
+	echo "To prepend, specify '^', e.g. marcreplace [filename] [marcfield] ^ '[replaceexpression]'"
 	exit
 else
 	infile="${1}"
 	marctag=${2}
 	search="${3}"
 	replace="${4}"
+
+	if [[ ${search:0:1} == "^" ]];then
+		prepend=1
+		search=${search:1}
+	fi
 
 fi
 
@@ -25,9 +33,19 @@ delim=$'\x1f'
 
 if [[ ${#marctag} == 4 ]];then 
 	subfield=${marctag:3:1}
-	sed -i "s/^\(=${tag}.*${delim}${subfield}[^${delim}]*\)${search}/\1${replace}/" "${fileroot}_fixed.txt"
+
+	if [[ $prepend -eq 1 ]];then
+		sed -i "s/^\(=${tag}.*${delim}${subfield}\)/\1${replace}/" "${fileroot}_fixed.txt"
+	else
+		sed -i "s/^\(=${tag}.*${delim}${subfield}[^${delim}]*\)${search}/\1${replace}/" "${fileroot}_fixed.txt"
+	fi
 else
-	sed -i "s/^\(=${tag}.*\)${search}/\1${replace}/" "${fileroot}_fixed.txt"
+	if [[ $prepend -eq 1 ]];then
+		sed -i "s/^\(=${tag}  \)/\1${replace}/" "${fileroot}_fixed.txt"
+	else
+		sed -i "s/^\(=${tag}.*\)${search}/\1${replace}/" "${fileroot}_fixed.txt"
+	fi
+	
 fi
 
 echo "Rebuilding MARC file"

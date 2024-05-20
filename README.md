@@ -136,9 +136,10 @@ Remaps one MARC field to another. Currently only does whole field content, not i
 
 ## marcreplace
 **Usage:** *marcreplace [filename] [searchfor] [replacewith]*  
-**Example:** *marcreplace myfile.mrc 856 my.edu somevendor.com*
+**Example:** *marcreplace myfile.mrc 856u my.edu somevendor.com*
+**Example:** *marcreplace myfile.mrc 001 ^ myprefix_* [prefixes the field]
 
-Replace contents of field based on regex replacement. Targeting subfields requires including hex 1F in searchfor and replacewith. Delete the search expresion by not including the replacewith argument.
+Replace contents of field based on regex replacement. Targeting subfields can be done via hex 1F in searchfor and replacewith or via. Delete the search expresion by not including the replacewith argument.
 
 ## marcsearch
 **Usage:** *marcsearch [filename] [marc-tag] [regex_search_expression] [count]*  
