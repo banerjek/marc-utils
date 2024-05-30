@@ -65,7 +65,7 @@ if (directory_check == 0) {
 		}
 	}
 }
-if ( good_record == 1 ) { 
+if ( good_record == 1 || record_id == "") { 
 	uniquerecs++
 	print $0 > "unique_recs.mrc"
 } else {
@@ -76,6 +76,7 @@ if ( good_record == 1 ) {
 if (NR % 10000 == 0){ printf "Records searched: "NR" with %d unique records and %d duplicates \r", uniquerecs, duprecs }
 
 }
+END { printf "Records searched: "NR" with %d unique records and %d duplicates \\n", uniquerecs, duprecs }
 
 ENDOFAWK
 
