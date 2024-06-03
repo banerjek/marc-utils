@@ -4,14 +4,13 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 # Table of Contents
 * [**marc**](#marc) -- Converts text in text2marc format sent to stdin to MARC
 * [**marccount**](#marccount) -- Simple count of MARC records
-* [**marc2bibsandholdings**](#marc2bibsandholdings) -- Separate bib from holdings records
 * [**marc2text**](#marc2text) -- Convert binary MARC files to text
 * [**marc2tsv**](#marc2tsv) -- Extract MARC fields into TSV file 
 * [**marcdelete**](#marcdelete) -- Delete MARC field based on tag with optional regex
 * [**marcextract**](#marcextract) -- Extract record identifier and data from MARC tag 
 * [**marcextractbyid**](#marcextractbyid) -- Extract records matching a list of identifiers
 * [**marcfc**](#marcfc) -- Provide field and subfield counts
-* [**marcfix**](#marcfix) -- Separate MARC records likely to cause processing issues
+* [**marcfix**](#marcfix) -- Divide MARC records by type and fix some common issues
 * [**marcgrep**](#marcgrep) -- Search raw file or stdin for regex and render output as text
 * [**marchead**](#marchead) -- Extract first part of MARC files 
 * [**marcmissing**](#marcmissing) -- Extract MARC records based absence of a specified tag
@@ -42,12 +41,6 @@ bash and a version of awk that understands the "-b" switch (i.e. anything from t
 **Example:** *cat marcfile.txt | marc > out.mrc*
 
 Lightweight conversion of MARC to text to simplify viewing binary MARC files without creating temp files. Handy for converting text representations from marc2text(not Marcedit) into MARC while in a vi viewing pane. 
-
-## marc2bibsandholdings
-**Usage:** *marc2bibsandholdings [filename]*  
-**Example:** *marc2bibsandholdings marc_file\*.mrc*
-
-Separates bibs and holdings records from an integrated file. No processing is performed on either record type.
 
 ## marc2text
 **Usage:** *marc2text [filename]*  
@@ -101,7 +94,7 @@ Gives frequency count for each MARC tag and subfield count. Wildcard expressions
 **Usage:** *marcfix [filename]*  
 **Example:** *marcfix marc_file\*.mrc*
 
-Somewhat misnamed, marcfix doesn't fix anything. Rather, it puts all the good records in one file, and separates out problematic records into separate files categorized by issue. Wildcard expressions can be used to process multiple files.
+Analyzes a MARC stream separating out bib, holdings, and authority records performing minor repairs to some leader values. Problematic records into separate files categorized by issue. Wildcard expressions can be used to process multiple files.
 
 ## marcgrep
 **Usage:** *marcgrep [regex] [filename]*  
