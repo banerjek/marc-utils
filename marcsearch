@@ -2,6 +2,7 @@ if [[ -z $1 || -z $2 || -z $3 ]];then
 	echo "Usage: marcsearch [filename] [marcfield] '[searchexpression]' [count]"
 	echo "Regular expresions are supported for searchexpression. Count is optional and"
 	echo "should just be \"count\" if you want a record count only"
+	echo "Marcfield can either be three digits or three digits and a subfield, e.g. 245a"
 	exit
 else
 	infile="${1}"
@@ -14,6 +15,12 @@ fi
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
 outfile="${fileroot}_found.mrc"
 
+
+
+if [[ ${#marctag} -eq 4 ]];then
+	marctag=${marctag:0:3}
+	search=$'\x1f'${marctag:3:1}[^$'\x1f']*${search}
+fi
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
