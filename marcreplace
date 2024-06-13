@@ -1,7 +1,9 @@
-if [[ -z $3 ]];then
+if [[ -z $1 ]];then
 	echo "Replaces first occurrence of expression in a marc field based on regex match"
+	echo "If only a filename is specified, trailing spaces are trimmed from 001 and 004"
 	echo
 	echo "Usage: marcreplace [filename] [marcfield] '[searchexpression]' '[replaceexpression]'"
+	echo "Usage: marcreplace [filename]"
 	echo 
 	echo "To target subfields, append the subfield to the marcfield, e.g. "marcreplace filename 245a '[searchexpression]' '[replaceexpression]'
 	echo
@@ -17,9 +19,11 @@ else
 		prepend=1
 		search=${search:1}
 	fi
+	if [[ ${search:0-1} == "$" ]];then
+		end=1	
+	fi
 
 fi
-
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
 
@@ -39,12 +43,13 @@ if [[ ${#marctag} == 4 ]];then
 	else
 		sed -i "s/^\(=${tag}.*${delim}${subfield}[^${delim}]*\)${search}/\1${replace}/" "${fileroot}_fixed.txt"
 	fi
-else
+elif [[ ${#marctag} == 3 ]];then
 	if [[ $prepend -eq 1 ]];then
 		sed -i "s/^\(=${tag}  \)/\1${replace}/" "${fileroot}_fixed.txt"
-	else
-		sed -i "s/^\(=${tag}.*\)${search}/\1${replace}/" "${fileroot}_fixed.txt"
 	fi
+elif [[ -z ${2} ]];then
+	echo "No search or replace specified. Trimming spaces from 001 and 004"
+	sed -i "s/^\(=00[14]  .*\)  *$/\1/" "${fileroot}_fixed.txt"
 	
 fi
 
