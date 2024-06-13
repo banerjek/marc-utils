@@ -81,8 +81,10 @@ Outputs record identifier and MARC tag. The idtag parameter is optional. If left
 ## marcextractbyid
 **Usage:** *Usage: marcextractbyid [filename] [marcid_field]*  
 **Example:** *marcextractbyid marcfile.mrc 907a*
+**Example:** *marcextractbyid marcfile.mrc 907a !*
+**Example:** *marcextractbyid marcfile.mrc !*
 
-Extracts MARC records based on a list of identifiers contained in a file named "ids." The marcid_field is optional and will be presumed to be 001 unless otherwise specified.
+Extracts MARC records based on a list of identifiers contained in a file named "ids." The marcid_field is optional and will be presumed to be 001 unless otherwise specified. Use "!" to indicate negative search (extract records not in id list)
 
 ## marcfc
 **Usage:** *marcfc [filename]*  
@@ -131,8 +133,9 @@ Remaps one MARC field to another. Currently only does whole field content, not i
 **Usage:** *marcreplace [filename] [searchfor] [replacewith]*  
 **Example:** *marcreplace myfile.mrc 856u my.edu somevendor.com*
 **Example:** *marcreplace myfile.mrc 001 ^ myprefix_* [prefixes the field]
+**Example:** *marcreplace myfile.mrc [removes trailing spaces in 001 and 004]
 
-Replace contents of field based on regex replacement. Targeting subfields can be done via hex 1F in searchfor and replacewith or via. Delete the search expresion by not including the replacewith argument.
+Replace contents of field based on regex replacement. Use no arguments except a file to trim trailing spaces on 001 and 004 
 
 ## marcsearch
 **Usage:** *marcsearch [filename] [marc-tag] [regex_search_expression] [count]*  
