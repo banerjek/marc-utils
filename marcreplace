@@ -26,39 +26,96 @@ else
 fi
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
-
-cp "${infile}" "${fileroot}_fixed.mrc"
-
-echo "Converting file to text to facilitate processing"
-marc2text "${fileroot}_fixed.mrc"
-
-tag=${marctag:0:3}
-delim=$'\x1f'
-
-if [[ ${#marctag} == 4 ]];then 
-	subfield=${marctag:3:1}
-
-	if [[ $prepend -eq 1 ]];then
-		sed -i "s/^\(=${tag}.*${delim}${subfield}\)/\1${replace}/" "${fileroot}_fixed.txt"
-	else
-		sed -i "s/^\(=${tag}.*${delim}${subfield}[^${delim}]*\)${search}/\1${replace}/" "${fileroot}_fixed.txt"
-	fi
-elif [[ ${#marctag} == 3 ]];then
-	if [[ $prepend -eq 1 ]];then
-		sed -i "s/^\(=${tag}  \)/\1${replace}/" "${fileroot}_fixed.txt"
-	fi
-elif [[ -z ${2} ]];then
-	echo "No search or replace specified. Trimming spaces from 001 and 004"
-	sed -i "s/^\(=00[14]  .*\)  *$/\1/" "${fileroot}_fixed.txt"
-	
-fi
-
-echo "Rebuilding MARC file"
-text2marc "${fileroot}_fixed.txt"
-
-rm -f "${fileroot}_fixed.txt"
-
-echo "Temporary files have been removed"
+outfile="${fileroot}_fixed.mrc"
 
 
+read -r -d '' awkscript << "ENDOFAWK"
+#!/usr/bin/awk -f 
 
+BEGIN { 
+        if(length("а") != 2) {
+                badawk = 1
+                printf("Your version of awk does not support marc2text -- you need a version that supports the -b switch\\n")
+                exit
+        }
+}
+
+function fix_field(){
+	new_field_content = field_content
+
+	########################
+	### adjust the directory
+	########################
+
+	new_field_length=sprintf("%04d", length(new_field_content))
+
+	new_directory_address = sprintf("%05d", new_base_address)
+	new_base_address = new_base_address + new_field_length
+	new_directory_entry = marc_tag""new_field_length""new_directory_address
+
+	new_directory = new_directory""new_directory_entry
+
+	new_record_content = new_record_content""new_field_content
+
+}
+
+{
+	leader=substr($0,1,24)
+	base_address=substr(leader,13, 5) + 0
+	record_content=substr($0, base_address + 1)
+
+	leader_length=substr(leader, 1, 5)
+	leader_content=substr(leader, 6)
+
+	directory=substr($0,25, base_address - 25)
+	directory_length=length(directory)
+	directory_check=(directory_length % 12)
+	record_length = length($0) + 0
+
+	new_base_address = 0
+	new_record = ""
+	new_directory=""
+	new_record_content=""
+
+	for (i=1; i<=directory_length; i=i+12) {
+
+		####################
+		### read the entries
+		####################
+
+		directory_entry = substr(directory, i, 12)
+		marc_tag = substr(directory, i, 3)
+
+		field_length = substr(directory, i + 3, 4) 
+		starting_pos = substr(directory, i + 7, 5) + 1 
+
+		field_content = substr(record_content, starting_pos, field_length)
+
+		fix_field()
+
+	}
+	new_directory = new_directory""OFS
+
+	### original leader including base are still good so we use those. New values were just to get ose_address + new_field_lengthffsets
+
+	new_record_length = 24 + length(new_directory) + length(new_record_content) + 1
+	new_record_length = sprintf("%05d", new_record_length)
+
+	print new_record_length""leader_content""new_directory""record_content > OUTFILE 
+
+}
+
+END { 
+	ORS="\\n"
+	print "";print NR " records were output to "OUTFILE
+}
+
+ENDOFAWK
+
+echo -e "${awkscript}" > tmp_marcreplace
+chmod 700 tmp_marcreplace
+
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v OFS=$'\x1e' -v SUBFIELD=$'\x1f' -v OUTFILE="${outfile}" -b -f tmp_marcreplace "${infile}"
+
+sleep 1
+rm -f tmp_marcreplace
