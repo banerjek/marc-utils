@@ -43,10 +43,6 @@ BEGIN {
 function fix_field(){
 	new_field_content = field_content
 
-	########################
-	### adjust the directory
-	########################
-
 	new_field_length=sprintf("%04d", length(new_field_content))
 
 	new_directory_address = sprintf("%05d", new_base_address)
@@ -79,10 +75,6 @@ function fix_field(){
 
 	for (i=1; i<=directory_length; i=i+12) {
 
-		####################
-		### read the entries
-		####################
-
 		directory_entry = substr(directory, i, 12)
 		marc_tag = substr(directory, i, 3)
 
@@ -96,13 +88,11 @@ function fix_field(){
 	}
 	new_directory = new_directory""OFS
 
-	### original leader including base are still good so we use those. New values were just to get ose_address + new_field_lengthffsets
-
 	new_record_length = 24 + length(new_directory) + length(new_record_content) + 1
 	new_record_length = sprintf("%05d", new_record_length)
 
 	print new_record_length""leader_content""new_directory""record_content > OUTFILE 
-
+	if (NR % 10000 == 0){ printf "Records processed: %d \\r", NR}
 }
 
 END { 
