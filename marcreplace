@@ -60,28 +60,33 @@ function fix_var_field(){
 }
 
 function fix_field(){
+	### by default, old values are good
 	new_field_content = field_content
+	new_field_length = field_length
 
 	## special handling for control fields
-
 	if (TAG == marc_tag) {
 		if (TAG ~ /^00/) { 
 			sub(SEARCH, REPLACE, new_field_content)
 		} else {
 			fix_var_field()
 		}
+		new_field_length = length(new_field_content)
 	}
 
-	new_field_content = new_field_content""FS
-	new_field_length=sprintf("%04d", length(new_field_content))
+	## trim 001/004 if no arguments given
+	if (TAG == "" && marc_tag ~ /00[14]/) {
+		sub(" +$", SFS, new_field_content)
+		new_field_length = length(new_field_content)
+	}
+
+	new_field_length=sprintf("%04d", new_field_length)
 
 	new_directory_address = sprintf("%05d", new_base_address)
 	new_base_address = new_base_address + new_field_length
 
 	new_directory_entry = marc_tag""new_field_length""new_directory_address
-
 	new_directory = new_directory""new_directory_entry
-
 	new_record_content = new_record_content""new_field_content
 }
 
@@ -90,12 +95,10 @@ function fix_field(){
 	base_address=substr(leader,13, 5) + 0
 	record_content=substr($0, base_address + 1)
 
-	leader_length=substr(leader, 1, 5)
 	leader_content=substr(leader, 6)
 
 	directory=substr($0,25, base_address - 25)
 	directory_length=length(directory)
-	directory_check=(directory_length % 12)
 	record_length = length($0) + 0
 
 	new_base_address = 0
@@ -103,6 +106,7 @@ function fix_field(){
 	new_directory=""
 	new_record_content=""
 
+	### no error correction for bad leaders, use marcfix first
 	for (i=1; i<=directory_length; i=i+12) {
 
 		directory_entry = substr(directory, i, 12)
@@ -110,7 +114,7 @@ function fix_field(){
 
 		field_length = substr(directory, i + 3, 4) - 1
 		starting_pos = substr(directory, i + 7, 5) + 1 
-
+		
 		field_content = substr(record_content, starting_pos, field_length)
 
 		fix_field()
@@ -118,7 +122,8 @@ function fix_field(){
 	}
 	new_directory = new_directory""OFS
 
-	new_record_length = 24 + length(new_directory) + length(new_record_content) + 1
+	#### old directory length, base address, and leader content are good
+	new_record_length = 24 + length_directory + length(new_record_content) + 1
 	new_record_length = sprintf("%05d", new_record_length)
 
 	print new_record_length""leader_content""new_directory""new_record_content > OUTFILE 
