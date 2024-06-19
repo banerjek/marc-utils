@@ -133,9 +133,9 @@ Remaps one MARC field to another. Currently only does whole field content, not i
 **Usage:** *marcreplace [filename] [searchfor] [replacewith]*  
 **Example:** *marcreplace myfile.mrc 856u my.edu somevendor.com*
 **Example:** *marcreplace myfile.mrc 001 ^ myprefix_* [prefixes the field]
-**Example:** *marcreplace myfile.mrc [removes trailing spaces in 001 and 004]
+**Example:** *marcreplace myfile.mrc 001 $ _mysuffix* [suffixes the field]
 
-Replace contents of field based on regex replacement. Use no arguments except a file to trim trailing spaces on 001 and 004 
+Replace contents of field based on regex replacement. 
 
 ## marcsearch
 **Usage:** *marcsearch [filename] [marc-tag] [regex_search_expression] [count]*  
