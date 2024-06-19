@@ -7,7 +7,7 @@ if [[ -z $1 ]];then
 	echo 
 	echo "To target subfields, append the subfield to the marcfield, e.g. "marcreplace filename 245a '[searchexpression]' '[replaceexpression]'
 	echo
-	echo "To prepend, specify '^', e.g. marcreplace [filename] [marcfield] ^ '[replaceexpression]'"
+	echo "To prependplit(field_content, subfields, SFS) specify '^', e.g. marcreplace [filename] [marcfield] ^ '[replaceexpression]'"
 	exit
 else
 	infile="${1}"
@@ -15,12 +15,9 @@ else
 	search="${3}"
 	replace="${4}"
 
-	if [[ ${search:0:1} == "^" ]];then
-		prepend=1
-		search=${search:1}
-	fi
-	if [[ ${search:0-1} == "$" ]];then
-		end=1	
+	if [[ ${#marctag} == 4 ]];then
+		tag=${marctag:0:3}
+        	subfield=${marctag:3:1}
 	fi
 
 fi
@@ -40,19 +37,51 @@ BEGIN {
         }
 }
 
+function fix_var_field(){
+	if (SUBFIELD != "") {
+		split(new_field_content, subfields, SFS)
+		num_subfields = length(subfields)
+	
+		### loop through the subfields skipping the indicators	
+		for (subfield=2;subfield<=num_subfields;subfield++) {
+			if (substr(subfields[subfield], 1, 1) == SUBFIELD) {
+				subfield_content = substr(subfields[subfield], 2)
+				sub(SEARCH, REPLACE, subfield_content)
+				subfields[subfield] = SUBFIELD""subfield_content
+			}
+		}
+		### and put it back together
+		new_field_content = subfields[1]
+		for (subfield=2;subfield<=num_subfields;subfield++) { 
+			new_field_content = new_field_content""SFS""subfields[subfield]
+		}
+	}
+}
+
 function fix_field(){
 	new_field_content = field_content
 
+	## special handling for control fields
+
+	if (TAG == marc_tag) {
+		if (TAG ~ /^00/) { 
+			sub(SEARCH, REPLACE, new_field_content)
+		} else {
+			fix_var_field()
+		}
+	}
+
+	new_field_content = new_field_content""FS
 	new_field_length=sprintf("%04d", length(new_field_content))
 
 	new_directory_address = sprintf("%05d", new_base_address)
 	new_base_address = new_base_address + new_field_length
+
 	new_directory_entry = marc_tag""new_field_length""new_directory_address
 
 	new_directory = new_directory""new_directory_entry
 
 	new_record_content = new_record_content""new_field_content
-
 }
 
 {
@@ -78,7 +107,7 @@ function fix_field(){
 		directory_entry = substr(directory, i, 12)
 		marc_tag = substr(directory, i, 3)
 
-		field_length = substr(directory, i + 3, 4) 
+		field_length = substr(directory, i + 3, 4) - 1
 		starting_pos = substr(directory, i + 7, 5) + 1 
 
 		field_content = substr(record_content, starting_pos, field_length)
@@ -91,7 +120,7 @@ function fix_field(){
 	new_record_length = 24 + length(new_directory) + length(new_record_content) + 1
 	new_record_length = sprintf("%05d", new_record_length)
 
-	print new_record_length""leader_content""new_directory""record_content > OUTFILE 
+	print new_record_length""leader_content""new_directory""new_record_content > OUTFILE 
 	if (NR % 10000 == 0){ printf "Records processed: %d \\r", NR}
 }
 
@@ -105,7 +134,7 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_marcreplace
 chmod 700 tmp_marcreplace
 
-awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v OFS=$'\x1e' -v SUBFIELD=$'\x1f' -v OUTFILE="${outfile}" -b -f tmp_marcreplace "${infile}"
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v OFS=$'\x1e' -v SFS=$'\x1f' -v TAG="${tag}" -v SUBFIELD="${subfield}" -v SEARCH="${search}" -v REPLACE="${replace}" -v OUTFILE="${outfile}" -b -f tmp_marcreplace "${infile}"
 
 sleep 1
 rm -f tmp_marcreplace
