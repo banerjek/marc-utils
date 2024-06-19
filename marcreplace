@@ -15,8 +15,9 @@ else
 	search="${3}"
 	replace="${4}"
 
+	tag=${marctag:0:3}
+
 	if [[ ${#marctag} == 4 ]];then
-		tag=${marctag:0:3}
         	subfield=${marctag:3:1}
 	fi
 
