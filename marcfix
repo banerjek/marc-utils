@@ -160,8 +160,9 @@ process_file() {
 
 	# ala codes followed by tabs and line breaks	
 	#bad_chars=$'\xe1'$'\xe2'$'\xe3'$'\xe4'$'\xe5'$'\xe6'$'\xe7'$'\xe8'$'\xe9'$'\xc3''\n'\t'\r'
+	SFS=$'\x1f'
 
-	cat "${marcfile}.tmp" |tr '[\200-\377]\n\r\t' ' ' > "${marcfile}"
+	cat "${marcfile}.tmp" |tr '[\200-\377]\n\r\t' ' ' | sed "s/${SFS}9/${SFS}0/g"> "${marcfile}"
 	rm ${marcfile}.tmp
 		
 
