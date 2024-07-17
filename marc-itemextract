@@ -490,7 +490,7 @@ function extract_identifiers() {
 			field_length = substr(directory, i + 3, 4) + 0
 			starting_pos = substr(directory, i + 7, 5) 
 
-			tag001 = substr(record_content, starting_pos, field_length - 1)
+			tag001 = substr(record_content, starting_pos, field_length)
 			gsub(/^ *+| +$/, "", tag001)
 			gsub(FS, "", tag001)
 		}
@@ -520,7 +520,7 @@ function extract_identifiers() {
 
 				split(field_content, subfields, SFS)
 
-				bibno = substr(record_content, starting_pos, field_length - 1)
+				bibno = substr(record_content, starting_pos, field_length)
 				split(bibno, subfields, SFS)
 	
 				for (subfield in subfields) {
