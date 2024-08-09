@@ -1,6 +1,6 @@
 # sirsi was inadvertantly modified to accommodate NALIS -- must be modified
 
-knownsystems=("destiny" "eos" "janium" "koha" "opals" "sierra" "sirsi" "softlink" "virtua" "wms")
+knownsystems=("destiny" "eos" "janium" "koha" "lc2" "opals" "sierra" "sirsi" "softlink" "virtua" "wms")
 
 if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] "
@@ -72,12 +72,12 @@ fi
 
 if [[ ${system} == "eos" ]];then
 	identifier="001"
-	item_field="949p"
-	item_call_subfield="k"
-	location_subfield="b"
+	item_field="949z"
+	item_call_subfield="a"
+	location_subfield="h"
 
-	tags[1]="p"
-	tags[2]="k"
+	tags[1]="z"
+	tags[2]="a"
 	tags[3]="o"
 	tags[4]="b"
 
@@ -140,6 +140,8 @@ if [[ ${system} == "koha" ]];then
 	tags[6]="g"
 	tags[7]="z"
 	tags[8]="d"
+	tags[9]="b"
+	tags[10]="7"
 
 	labels[1]="barcode"
 	labels[2]="call#prefix"
@@ -149,6 +151,42 @@ if [[ ${system} == "koha" ]];then
 	labels[6]="price"
 	labels[7]="public_note"
 	labels[8]="inventory_date"
+	labels[9]="location"
+	labels[10]="loan_type"
+fi
+
+if [[ ${system} == "lc2" ]];then
+	identifier="001"
+	item_field="949z"
+	item_call_subfield="a"
+	location_subfield="h"
+	bib_mattype_field="380"
+
+	tags[1]="z"
+	tags[2]="a"
+	tags[3]="q"
+	tags[4]="s"
+	tags[5]="c"
+	tags[6]="v"
+	tags[7]="g"
+	tags[8]="d"
+	tags[9]="p"
+	tags[10]="h"
+	tags[11]="x"
+	tags[12]="i"
+
+	labels[1]="barcode"
+	labels[2]="call#"
+	labels[3]="call#suffix"
+	labels[4]="call#suffix2"
+	labels[5]="copy"
+	labels[6]="volume"
+	labels[7]="price"
+	labels[8]="volume_dates"
+	labels[9]="part"
+	labels[10]="location"
+	labels[11]="enum"
+	labels[12]="staff_note"
 fi
 
 if [[ ${system} == "opals" ]];then
@@ -558,6 +596,15 @@ function extract_items() {
 				}
          }
 
+      if (marc_tag == BIB_MATTYPE_FIELD) {
+
+         field_length = substr(directory, d_iter + 3, 4) + 0
+         starting_pos = substr(directory, d_iter + 7, 5)
+
+         bib_mattype = substr(record_content, starting_pos + 5, field_length - 5)
+         gsub(subfield_regex, " ", bib_mattype)
+         }
+
 		if (marc_tag == ITEMFIELD) {
 
 			field_length = substr(directory, d_iter + 3, 4) + 0
@@ -617,7 +664,7 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
-awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${identifier}" -v ITEMFIELD="${item_field}" -v CALL="${item_call_subfield}" -v CALL_PREFIX="${item_call_prefix}" -v CALL_SUFFIX="${item_call_suffix}" -v BIB_CALL_FIELD="${bib_call_field}" -v BIB_CALL_FALLBACK="${bib_call_fallback}" -v LOCATION="${location_subfield}" -v TAGLIST="${taglist}" -v LABELLIST="${labellist}" -v SPECIALLIST="${speciallist}" -v SYSTEM="${system}" -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${identifier}" -v ITEMFIELD="${item_field}" -v CALL="${item_call_subfield}" -v CALL_PREFIX="${item_call_prefix}" -v CALL_SUFFIX="${item_call_suffix}" -v BIB_CALL_FIELD="${bib_call_field}" -v BIB_CALL_FALLBACK="${bib_call_fallback}" -v BIB_MATTYPE_FIELD="${bib_mattype_field}" -v LOCATION="${location_subfield}" -v TAGLIST="${taglist}" -v LABELLIST="${labellist}" -v SPECIALLIST="${speciallist}" -v SYSTEM="${system}" -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
 echo
 
 rm -f tmp_checkmarc
