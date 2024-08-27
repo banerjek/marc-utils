@@ -12,6 +12,7 @@ if [[ -z $1 || ! -f ids ]];then
 else
    infile="${1}"
    idtag=${2}
+   not=0
 
    if [[ $2 == "!" ]]; then idtag="001";not=1;fi
    if [[ $3 == "!" ]]; then idtag=${2}; not=1;fi
