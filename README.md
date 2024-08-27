@@ -101,6 +101,7 @@ Analyzes a MARC stream separating out bib, holdings, and authority records perfo
 ## marcgrep
 **Usage:** *marcgrep [regex] [filename]*   
 **Example:** *marcgrep 12345 marc_file.mrc*   
+**Example:** *%! marcgrep 12345 (within vi subshell)*   
 
 Simple regex match through binary MARC file with output to text.
 
@@ -149,9 +150,9 @@ The count parameter is optional. If the word "count" is sent, marcsearch only re
 
 ## marcsort
 **Usage:** *marcsort [filename] *   
-**Example:** *marcsort mrc_00\*.mrk*   
+**Example:** *marcsort mrc_00\*.mrc*   
 
-Sort text representations (Marcedit or text2marc) of MARC files in tag order
+Sort MARC records in tag order
 
 ## marcsplit
 **Usage:** *marcsplit [filename] [num_records]*   
