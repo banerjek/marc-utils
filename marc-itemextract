@@ -142,6 +142,9 @@ if [[ ${system} == "koha" ]];then
 	tags[8]="d"
 	tags[9]="b"
 	tags[10]="7"
+	tags[11]="5"
+	tags[12]="1"
+	tags[13]="x"
 
 	labels[1]="barcode"
 	labels[2]="call#prefix"
@@ -153,6 +156,8 @@ if [[ ${system} == "koha" ]];then
 	labels[8]="inventory_date"
 	labels[9]="location"
 	labels[10]="loan_type"
+	labels[11]="lost_missing_overdue"
+	labels[12]="staff_note"
 fi
 
 if [[ ${system} == "lc2" ]];then
