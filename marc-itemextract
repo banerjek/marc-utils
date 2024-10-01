@@ -142,9 +142,6 @@ if [[ ${system} == "koha" ]];then
 	tags[8]="d"
 	tags[9]="b"
 	tags[10]="7"
-	tags[11]="5"
-	tags[12]="1"
-	tags[13]="x"
 
 	labels[1]="barcode"
 	labels[2]="call#prefix"
@@ -156,8 +153,6 @@ if [[ ${system} == "koha" ]];then
 	labels[8]="inventory_date"
 	labels[9]="location"
 	labels[10]="loan_type"
-	labels[11]="lost_missing_overdue"
-	labels[12]="staff_note"
 fi
 
 if [[ ${system} == "lc2" ]];then
@@ -293,7 +288,7 @@ if [[ ${system}  == "sirsi"  ]];then
 	tags[11]="g"
 	tags[12]="j"
 	tags[13]="k"
-	tags[14]="m"
+	tags[14]="l"
 	tags[15]="n"
 	tags[16]="o"
 	tags[17]="p"
@@ -304,7 +299,6 @@ if [[ ${system}  == "sirsi"  ]];then
 	tags[22]="u"
 	tags[23]="x"
 	tags[24]="z"
-	tags[25]="l"
 
 	
 	labels[1]="call"
@@ -331,7 +325,6 @@ if [[ ${system}  == "sirsi"  ]];then
 	labels[22]="acqDate"
 	labels[23]="itemCat1"
 	labels[24]="itemCat2"
-	labels[25]="callPrefix"
 fi
 
 if [[ ${system}  == "softlink"  ]];then
@@ -400,13 +393,11 @@ if [[ ${system} == "wms"  ]];then
 	tags[2]="3"
 	tags[3]="x"
 	tags[4]="z"
-	tags[5]="a"
 
 	labels[1]="barcode"
 	labels[2]="volume"
 	labels[3]="imsg"
 	labels[4]="opacmsg"
-	labels[5]="copynum"
 fi
 
 taglist="$(echo ${tags[@]})"
