@@ -1,0 +1,27 @@
+if [[-z $3]];then
+	echo "Copies one marc field to another"
+	echo
+	echo "Usage: marccopy [filename] [sourcefield] [destinationfield]"
+	echo 
+	exit
+else
+	infile="${1}"
+	sourcefield=$2
+	destfield=$3
+fi
+
+fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
+
+cp "${infile}" "${fileroot}_fixed.mrc"
+
+echo "Converting file to text to facilitate processing"
+marc2text "${fileroot}_fixed.mrc"
+
+sed -i "s/^=${2}\(.*\)/=${2}\1\n=${3}\1/" "${fileroot}_fixed.txt"
+
+echo "Rebuilding MARC file"
+text2marc "${fileroot}_fixed.txt"
+
+rm -f "${fileroot}_fixed.txt"
+
+echo "Temporary files have been removed. Results are in ${fileroot}_fixed.mrc"
