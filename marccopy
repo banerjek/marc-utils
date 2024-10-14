@@ -16,6 +16,7 @@ cp "${infile}" "${fileroot}_fixed.mrc"
 
 echo "Converting file to text to facilitate processing"
 marc2text "${fileroot}_fixed.mrc"
+echo "Copying MARC ${sourcefield} to ${destfield}. Please be patient"
 
 sed -i "s/^=${2}\(.*\)/=${2}\1\n=${3}\1/" "${fileroot}_fixed.txt"
 
