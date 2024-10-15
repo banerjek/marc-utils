@@ -366,12 +366,24 @@ if [[ ${system} == "tlc" ]];then
 	tags[3]="g"
 	tags[4]="n"
 	tags[5]="p"
+	tags[6]="i"
+	tags[7]="j"
+	tags[8]="k"
+	tags[9]="q"
+	tags[10]="7"
+	tags[11]="5"
 
 	labels[1]="location"
 	labels[2]="call#"
 	labels[3]="barcode"
 	labels[4]="copy"
 	labels[5]="price"
+	labels[6]="volume"
+	labels[7]="enumeration"
+	labels[8]="enumeration_2"
+	labels[9]="staff_note"
+	labels[10]="staff_note2"
+	labels[11]="status"
 fi
 
 if [[ ${system} == "virtua" ]];then
