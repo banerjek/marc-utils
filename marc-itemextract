@@ -1,6 +1,6 @@
 # sirsi was inadvertantly modified to accommodate NALIS -- must be modified
 
-knownsystems=("destiny" "eos" "janium" "koha" "lc2" "opals" "sierra" "sirsi" "softlink" "virtua" "wms")
+knownsystems=("destiny" "eos" "janium" "koha" "lc2" "opals" "sierra" "sirsi" "softlink" "tlc" "virtua" "wms")
 
 if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] "
@@ -350,6 +350,28 @@ if [[ ${system}  == "softlink"  ]];then
 	labels[6]="accession"
 	labels[7]="status"
 	labels[8]="note"
+fi
+
+if [[ ${system} == "tlc" ]];then
+	identifier="001"
+	item_field="949g"
+	item_call_subfield="a"
+	location_subfield="D"
+	bib_call_field="090"
+	bib_call_fallback="050"
+	bib_mattype_field="380"
+
+	tags[1]="a"
+	tags[2]="c"
+	tags[3]="g"
+	tags[4]="n"
+	tags[5]="p"
+
+	labels[1]="location"
+	labels[2]="call#"
+	labels[3]="barcode"
+	labels[4]="copy"
+	labels[5]="price"
 fi
 
 if [[ ${system} == "virtua" ]];then
