@@ -404,6 +404,7 @@ if [[ ${system} == "virtua" ]];then
 	tags[8]="p"
 	tags[9]="q"
 	tags[10]="G"
+	tags[11]="X"
 
 	labels[1]="call#"
 	labels[2]="call#cutter"
@@ -415,6 +416,7 @@ if [[ ${system} == "virtua" ]];then
 	labels[8]="public_note"
 	labels[9]="checkin_note"
 	labels[10]="temp_location"
+	labels[11]="status"
 fi
 
 if [[ ${system} == "wms"  ]];then
