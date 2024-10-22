@@ -1,6 +1,6 @@
 # sirsi was inadvertantly modified to accommodate NALIS -- must be modified
 
-knownsystems=("destiny" "eos" "janium" "koha" "lc2" "opals" "sierra" "sirsi" "softlink" "virtua" "wms")
+knownsystems=("destiny" "eos" "janium" "koha" "lc2" "opals" "sierra" "sirsi" "softlink" "tlc" "virtua" "wms")
 
 if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] "
@@ -270,7 +270,7 @@ fi
 
 if [[ ${system}  == "sirsi"  ]];then
 	bib_call_field="092"
-	identifier="991a"
+	identifier="001"
 	item_field="999i"
 	item_call_subfield="a"
 	location_subfield="m"
@@ -352,6 +352,40 @@ if [[ ${system}  == "softlink"  ]];then
 	labels[8]="note"
 fi
 
+if [[ ${system} == "tlc" ]];then
+	identifier="001"
+	item_field="949g"
+	item_call_subfield="a"
+	location_subfield="D"
+	bib_call_field="090"
+	bib_call_fallback="050"
+	bib_mattype_field="380"
+
+	tags[1]="a"
+	tags[2]="c"
+	tags[3]="g"
+	tags[4]="n"
+	tags[5]="p"
+	tags[6]="i"
+	tags[7]="j"
+	tags[8]="k"
+	tags[9]="q"
+	tags[10]="7"
+	tags[11]="5"
+
+	labels[1]="location"
+	labels[2]="call#"
+	labels[3]="barcode"
+	labels[4]="copy"
+	labels[5]="price"
+	labels[6]="volume"
+	labels[7]="enumeration"
+	labels[8]="enumeration_2"
+	labels[9]="staff_note"
+	labels[10]="staff_note2"
+	labels[11]="status"
+fi
+
 if [[ ${system} == "virtua" ]];then
 	identifier="001"
 	item_field="949D"
@@ -370,7 +404,6 @@ if [[ ${system} == "virtua" ]];then
 	tags[8]="p"
 	tags[9]="q"
 	tags[10]="G"
-	tags[11]="X"
 
 	labels[1]="call#"
 	labels[2]="call#cutter"
@@ -382,7 +415,6 @@ if [[ ${system} == "virtua" ]];then
 	labels[8]="public_note"
 	labels[9]="checkin_note"
 	labels[10]="temp_location"
-	labels[11]="status"
 fi
 
 if [[ ${system} == "wms"  ]];then
