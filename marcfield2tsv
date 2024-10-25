@@ -1,0 +1,186 @@
+# sirsi was inadvertantly modified to accommodate NALIS -- must be modified
+#
+
+infile="${1}"
+
+if [[ -z $2 ]];then
+	echo "Usage: marcfield2tsv [filename] [idfield] [marctag] [subfield1] [subfield2] ..."
+	echo
+	echo "idfield is optional. If not supplied, 001 is assumed"
+	echo 
+	echo "Example: marcfield2tsv marcfile.mrc 949 907a a b c d"
+	echo "Example: marcfield2tsv marcfile.mrc 952 a b c d"
+	echo
+	exit
+else
+	if [[ ${#3} -ne 1 ]];then ## check to see if third argument isn't single subfield
+		idfield=$2
+		searchfield=$3
+		tags=(${@:4})
+	else
+		idfield="001"
+		searchfield=$2
+		tags=(${@:3})
+	fi
+	
+	fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
+	outfile="${fileroot}.tsv"
+	rm -f ${outfile}
+fi
+
+labels=()
+
+numtags=${#tags[@]}
+
+for (( i = 0; i<${numtags};i++ ));do
+	labels[$i]="${searchfield}${tags[$i]}"
+done
+
+echo "Starting processing. Please wait"
+
+read -r -d '' awkscript << "ENDOFAWK"
+#!/usr/bin/awk -f 
+
+BEGIN { records_found = 0 
+
+		subfield_regex=SFS"."
+
+      if (length("а") != 2) {
+                badawk = 1
+                printf("Your version of awk does not support  -- you need a version that supports the -b switch\\n")
+                exit
+        } else {
+
+		split(TAGLIST, tags, " ")
+		split(LABELLIST, labels, " ")
+
+		for (j=1;j<=length(tags);j++) {value=tags[j];tag_index[value]=j}
+
+		num_tags = length(tags)
+
+		required_item_subfield = substr(ITEMFIELD, 4, 1)
+		ITEMFIELD = substr(ITEMFIELD, 1, 3)
+	}
+}
+
+
+function extract_subfields() { 
+	real_item = 0
+	for (j=1;j<=num_tags;j++) { item_subfield[j] = "" }
+
+	split(field_content, subfields, SFS)
+	
+	for (subfield=1;subfield<=length(subfields);subfield++) {
+		extracted_tag=substr(subfields[subfield], 1, 1)
+		index_position=tag_index[extracted_tag]
+
+		if (index_position > 0) {
+		if (substr(subfields[subfield], 1, 1) == extracted_tag) {
+			if (item_subfield[index_position] == "") {
+				item_subfield[index_position] = substr(subfields[subfield],2)
+				gsub(/^[ \\-]*$/, "", item_subfield[index_position])
+			} else { 
+				item_subfield[index_position] = item_subfield[index_position]";"substr(subfields[subfield],2) 
+			}
+
+			gsub(/^ *+| +$/, "", item_subfield[index_position])
+
+		}	
+	}
+	}
+
+	lineout = bibno
+
+	for (j=1;j<=num_tags;j++) {
+		lineout = lineout"\t"item_subfield[j]
+	}
+	
+	print lineout >> OUTFILE;numItems++ 
+	lineout = ""
+}
+
+function extract_identifiers() {
+
+	bibno=""
+	tagid = substr(IDENTIFIER, 4, 1)
+
+	for (i=1; i<=directory_length; i=i+12) {
+		if (bibno == "") {
+			if (substr(directory, i, 3) == substr(IDENTIFIER, 1, 3)) {
+
+				field_length = substr(directory, i + 3, 4) + 0
+				starting_pos = substr(directory, i + 7, 5) 
+
+				split(field_content, subfields, SFS)
+
+				bibno = substr(record_content, starting_pos, field_length)
+				split(bibno, subfields, SFS)
+	
+				for (subfield in subfields) {
+					if (tagid == substr(subfields[subfield], 1, 1)) {
+						bibno = substr(subfields[subfield],2)
+					}	
+				}
+			gsub(/[^a-zA-Z0-9]/, "", bibno)
+			}
+		}
+	}
+}
+
+function extract_items() {
+	for (d_iter=1; d_iter<=directory_length; d_iter=d_iter+12) {
+		marc_tag = substr(directory, d_iter, 3)
+
+		if (marc_tag == ITEMFIELD) {
+			field_length = substr(directory, d_iter + 3, 4) + 0
+			starting_pos = substr(directory, d_iter + 7, 5) 
+			field_content = ""
+
+			if (substr(record_content, starting_pos + 3, 1) == SFS) {
+				field_content = substr(record_content, starting_pos + 3, field_length - 3)
+			} else {
+				field_content = substr(record_content, starting_pos + 1, field_length - 1)
+			}
+			extract_subfields()
+		}
+	}
+}
+
+{
+
+leader=substr($0,1,24)
+baseaddress=substr(leader,13, 5) + 0
+directory=substr($0,25, baseaddress - 25)
+directory_length=length(directory) 
+directory_check=(directory_length % 12)
+record_content=substr($0, baseaddress + 1)
+bib_mattype=substr(leader, 7, 1)
+holdings_type=substr(leader, 8, 1)
+
+if (directory_check == 0) {
+	if (NR == 1) { 
+		lineout = "bib_no"
+		for (i=1;i<=num_tags;i++) {
+			lineout = lineout"\t"labels[i]
+		}
+		print lineout > OUTFILE
+		lineout = ""
+	}
+	extract_identifiers()
+	extract_items()
+}
+
+if (NR % 1000 == 0){ printf "Records processed: "NR"\r" }
+
+}
+END { print NR" MARC records have been processed. "numItems" item records were sent to "OUTFILE }
+
+ENDOFAWK
+
+echo -e "${awkscript}" > tmp_checkmarc
+chmod 700 tmp_checkmarc
+
+awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${idfield}" -v ITEMFIELD="${searchfield}" -v TAGLIST="$(echo ${tags[@]})" -v LABELLIST="$(echo ${labels[@]})" -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+echo
+
+rm -f tmp_checkmarc
