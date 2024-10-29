@@ -4,18 +4,13 @@ if [[ -z $1 || ! -f ids ]];then
    echo "This program expects an input file of identifiers named 'ids'"
    echo "marcid_field is optional. If not specified, it will be 001"
    echo
-   echo "Specify ! as the last argument if you want only records that don't match to be extracted"
-   echo "Usage: marcextractbyid [filename] [marcid_field] !"
-   echo "Usage: marcextractbyid [filename] !"
+   echo "Usage: marcextractbyid [filename] [marcid_field]"
+   echo "Usage: marcextractbyid [filename]"
    echo
    exit
 else
    infile="${1}"
    idtag=${2}
-   not=0
-
-   if [[ $2 == "!" ]]; then idtag="001";not=1;fi
-   if [[ $3 == "!" ]]; then idtag=${2}; not=1;fi
 
    if [[ -z $idtag ]];then idtag="001";fi
 
@@ -24,7 +19,8 @@ fi
 cat ids |tr "\n" $'\x1d' > tmp_ids
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
-outfile="${fileroot}_extract.mrc"
+matched="${fileroot}_matched.mrc"
+notmatched="${fileroot}_not-matched.mrc"
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
@@ -44,8 +40,6 @@ if (NR == FNR) {
 	seen[$1] = 1
 	next
 }
-
-good_record=0
 
 leader=substr($0,1,24)
 baseaddress=substr(leader,13, 5) + 0
@@ -88,29 +82,31 @@ if (directory_check == 0) {
 
 gsub(" *$", "", id_content)
 
-if ( NOT == 0 && seen[id_content] == 1 ) { 
+if (seen[id_content] == 1 ) { 
 	foundrecs++
-	print $0 > OUTFILE
-	} 
-if ( NOT == 1 && ! seen[id_content] ) { 
-	foundrecs++
-	print $0 > OUTFILE
-	}
+	print $0 > MATCHED
+} else {
+	notfoundrecs++
+	print $0 > NOTMATCHED
 }
-if (NR % 10000 == 0){ printf "Records searched: "NR" Records found: %d \r", foundrecs }
 
 }
-END { printf "Records searched: "NR" Records found: %d \r", foundrecs }
+if (NR % 10000 == 0) if (NR % 10000 == 0){ printf "Records searched: %d Matching: %d Not matching: %d \r", NR, foundrecs, notfoundrecs }
+
+}
+END { printf "Records searched: %d Matching: %d Not matching: %d \r", NR, foundrecs, notfoundrecs }
 ENDOFAWK
 
 echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
 
-awk -v ORS=$'\x1d' -v FS=$'\x1e' -v RS=$'\x1d' -v SFS=$'\x1f' -v NOT=${not} -v IDTAG=${idtag} -v OUTFILE="${outfile}" -b -f tmp_checkmarc "tmp_ids" "${infile}"
+awk -v ORS=$'\x1d' -v FS=$'\x1e' -v RS=$'\x1d' -v SFS=$'\x1f' -v IDTAG=${idtag} -v MATCHED="${matched}" -v NOTMATCHED="${notmatched}" -b -f tmp_checkmarc "tmp_ids" "${infile}"
 echo
 echo
 
-echo "Records have been output to ${outfile}                     " 
+echo "Records matching ID file were output to ${matched}                     " 
+echo "Records not matching ID file were output to ${notmatched}                     " 
+echo
 
 rm -f tmp_checkmarc tmp_ids
