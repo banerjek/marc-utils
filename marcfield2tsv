@@ -1,6 +1,3 @@
-# sirsi was inadvertantly modified to accommodate NALIS -- must be modified
-#
-
 infile="${1}"
 
 if [[ -z $2 ]];then
