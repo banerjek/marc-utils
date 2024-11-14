@@ -9,7 +9,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marc2tsv**](#marc2tsv) -- Extract MARC fields into TSV file 
 * [**marcdelete**](#marcdelete) -- Delete MARC field based on tag with optional regex
 * [**marcextract**](#marcextract) -- Extract record identifier and data from MARC tag 
-* [**marcextractbyid**](#marcextractbyid) -- Extract records matching a list of identifiers
+* [**marcextractbyid**](#marcextractbyid) -- Extract records matching or not matching a list of identifiers
 * [**marcfc**](#marcfc) -- Provide field and subfield counts
 * [**marcfield2tsv**](#marcfield2tsv) -- Extract bib identifier and subfields from single MARC tag
 * [**marcfix**](#marcfix) -- Divide MARC records by type and fix some common issues
@@ -89,10 +89,9 @@ Outputs record identifier and MARC tag. The idtag parameter is optional. If left
 ## marcextractbyid
 **Usage:** *Usage: marcextractbyid [filename] [marcid_field]*   
 **Example:** *marcextractbyid marcfile.mrc 907a*   
-**Example:** *marcextractbyid marcfile.mrc 907a !*   
-**Example:** *marcextractbyid marcfile.mrc !*   
+**Example:** *marcextractbyid marcfile.mrc*   
 
-Extracts MARC records based on a list of identifiers contained in a file named "ids." The marcid_field is optional and will be presumed to be 001 unless otherwise specified. Use "!" to indicate negative search (extract records not in id list)
+Extracts MARC records based on a list of identifiers contained in a file named "ids." The marcid_field is optional and will be presumed to be 001 unless otherwise specified. Separate output files are created for records matching and not matching the list of identifiers 
 
 ## marcfc
 **Usage:** *marcfc [filename]*   
