@@ -66,6 +66,8 @@ function fix_var_field(){
 		for (subfield=2;subfield<=num_subfields;subfield++) { 
 			new_field_content = new_field_content""SFS""subfields[subfield]
 		}
+	} else {
+		sub(SEARCH, REPLACE, new_field_content)
 	}
 }
 
