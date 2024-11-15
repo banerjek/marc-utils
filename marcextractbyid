@@ -60,7 +60,7 @@ if (directory_check == 0) {
 				if (IDTAG == "001") { 
 					id_content = substr(record_content, starting_pos + 0, field_length - 1)
 				} else {
-					id_content = substr(record_content, starting_pos + 1, field_length - 2)
+					id_content = substr(record_content, starting_pos + 1, field_length - 1)
 				}
 			}
 	
@@ -89,6 +89,8 @@ if (seen[id_content] == 1 ) {
 	notfoundrecs++
 	print $0 > NOTMATCHED
 }
+
+id_content = ""
 
 }
 if (NR % 10000 == 0) if (NR % 10000 == 0){ printf "Records searched: %d Matching: %d Not matching: %d \r", NR, foundrecs, notfoundrecs }
