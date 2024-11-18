@@ -25,7 +25,7 @@ notmatched="${fileroot}_not-matched.mrc"
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
-BEGIN { records_found = 0 
+BEGIN { foundrecs = 0 
         if (length("а") != 2) {
                 badawk = 1
                 printf("Your version of awk does not support marcextractbyid -- you need a version that supports the -b switch\\n")
