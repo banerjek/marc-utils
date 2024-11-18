@@ -16,7 +16,7 @@ else
 
 fi	
 
-cat ids |tr "\n" $'\x1d' > tmp_ids
+cat ids |tr "\n" $'\x1d' | tr -d "\r" > tmp_ids
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
 matched="${fileroot}_matched.mrc"
