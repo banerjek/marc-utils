@@ -82,21 +82,26 @@ if (directory_check == 0) {
 
 gsub(" *$", "", id_content)
 
-if (seen[id_content] == 1 ) { 
-	foundrecs++
-	print $0 > MATCHED
-} else {
-	notfoundrecs++
-	print $0 > NOTMATCHED
-}
+if (seen[id_content] == 1 ) { found = 1 }
 
 id_content = ""
 
 }
-if (NR % 10000 == 0) if (NR % 10000 == 0){ printf "Records searched: %d Matching: %d Not matching: %d \r", NR, foundrecs, notfoundrecs }
+
+if (found == 1 ) {
+        foundrecs++
+        print $0 > MATCHED
+} else {
+        notfoundrecs++
+        print $0 > NOTMATCHED
+}
+
+recordcounter++
+
+if (NR % 10000 == 0) if (NR % 10000 == 0){ printf "Records searched: %d Matching: %d Not matching: %d \r", recordcounter, foundrecs, notfoundrecs }
 
 }
-END { printf "Records searched: %d Matching: %d Not matching: %d \r", NR, foundrecs, notfoundrecs }
+END { printf "Records searched: %d Matching: %d Not matching: %d \r", recordcounter, foundrecs, notfoundrecs }
 ENDOFAWK
 
 echo -e "${awkscript}" > tmp_checkmarc
