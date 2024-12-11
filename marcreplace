@@ -18,6 +18,8 @@ else
 	search="${3}"
 	replace="${4}"
 
+	if [[ ${#replace} -lt 1 ]];then replace='""';fi
+
 	tag=${marctag:0:3}
 
 	if [[ ${#marctag} == 4 ]];then
@@ -51,6 +53,8 @@ BEGIN {
 
 function fix_var_field(){
 	if (SUBFIELD != "") {
+
+		split(new_field_content, subfields, SFS)
 		num_subfields = length(subfields)
 	
 		### loop through the subfields skipping the indicators	
