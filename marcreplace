@@ -18,8 +18,6 @@ else
 	search="${3}"
 	replace="${4}"
 
-	if [[ ${#replace} -lt 1 ]];then replace='""';fi
-
 	tag=${marctag:0:3}
 
 	if [[ ${#marctag} == 4 ]];then
