@@ -292,8 +292,9 @@ if [[ ${system}  == "sierra"  ]];then
 fi
 
 if [[ ${system}  == "sirsi"  ]];then
-	bib_call_field="092"
-	identifier="001"
+	bib_call_field="090"
+	bib_call_fallback="050"
+	identifier="991a"
 	item_field="999i"
 	item_call_subfield="a"
 	location_subfield="m"
@@ -422,12 +423,13 @@ if [[ ${system} == "virtua" ]];then
 	tags[3]="6"
 	tags[4]="F"
 	tags[5]="D"
-	tags[6]="x"
+	tags[6]="X"
 	tags[7]="o"
 	tags[8]="p"
 	tags[9]="q"
 	tags[10]="G"
-	tags[11]="X"
+	tags[11]="s"
+	tags[12]="r"
 
 	labels[1]="call#"
 	labels[2]="call#cutter"
@@ -440,6 +442,7 @@ if [[ ${system} == "virtua" ]];then
 	labels[9]="checkin_note"
 	labels[10]="temp_location"
 	labels[11]="status"
+	labels[12]="checkout_note"
 fi
 
 if [[ ${system} == "wms"  ]];then
