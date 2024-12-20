@@ -627,7 +627,7 @@ function extract_identifiers() {
 					}	
 				}
 			#gsub(/^ *+| +$/, "", bibno)
-			gsub(/[^a-zA-Z0-9]/, "", bibno)
+			gsub(/[^\.a-zA-Z0-9]/, "", bibno)
 			}
 		}
 	}
