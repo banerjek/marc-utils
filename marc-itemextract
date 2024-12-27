@@ -560,7 +560,7 @@ function extract_subfields() {
 
 	if (IDENTIFIER == "004") {
 		holdid = tag001 
-		gsub(/[^a-zA-Z0-9]/, "", bibno)
+		gsub(/[^\.\-a-zA-Z0-9]/, "", bibno)
 	} else {
 		holdid =  bibno""location""callprefix""callnum""callsuffix
 	}
@@ -627,7 +627,7 @@ function extract_identifiers() {
 					}	
 				}
 			#gsub(/^ *+| +$/, "", bibno)
-			gsub(/[^\.a-zA-Z0-9]/, "", bibno)
+			gsub(/[^\-\.a-zA-Z0-9]/, "", bibno)
 			}
 		}
 	}
