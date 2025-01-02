@@ -20,6 +20,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marcremap**](#marcremap) -- Remap one MARC field to another 
 * [**marcreplace**](#marcreplace) -- MARC regex replacement within a field tag
 * [**marcsearch**](#marcsearch) -- Extract MARC records containing a search pattern
+* [**marcslice**](#marcslice) -- Extract sequence of records from a MARC file
 * [**marcsort**](#marcsort) -- Sort MARC files by field
 * [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
 * [**marctail**](#marctail) -- Extract last part of MARC files 
@@ -164,6 +165,15 @@ Extracts MARC records where regex_search_expression was found in a MARC tag and 
 To negate a search, add an exclamation point to the end of the regex, e.g. *marcsearch marcfile.mrc 856 "my_proxy.edu!"*   
 
 The count parameter is optional. If the word "count" is sent, marcsearch only reports on how many records it found without extracting them.
+
+## marcslice
+**Usage:** *marcslice [filename] [startrecord] [endrecord] [count]*   
+**Example:** *marcsearch marcfile.mrc 5000 6000*   
+**Example:** *marcsearch marcfile.mrc 15 20 |text*   
+
+Extracts MARC records from record [startrecord] which is an integer starting at 1 to [endrecord]. 
+
+Output is to stdout. If you wish to view in text, run it through the |text filter
 
 ## marcsort
 **Usage:** *marcsort [filename] *   

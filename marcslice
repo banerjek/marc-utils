@@ -1,0 +1,12 @@
+infile="${1}"
+from=$2
+to=$3
+
+if [[ -z $to ]];then
+   echo "Usage: marcslice [filename] [startrecord] [endrecord]"
+   exit
+fi
+
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FROM=${from} -v TO=${to} '{if (NR >= FROM && NR <= TO){print $0}else{if (NR > TO){exit}}}' "${infile}" 
+
+
