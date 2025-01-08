@@ -41,7 +41,7 @@ function build_mfhd() {
 	gsub(/HOLDINGSID/, holdId, text_mfhd)
 	gsub(/CALLNUM/, callNum, text_mfhd)
 
-	if (callPrefix > 0) {gsub(/CALLPREFIX/, $callPrefix, text_mfhd)} else {gsub(/CALLPREFIX/, "", text_mfhd)
+	if (callPrefix > 0) {gsub(/CALLPREFIX/, $callPrefix, text_mfhd)} else {gsub(/CALLPREFIX/, "", text_mfhd)}
 	if (callSuffix > 0) {gsub(/CALLSUFFIX/, $callSuffix, text_mfhd)} else {gsub(/CALLSUFFIX/, "", text_mfhd)}
 
 	### nonrequired fields must be entered here
