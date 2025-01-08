@@ -16,7 +16,7 @@ read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
 BEGIN {
-	record_template="=LDR  00159cx  a22000733  4500"FS"=001  HOLDINGSID"FS"=004  BIBID"FS"=008  9810090p    8   4001aueng0000000"FS"=852   0"SFS"bLOCATION"SFS"kCALLPREFIX"SFS"hCALLNUM"
+	record_template="=LDR  00159cx  a22000733  4500"FS"=001  HOLDINGSID"FS"=004  BIBID"FS"=008  9810090p    8   4001aueng0000000"FS"=852   0"SFS"bLOCATION"SFS"kCALLPREFIX"SFS"hCALLNUM"SFS"mCALLSUFFIX"
 
 	if(length("а") != 2) {
 		badawk = 1
@@ -41,7 +41,8 @@ function build_mfhd() {
 	gsub(/HOLDINGSID/, holdId, text_mfhd)
 	gsub(/CALLNUM/, callNum, text_mfhd)
 
-	if (callPrefix > 0) {gsub(/CALLPREFIX/, $callPrefix, text_mfhd)} else {gsub(/CALLPREFIX/, "", text_mfhd)}
+	if (callPrefix > 0) {gsub(/CALLPREFIX/, $callPrefix, text_mfhd)} else {gsub(/CALLPREFIX/, "", text_mfhd)
+	if (callSuffix > 0) {gsub(/CALLSUFFIX/, $callSuffix, text_mfhd)} else {gsub(/CALLSUFFIX/, "", text_mfhd)}
 
 	### nonrequired fields must be entered here
 	if (recType > 0) {
@@ -201,6 +202,10 @@ function build_mfhd() {
 				case "callprefix":
 					callPrefix=i
 					printf ("Call number prefix found in "$i"\\n")
+					break
+				case "callsuffix":
+					callSuffix=i
+					printf ("Call number suffix found in "$i"\\n")
 					break
 				case "callbibliographic":
 					callNumFallback=i
