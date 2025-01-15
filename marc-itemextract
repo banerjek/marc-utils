@@ -411,6 +411,7 @@ if [[ ${system} == "tlc" ]];then
 fi
 
 if [[ ${system} == "virtua" ]];then
+	special[1]="949"
 	identifier="001"
 	item_field="949D"
 	item_call_subfield="a"
@@ -428,7 +429,7 @@ if [[ ${system} == "virtua" ]];then
 	tags[8]="p"
 	tags[9]="q"
 	tags[10]="G"
-	tags[11]="s"
+	tags[11]="s" # special function, disable if not used for status
 	tags[12]="r"
 
 	labels[1]="call#"
@@ -474,6 +475,8 @@ read -r -d '' awkscript << "ENDOFAWK"
 BEGIN { records_found = 0 
 
 		subfield_regex=SFS"."
+
+		virtua_status_match = "("SFS"s[0-9]+):[0-9;:]+"
 
       if (length("а") != 2) {
                 badawk = 1
@@ -528,6 +531,11 @@ function destiny_852() {
 	gsub("@[^"SFS"]*", "", field_content)
 }
 
+function virtua_949() { 
+	# status 
+	field_content = gensub(virtua_status_match, "\\\1", "g", field_content)
+}
+
 function extract_subfields() { 
 	real_item = 0
 	for (j=1;j<=num_tags;j++) { item_subfield[j] = "" }
@@ -560,7 +568,7 @@ function extract_subfields() {
 
 	if (IDENTIFIER == "004") {
 		holdid = tag001 
-		gsub(/[^\.\-a-zA-Z0-9]/, "", bibno)
+		gsub(/[^a-zA-Z0-9]/, "", bibno)
 	} else {
 		holdid =  bibno""location""callprefix""callnum""callsuffix
 	}
@@ -627,7 +635,7 @@ function extract_identifiers() {
 					}	
 				}
 			#gsub(/^ *+| +$/, "", bibno)
-			gsub(/[^\-\.a-zA-Z0-9]/, "", bibno)
+			gsub(/[^\.a-zA-Z0-9]/, "", bibno)
 			}
 		}
 	}
@@ -727,4 +735,4 @@ chmod 700 tmp_checkmarc
 awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${identifier}" -v ITEMFIELD="${item_field}" -v CALL="${item_call_subfield}" -v CALL_PREFIX="${item_call_prefix}" -v CALL_SUFFIX="${item_call_suffix}" -v BIB_CALL_FIELD="${bib_call_field}" -v BIB_CALL_FALLBACK="${bib_call_fallback}" -v BIB_MATTYPE_FIELD="${bib_mattype_field}" -v LOCATION="${location_subfield}" -v TAGLIST="${taglist}" -v LABELLIST="${labellist}" -v SPECIALLIST="${speciallist}" -v SYSTEM="${system}" -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
 echo
 
-rm -f tmp_checkmarc
+#rm -f tmp_checkmarc
