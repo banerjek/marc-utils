@@ -42,7 +42,7 @@ BEGIN {
 
 	### modify search if end of field search detected
 	if (substr(SEARCH, length(SEARCH), 1) == "$") {
-		if (TAG ~ /^00/) { 
+		if (SUBFIELD == "") { 
 			SEARCH = substr(SEARCH, 1, length(SEARCH) - 1)""FS
 			REPLACE = REPLACE""FS
                 }
