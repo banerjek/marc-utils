@@ -16,7 +16,17 @@ read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
 BEGIN {
-	record_template="=LDR  00159cx  a22000733  4500"FS"=001  HOLDINGSID"FS"=004  BIBID"FS"=008  9810090p    8   4001aueng0000000"FS"=852   0"SFS"bLOCATION"SFS"kCALLPREFIX"SFS"hCALLNUM"SFS"mCALLSUFFIX"
+	record_template="=LDR  00159cx  a22000733  4500"FS"=001  HOLDINGSID"FS"=004  BIBID"FS"=008  9810090p    8   4001aueng0000000"FS
+
+	template_852="=852   0"SFS"bLOCATION"SFS"kCALLPREFIX"SFS"hCALLNUM"SFS"mCALLSUFFIX"
+
+	alma_regex867 = " *; 867: *"
+	alma_regex868 = " *; 868: *"
+	alma_source = 0
+	multispace = " +"
+	not_delim = "[^"SFS"]*"
+	alma_subfield = " *\\\$\\\$([a-z0-9]) *"
+	doubledagger = " *‡ *"
 
 	if(length("а") != 2) {
 		badawk = 1
@@ -34,15 +44,23 @@ function build_mfhd() {
 	record_content = ""
 	record_counter++
 
+	text_852 = template_852
 	text_mfhd = record_template
 
-	gsub(/LOCATION/, $location, text_mfhd)
-	gsub(/BIBID/, $bibId, text_mfhd)
-	gsub(/HOLDINGSID/, holdId, text_mfhd)
-	gsub(/CALLNUM/, callNum, text_mfhd)
+	sub(/BIBID/, $bibId, text_mfhd)
+	sub(/HOLDINGSID/, holdId, text_mfhd)
 
-	if (callPrefix > 0) {gsub(/CALLPREFIX/, $callPrefix, text_mfhd)} else {gsub(/CALLPREFIX/, "", text_mfhd)}
-	if (callSuffix > 0) {gsub(/CALLSUFFIX/, $callSuffix, text_mfhd)} else {gsub(/CALLSUFFIX/, "", text_mfhd)}
+	if (marc852 > 0) { 
+		$marc852 = gensub(alma_subfield, SFS"\\\1", "g", $marc852)
+		sub(not_delim, "", $marc852)
+		text_852 = text_852""$marc852 
+	} else { 
+		gsub(/LOCATION/, $location, text_852)
+		gsub(/CALLNUM/, callNum, text_852)
+	
+		if (callPrefix > 0) {gsub(/CALLPREFIX/, $callPrefix, text_852)} else {gsub(/CALLPREFIX/, "", text_852)}
+		if (callSuffix > 0) {gsub(/CALLSUFFIX/, $callSuffix, text_852)} else {gsub(/CALLSUFFIX/, "", text_852)}
+	}
 
 	### nonrequired fields must be entered here
 	if (recType > 0) {
@@ -99,11 +117,13 @@ function build_mfhd() {
 		gsub(/^1\.[1-9]?[0-9] /, "", $libHas)
 		gsub(/;1\.[1-9]?[0-9] /, "", $libHas)
 		split($libHas, statements, ";") 
-		for (statement in statements) { text_mfhd = text_mfhd""FS"=866    "SFS"a"statements[statement]
+		for (statement in statements) { text_mfhd = text_852""FS"=866    "SFS"a"statements[statement]
 		}
 	}
 
-	split(text_mfhd, marc_array, FS)	
+	full_record = text_mfhd""text_852
+
+	split(full_record, marc_array, FS)	
 	num_mfhd_fields = length(marc_array)
 	
 	for (field = 2; field <= num_mfhd_fields; ++field) {
@@ -151,11 +171,21 @@ function build_mfhd() {
 			gsub(/[^a-z0-9]/, "", compareheader)
 
 			switch(compareheader) {
+				case "852marc":
+					marc852=i
+					printf ("Alma holdings data found in "$i"\\n")
+					alma_source = 1
+					template_852="=852   0"
+					break
 				case "bibno":
 					bibId=i
 					printf ("Bib ID found in "$i"\\n")
 					break
 				case "bibid":
+					bibId=i
+					printf ("Bib ID found in "$i"\\n")
+					break
+				case "mmsid":
 					bibId=i
 					printf ("Bib ID found in "$i"\\n")
 					break
@@ -231,15 +261,24 @@ function build_mfhd() {
 					libHas=i
 					printf ("Lib has was found in "$i"\\n")
 					break
+				case "summaryholding":
+					libHas=i
+					printf ("Lib has was found in "$i"\\n")
+					break
 				case "holdid":
 					holdIdpos=i
 					holdId=i
-					printf ("Holdings ID fallback found in "$i"\\n")
+					printf ("Holdings ID found in "$i"\\n")
+					break
+				case "holdingid":
+					holdIdpos=i
+					holdId=i
+					printf ("Holdings ID found in "$i"\\n")
 					break
 				case "holdingsid":
 					holdIdpos=i
 					holdId=i
-					printf ("Holdings ID fallback found in "$i"\\n")
+					printf ("Holdings ID found in "$i"\\n")
 					break
 				case "intnote":
 					if (itemfile == 0) {
@@ -309,19 +348,26 @@ function build_mfhd() {
 					break
 			}
 		}
-	if (! bibId) {  printf ("\\nNo valid bib ID field could be found\\n"); exit }
-	if (! location ) {  printf ("\\nNo valid location field could be found\\n"); exit }
 
-	if (! callNumPos && ! callNumFallback ) {  emptyCall = 1 } else { emptyCall = 0 }
-	if (! callNumPos && callNumFallback > 0 ) { callNumPos = callNumFallback; callNumFallback = "" }
+	if (! bibId) {  printf ("\\nNo valid bib ID field could be found\\n"); exit }
+
+	if (alma_source == 0) {
+		if (! location ) {  printf ("\\nNo valid location field could be found\\n"); exit }
+		if (! callNumPos && ! callNumFallback ) {  emptyCall = 1 } else { emptyCall = 0 }
+		if (! callNumPos && callNumFallback > 0 ) { callNumPos = callNumFallback; callNumFallback = "" }
+	}
 
 	if (! recType) {  printf ("\\nNo record type field detected, defaulting to Single part holdings\\n") }
 	printf("\\n\\n")
 	}
 
 	gsub(/"/, "", $0) 
-	gsub(/^ */, "", $location) 
-	gsub(/ *$/, "", $location) 
+
+	if (alma_source == 0) {
+		gsub(/^ */, "", $location) 
+		gsub(/ *$/, "", $location) 
+	
+	}
 
 	if (emptyCall == 0) {
 		callNum = $callNumPos
@@ -343,9 +389,9 @@ END {
 
 ENDOFAWK
 
-echo -e "${awkscript}" > tmp_checkmarc
-chmod 700 tmp_checkmarc
+echo -e "${awkscript}" > tmp_mfhdsfromtsv
+chmod 700 tmp_mfhdsfromtsv
 
-awk -v ORS=$'\x1d' -v RS='\n' -v OFS=$'\x1e' -v FS='\t' -v SFS=$'\x1f' -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+awk -v ORS=$'\x1d' -v RS='\n' -v OFS=$'\x1e' -v FS='\t' -v SFS=$'\x1f' -v OUTFILE="${outfile}" -b -f tmp_mfhdsfromtsv "${infile}"
 
-rm -f tmp_*
+rm -f tmp_mfhdsfromtsv
