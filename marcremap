@@ -50,13 +50,15 @@ for (i=1; i<=directory_length; i=i+12) {
 			found_fields++
 			newtag = TOTAG""directory_metadata 
 		} else {
-			field_length = substr(directory, i + 3, 4) + 0
-			starting_pos = substr(directory, i + 7, 5) 
-			field_content = substr(record_content, starting_pos + 1, field_length - 1)
+			field_length = substr(directory_entry, 4, 4) + 0
+			starting_pos = substr(directory_entry, 8, 5) + 0
+			field_content = substr(record_content, starting_pos + 2, field_length - 2)
 
 			if (field_content ~ REGEX) {
 				found_fields++
 				newtag = TOTAG""directory_metadata 
+			} else {
+				newtag = tag""directory_metadata 
 			}
 		}
 	} else {
