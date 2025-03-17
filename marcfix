@@ -151,12 +151,15 @@ process_file() {
 	echo -e "${awkscript}" > tmp_checkmarc
 	chmod 700 tmp_checkmarc
 
+	echo
 	echo "Processing ${marcfile}"	
+	echo
 	
 	echo "Detecting and removing nulls"
-	tr < "${marcfile}" -d '\000' > "${marcfile}.tmp"
+	pv "${marcfile}" | tr -d '\000' > "${marcfile}.tmp"
+	echo 
+
 	echo "Detecting and converting carriage returns, newlines, tabs, and commonly misencoded characters to spaces"
-	echo
 
 	# ala codes followed by tabs and line breaks	
 	#bad_chars=$'\xe1'$'\xe2'$'\xe3'$'\xe4'$'\xe5'$'\xe6'$'\xe7'$'\xe8'$'\xe9'$'\xc3''\n'\t'\r'
@@ -164,7 +167,8 @@ process_file() {
 
 	#ala characters
 	#cat "${marcfile}.tmp" |tr '[\200-\377]\n\r\t' ' ' | sed "s/${SFS}9/${SFS}0/g"> "${marcfile}"
-	cat "${marcfile}.tmp" |tr '\n\r\t\033' ' ' | sed "s/${SFS}9/${SFS}0/g"> "${marcfile}"
+	pv "${marcfile}.tmp" |tr '\n\r\t\033' ' ' | sed "s/${SFS}9/${SFS}0/g"> "${marcfile}"
+	echo
 	rm ${marcfile}.tmp
 		
 
