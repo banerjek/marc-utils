@@ -432,6 +432,7 @@ if [[ ${system} == "virtua" ]];then
 	tags[11]="s" # special function, disable if not used for status
 	tags[12]="r"
 	tags[13]="e"
+	tags[14]="0"
 
 	labels[1]="call#"
 	labels[2]="call#cutter"
@@ -446,6 +447,7 @@ if [[ ${system} == "virtua" ]];then
 	labels[11]="status"
 	labels[12]="checkout_note"
 	labels[13]="accession"
+	labels[14]="volume"
 fi
 
 if [[ ${system} == "wms"  ]];then
@@ -571,9 +573,13 @@ function extract_subfields() {
 	if (IDENTIFIER == "004") {
 		holdid = tag001 
 		gsub(/[^a-zA-Z0-9]/, "", bibno)
-	} else {
-		holdid =  bibno""location""callprefix""callnum""callsuffix
-	}
+   	} else {
+      		if (length(callnum) > 1) {
+         		holdid =  bibno""location""callprefix""callnum""callsuffix
+      		} else {
+         		holdid =  bibno""location""bib_call
+      		}
+   	}
 
 	gsub(/[^a-zA-Z0-9]/, "", holdid)
 
