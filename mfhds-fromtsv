@@ -18,7 +18,14 @@ read -r -d '' awkscript << "ENDOFAWK"
 BEGIN {
 	record_template="=LDR  00159cx  a22000733  4500"FS"=001  HOLDINGSID"FS"=004  BIBID"FS"=008  9810090p    8   4001aueng0000000"FS
 
-	template_852="=852   0"SFS"bLOCATION"SFS"kCALLPREFIX"SFS"hCALLNUM"SFS"mCALLSUFFIX"
+	template_852="=852   CALLNUMBERTYPE"SFS"bLOCATION"SFS"kCALLPREFIX"SFS"hCALLNUM"SFS"mCALLSUFFIX"
+	#######
+	# 0 = LC
+	# 1 = DDC
+	# 2 = NLM
+	# 3 = Gov docs
+	# 8 = Other scheme
+	callTypeDefault = 0 
 
 	alma_regex867 = " *; 867: *"
 	alma_regex868 = " *; 868: *"
@@ -51,6 +58,7 @@ function build_mfhd() {
 	sub(/HOLDINGSID/, holdId, text_mfhd)
 
 	if (marc852 > 0) { 
+		if (NR == 1) { next }
 		$marc852 = gensub(alma_subfield, SFS"\\\1", "g", $marc852)
 		sub(not_delim, "", $marc852)
 		text_852 = text_852""$marc852 
@@ -63,6 +71,44 @@ function build_mfhd() {
 	}
 
 	### nonrequired fields must be entered here
+	if (callType > 1) {
+		 $callType=tolower($callType)
+                 gsub(/[^a-z0-9]/, "", $callType)
+
+		switch($callType) {
+			case "lcc":
+				$callType = 0
+				break
+			case "libraryofcongressclassification":
+				$callType = 0
+				break
+			case "ddc":
+				$callType = 1
+				break
+			case "deweydecimalclassification":
+				$callType = 1
+				break
+			case "nlm":
+				$callType = 2
+				break
+			case "nationallibraryofmedicine":
+				$callType = 2
+				break
+			case "superintendentofdocumentsclassification":
+				$callType = 3
+				break
+			case "otherscheme":
+				$callType = 8
+				break
+			case "local":
+				$callType = 8
+				break
+			default:
+				$callType = callTypeDefault
+				break
+		}
+	}
+
 	if (recType > 0) {
 		switch($recType) {
 			case "s":
@@ -225,6 +271,10 @@ function build_mfhd() {
 					callNumPos=i
 					printf ("Call number found in "$i"\\n")
 					break
+				case "callnumbertype":
+					callType=i
+					printf ("Call number type found in "$i"\\n")
+					break
 				case "callitem":
 					callNumPos=i
 					printf ("Call number found in "$i"\\n")
@@ -357,8 +407,10 @@ function build_mfhd() {
 		if (! callNumPos && callNumFallback > 0 ) { callNumPos = callNumFallback; callNumFallback = "" }
 	}
 
-	if (! recType) {  printf ("\\nNo record type field detected, defaulting to Single part holdings\\n") }
-	printf("\\n\\n")
+	printf("\\n")
+	if (! recType) {  printf ("No record type field detected, defaulting to Single part holdings\\n") }
+	if (! callType) {  printf ("No call number type field detected, setting second indicator in 852 to "callTypeDefault"\\n") }
+	printf("\\n")
 	}
 
 	gsub(/"/, "", $0) 
@@ -370,7 +422,7 @@ function build_mfhd() {
 	}
 
 	if (emptyCall == 0) {
-		callNum = $callNumPos
+		if (callNumPos > 0) {callNum = $callNumPos}
 		if (callNumFallback > 0 && length($callNumPos) == 0) {callNum = $callNumFallback}
 	} else {
 		if (NR == 1) { callNum = "callNum" } else { callNum = "" }
