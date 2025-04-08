@@ -18,7 +18,7 @@ read -r -d '' awkscript << "ENDOFAWK"
 BEGIN {
 	record_template="=LDR  00159cx  a22000733  4500"FS"=001  HOLDINGSID"FS"=004  BIBID"FS"=008  9810090p    8   4001aueng0000000"FS
 
-	template_852="=852   CALLNUMBERTYPE"SFS"bLOCATION"SFS"kCALLPREFIX"SFS"hCALLNUM"SFS"mCALLSUFFIX"
+	template_852="=852   CALLTYPE"SFS"bLOCATION"SFS"kCALLPREFIX"SFS"hCALLVALUE"SFS"mCALLSUFFIX"
 	#######
 	# 0 = LC
 	# 1 = DDC
@@ -26,6 +26,7 @@ BEGIN {
 	# 3 = Gov docs
 	# 8 = Other scheme
 	callTypeDefault = 0 
+	callNumberType = callTypeDefault 
 
 	alma_regex867 = " *; 867: *"
 	alma_regex868 = " *; 868: *"
@@ -57,20 +58,6 @@ function build_mfhd() {
 	sub(/BIBID/, $bibId, text_mfhd)
 	sub(/HOLDINGSID/, holdId, text_mfhd)
 
-	if (marc852 > 0) { 
-		if (NR == 1) { next }
-		$marc852 = gensub(alma_subfield, SFS"\\\1", "g", $marc852)
-		sub(not_delim, "", $marc852)
-		text_852 = text_852""$marc852 
-	} else { 
-		gsub(/LOCATION/, $location, text_852)
-		gsub(/CALLNUM/, callNum, text_852)
-	
-		if (callPrefix > 0) {gsub(/CALLPREFIX/, $callPrefix, text_852)} else {gsub(/CALLPREFIX/, "", text_852)}
-		if (callSuffix > 0) {gsub(/CALLSUFFIX/, $callSuffix, text_852)} else {gsub(/CALLSUFFIX/, "", text_852)}
-	}
-
-	### nonrequired fields must be entered here
 	if (callType > 1) {
 		 $callType=tolower($callType)
                  gsub(/[^a-z0-9]/, "", $callType)
@@ -100,6 +87,9 @@ function build_mfhd() {
 			case "otherscheme":
 				$callType = 8
 				break
+			case "title":
+				$callType = 5
+				break
 			case "local":
 				$callType = 8
 				break
@@ -107,6 +97,21 @@ function build_mfhd() {
 				$callType = callTypeDefault
 				break
 		}
+		callNumberType = $callType
+	}
+
+	if (marc852 > 0) { 
+		if (NR == 1) { next }
+		$marc852 = gensub(alma_subfield, SFS"\\\1", "g", $marc852)
+		sub(not_delim, "", $marc852)
+		text_852 = text_852""$marc852 
+	} else { 
+		gsub(/LOCATION/, $location, text_852)
+		gsub(/CALLTYPE/, callNumberType, text_852)
+		gsub(/CALLVALUE/, callNum, text_852)
+	
+		if (callPrefix > 0) {gsub(/CALLPREFIX/, $callPrefix, text_852)} else {gsub(/CALLPREFIX/, "", text_852)}
+		if (callSuffix > 0) {gsub(/CALLSUFFIX/, $callSuffix, text_852)} else {gsub(/CALLSUFFIX/, "", text_852)}
 	}
 
 	if (recType > 0) {
@@ -270,6 +275,14 @@ function build_mfhd() {
 				case "callnumber":
 					callNumPos=i
 					printf ("Call number found in "$i"\\n")
+					break
+				case "callnumtype":
+					callType=i
+					printf ("Call number type found in "$i"\\n")
+					break
+				case "calltype":
+					callType=i
+					printf ("Call number type found in "$i"\\n")
 					break
 				case "callnumbertype":
 					callType=i
@@ -435,7 +448,7 @@ function build_mfhd() {
 }
 END { 
 	if (badawk != 1) {
-		printf ("\\n\\n Records processed: %d Records created: %d Output file: %s\\n", record_counter, created, OUTFILE)
+		printf ("Records processed: %d Records created: %d Output file: %s\\n\\n", record_counter, created, OUTFILE)
 	}
 }
 
