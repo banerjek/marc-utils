@@ -1,1 +1,6 @@
-awk -v RS=$'\x1d' '{if (NR % 10000 == 0){printf("Records: "NR"\r")}}END{print "Records: "NR}' "${1}"
+if [[ -z ${1} ]];then
+	echo "Usage: marccount [filename]"
+	echo
+	exit
+fi
+awk -v RS=$'\x1d' '{if (NR % 10000 == 0){printf("Records: "NR"\r")}}END{print "Records found in "FILENAME": "NR}' "${1}"
