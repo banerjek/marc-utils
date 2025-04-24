@@ -1,6 +1,13 @@
-if [[ -z ${1} ]];then
+filelist=("$@")
+infile="${filelist[0]}"
+
+if [[ -z ${infile} ]];then
+	echo "You must supply a file name or expression (wildcards OK)"
 	echo "Usage: marccount [filename]"
 	echo
 	exit
 fi
-awk -v RS=$'\x1d' '{if (NR % 10000 == 0){printf("Records: "NR"\r")}}END{print "Records found in "FILENAME": "NR}' "${1}"
+
+for file in "${filelist[@]}";do
+	awk -v RS=$'\x1d' '{if (NR % 10000 == 0){printf("Records: "NR"\r")}}END{print "Records found in "FILENAME": "NR}' "${file}"
+done
