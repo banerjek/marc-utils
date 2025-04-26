@@ -71,7 +71,7 @@ Copies one MARC field to another
 
 ## marccount
 **Usage:** *marccount [filename]*   
-**Example:** *marccount myfile.mrc*   
+**Example:** *marccount myfilelist*.mrc*   
 
 Counts MARC records based on detection of end of record markers
 

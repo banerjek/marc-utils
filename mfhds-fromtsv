@@ -18,7 +18,7 @@ read -r -d '' awkscript << "ENDOFAWK"
 BEGIN {
 	record_template="=LDR  00159cx  a22000733  4500"FS"=001  HOLDINGSID"FS"=004  BIBID"FS"=008  9810090p    8   4001aueng0000000"FS
 
-	template_852="=852   CALLTYPE"SFS"bLOCATION"SFS"kCALLPREFIX"SFS"hCALLVALUE"SFS"mCALLSUFFIX"
+	#template_852="=852   CALLTYPE"SFS"bLOCATION"SFS"kCALLPREFIX"SFS"hCALLVALUE"SFS"mCALLSUFFIX"
 	#######
 	# 0 = LC
 	# 1 = DDC
@@ -52,11 +52,8 @@ function build_mfhd() {
 	record_content = ""
 	record_counter++
 
-	text_852 = template_852
-	text_mfhd = record_template
-
-	sub(/BIBID/, $bibId, text_mfhd)
-	sub(/HOLDINGSID/, holdId, text_mfhd)
+	text_852 = ""
+	text_mfhd = "=LDR  00159cx  a22000733  4500"FS"=001  "holdId""FS"=004  "$bibId
 
 	if (callType > 1) {
 		 $callType=tolower($callType)
@@ -106,12 +103,7 @@ function build_mfhd() {
 		sub(not_delim, "", $marc852)
 		text_852 = text_852""$marc852 
 	} else { 
-		gsub(/LOCATION/, $location, text_852)
-		gsub(/CALLTYPE/, callNumberType, text_852)
-		gsub(/CALLVALUE/, callNum, text_852)
-	
-		if (callPrefix > 0) {gsub(/CALLPREFIX/, $callPrefix, text_852)} else {gsub(/CALLPREFIX/, "", text_852)}
-		if (callSuffix > 0) {gsub(/CALLSUFFIX/, $callSuffix, text_852)} else {gsub(/CALLSUFFIX/, "", text_852)}
+		text_852="=852   "callNumberType""SFS"b"$location""SFS"k"CALLPREFIX""SFS"h"callNum""SFS"m"CALLSUFFIX
 	}
 
 	if (recType > 0) {
@@ -164,17 +156,17 @@ function build_mfhd() {
 		split($acquisitionstatus, statements, ";")
 		for (statement in statements) { text_mfhd = text_mfhd""FS"=583    "SFS"a"statements[statement] }
 	}
+	text_mfhd = text_mfhd"\\n"text_852
+
 	if (libHas > 0 && $libHas ~ /[a-zA-Z0-9]/) {
-		gsub(/^1\.[1-9]?[0-9] /, "", $libHas)
+		sub(/^1\.[1-9]?[0-9] /, "", $libHas)
 		gsub(/;1\.[1-9]?[0-9] /, "", $libHas)
 		split($libHas, statements, ";") 
-		for (statement in statements) { text_mfhd = text_852""FS"=866    "SFS"a"statements[statement]
+		for (statement in statements) { text_mfhd = text_mfhd""FS"=866    "SFS"a"statements[statement]
 		}
 	}
 
-	full_record = text_mfhd""text_852
-
-	split(full_record, marc_array, FS)	
+	split(text_mfhd, marc_array, FS)	
 	num_mfhd_fields = length(marc_array)
 	
 	for (field = 2; field <= num_mfhd_fields; ++field) {
