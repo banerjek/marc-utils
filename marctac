@@ -1,0 +1,20 @@
+
+if [[ -z $1 ]];then
+	echo "Usage: cram [filename]"
+	echo "Example: cram myfile.mrc "
+	echo 
+	echo 
+	echo "Reverses MARC file, not modifying contents."
+	echo "Recommended to run only after marcfix has been run"
+	echo
+	exit
+else
+	infile="${1}"
+	fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
+fi
+
+pv "${infile}" |tr $'\x1d' '\n' \
+	|tac  |tr '\n' $'\x1d' \
+	|tail -c +2 |pv > "${fileroot}_rev.mrc"
+echo "Reversed file has been sent to ${fileroot}_rev.mrc"
+echo
