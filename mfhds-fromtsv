@@ -53,7 +53,7 @@ function build_mfhd() {
 	record_counter++
 
 	text_852 = ""
-	text_mfhd = "=LDR  00159cx  a22000733  4500"FS"=001  "holdId""FS"=004  "$bibId
+	text_mfhd = "=LDR  00159cx  a22000733  4500"OFS"=001  "holdId""OFS"=004  "$bibId
 
 	if (callType > 1) {
 		 $callType=tolower($callType)
@@ -61,40 +61,39 @@ function build_mfhd() {
 
 		switch($callType) {
 			case "lcc":
-				$callType = 0
+				callNumberType = 0
 				break
 			case "libraryofcongressclassification":
-				$callType = 0
+				callNumberType = 0
 				break
 			case "ddc":
-				$callType = 1
+				callNumberType = 1
 				break
 			case "deweydecimalclassification":
-				$callType = 1
+				callNumberType = 1
 				break
 			case "nlm":
-				$callType = 2
+				callNumberType = 2
 				break
 			case "nationallibraryofmedicine":
-				$callType = 2
+				callNumberType = 2
 				break
 			case "superintendentofdocumentsclassification":
-				$callType = 3
+				callNumberType = 3
 				break
 			case "otherscheme":
-				$callType = 8
+				callNumberType = 8
 				break
 			case "title":
-				$callType = 5
+				callNumberType = 5
 				break
 			case "local":
-				$callType = 8
+				callNumberType = 8
 				break
 			default:
-				$callType = callTypeDefault
+				callNumberType = callTypeDefault
 				break
 		}
-		callNumberType = $callType
 	}
 
 	if (marc852 > 0) { 
@@ -122,51 +121,51 @@ function build_mfhd() {
 
 	if (publicNote > 0 && $publicNote ~ /[a-zA-Z0-9]/) {
 		split($publicNote, statements, ";")
-		for (statement in statements) { text_mfhd = text_mfhd""FS"=538    "SFS"a"statements[statement] }
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=538    "SFS"a"statements[statement] }
 	}
 	if (ownershipNote > 0 && $ownershipNote ~ /[a-zA-Z0-9]/) {
 		split($ownershipNote, statements, ";")
-		for (statement in statements) { text_mfhd = text_mfhd""FS"=561  0 "SFS"a"statements[statement] }
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=561  0 "SFS"a"statements[statement] }
 	}
 	if (copyNote > 0 && $copyNote ~ /[a-zA-Z0-9]/) {
 		split($copyNote, statements, ";")
-		for (statement in statements) { text_mfhd = text_mfhd""FS"=562  0 "SFS"a"statements[statement] }
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=562  0 "SFS"a"statements[statement] }
 	}
 	if (bindingNote > 0 && $bindingNote ~ /[a-zA-Z0-9]/) {
 		split($bindingNote, statements, ";")
-		for (statement in statements) { text_mfhd = text_mfhd""FS"=563    "SFS"a"statements[statement] }
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=563    "SFS"a"statements[statement] }
 	}
 	if (actionNote > 0 && $actionNote ~ /[a-zA-Z0-9]/) {
 		split($actionNote, statements, ";")
-		for (statement in statements) { text_mfhd = text_mfhd""FS"=583    "SFS"a"statements[statement] }
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=583    "SFS"a"statements[statement] }
 	}
 	if (notecheckin > 0 && $notecheckin ~ /[a-zA-Z0-9]/) {
 		split($notecheckin, statements, ";")
-		for (statement in statements) { text_mfhd = text_mfhd""FS"=583    "SFS"a"statements[statement] }
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=583    "SFS"a"statements[statement] }
 	}
 	if (staffnote > 0 && $staffnote ~ /[a-zA-Z0-9]/) {
 		split($staffnote, statements, ";")
-		for (statement in statements) { text_mfhd = text_mfhd""FS"=583    "SFS"a"statements[statement] }
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=583    "SFS"a"statements[statement] }
 	}
 	if (staffnote2 > 0 && $staffnote2 ~ /[a-zA-Z0-9]/) {
 		split($staffnote2, statements, ";")
-		for (statement in statements) { text_mfhd = text_mfhd""FS"=583    "SFS"a"statements[statement] }
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=583    "SFS"a"statements[statement] }
 	}
 	if (acquisitionstatus > 0 && $acquisitionstatus ~ /[a-zA-Z0-9]/) {
 		split($acquisitionstatus, statements, ";")
-		for (statement in statements) { text_mfhd = text_mfhd""FS"=583    "SFS"a"statements[statement] }
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=583    "SFS"a"statements[statement] }
 	}
-	text_mfhd = text_mfhd"\\n"text_852
+	text_mfhd = text_mfhd""OFS""text_852
 
 	if (libHas > 0 && $libHas ~ /[a-zA-Z0-9]/) {
 		sub(/^1\.[1-9]?[0-9] /, "", $libHas)
 		gsub(/;1\.[1-9]?[0-9] /, "", $libHas)
 		split($libHas, statements, ";") 
-		for (statement in statements) { text_mfhd = text_mfhd""FS"=866    "SFS"a"statements[statement]
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=866    "SFS"a"statements[statement]
 		}
 	}
 
-	split(text_mfhd, marc_array, FS)	
+	split(text_mfhd, marc_array, OFS)	
 	num_mfhd_fields = length(marc_array)
 	
 	for (field = 2; field <= num_mfhd_fields; ++field) {
