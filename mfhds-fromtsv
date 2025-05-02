@@ -417,6 +417,13 @@ function build_mfhd() {
 	printf("\\n")
 	}
 
+	if (length($0) > 10000) {
+		 for (field = 1; field <= NF; ++field) {
+			if (length($field) > 9900) { $field = substr($field, 1, 9900) }
+		}
+	}
+
+
 	gsub(/"/, "", $0) 
 
 	if (alma_source == 0) {
