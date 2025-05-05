@@ -17,8 +17,13 @@ read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
 BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=bibcount=holdingscount=authoritycount=0
+	subfield_0 = SFS"0" 
+	subfield_9 = SFS"9"
 }
 function check_fields() {
+	## get rid of bad subfield zeros that break links
+	gsub(subfield_0, subfield_9, $0)	
+
 	if (directory ~ /[^0-9A-Z]/){directory_check = 1;good_directory = 0}
 
 	if (directory_check == 0) {
@@ -159,17 +164,15 @@ process_file() {
 	
 	
 	echo "Detecting and removing nulls, converting carriage returns, newlines, tabs, and commonly misencoded characters to spaces"
-	pv "${marcfile}.tmp" | tr -d '\000' |tr '\n\r\t\033' ' ' | sed "s/${SFS}9/${SFS}0/g"> "${marcfile}"
+	pv "${marcfile}.tmp" | tr -d '\000' |tr '\n\r\t\033' ' ' > "${marcfile}"
 	echo 
 
 	# ala codes followed by tabs and line breaks	
 	#bad_chars=$'\xe1'$'\xe2'$'\xe3'$'\xe4'$'\xe5'$'\xe6'$'\xe7'$'\xe8'$'\xe9'$'\xc3''\n'\t'\r'
 
 	#ala characters
-	#cat "${marcfile}.tmp" |tr '[\200-\377]\n\r\t' ' ' | sed "s/${SFS}9/${SFS}0/g"> "${marcfile}"
-	#pv "${marcfile}.tmp" |tr '\n\r\t\033' ' ' | sed "s/${SFS}9/${SFS}0/g"> "${marcfile}"
-	#echo
-	#rm ${marcfile}.tmp
+	#cat "${marcfile}.tmp" |tr '[\200-\377]\n\r\t' ' ' > "${marcfile}"
+	#pv "${marcfile}.tmp" |tr '\n\r\t\033' ' ' "${marcfile}"
 		
 
 	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v FILEROOT="${fileroot}" -b -f tmp_checkmarc "${marcfile}"
