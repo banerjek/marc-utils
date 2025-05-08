@@ -24,6 +24,13 @@ function check_fields() {
 	## get rid of bad subfield zeros that break links
 	gsub(subfield_0, subfield_9, $0)	
 
+	## normalize high ascii chars if coded as utf8
+	if (utf8 == "a") { 
+		if (match($0, BAD_CHAR_REGEX) > 1) {
+			gsub(BAD_CHAR_REGEX, " ", $0)
+		}
+	}
+
 	if (directory ~ /[^0-9A-Z]/){directory_check = 1;good_directory = 0}
 
 	if (directory_check == 0) {
@@ -45,6 +52,7 @@ function check_fields() {
 function check_leader() {
 	leader=substr($0,1,24)
 	baseaddress=substr(leader,13, 5) + 0
+	utf8=substr(leader,10, 1)
 	directory=substr($0,25, baseaddress - 25)
 	directory_length=length(directory) 
 	directory_check=(directory_length % 12)
@@ -97,7 +105,6 @@ skip=0
 OUTFILE = FILEROOT"_"rectype"_fixed.mrc"
 
 if ( goodrec == 1 && good_directory == 1 && good_length == 1 && found008 == 0){ goodrecs++;skip = 1;missing_008++; print $0 > "tmp_"rectype"_008.mrc" }
-
 
 foundbad = 0
 if ( good_length == 0){ print $0 > "bad_length_"rectype"_"FILEROOT;badlength++;badlengthtext = " (length: "badlength")";foundbad = 1 }
@@ -163,19 +170,17 @@ process_file() {
 	mv "${marcfile}" "${marcfile}.tmp"
 	
 	
-	echo "Detecting and removing nulls, converting carriage returns, newlines, tabs, and commonly misencoded characters to spaces"
-	pv "${marcfile}.tmp" | tr -d '\000' |tr '\n\r\t\033' ' ' > "${marcfile}"
+	echo "Detecting and removing nulls and converting carriage returns, newlines, and tabs to spaces"
+	pv "${marcfile}.tmp" | tr -d '\000' | tr '\n\r\t' ' ' > "${marcfile}"
 	echo 
 
 	# ala codes followed by tabs and line breaks	
-	#bad_chars=$'\xe1'$'\xe2'$'\xe3'$'\xe4'$'\xe5'$'\xe6'$'\xe7'$'\xe8'$'\xe9'$'\xc3''\n'\t'\r'
+	#bad_chars="$'\x1b'$'\xe1'$'\xe2'$'\xe3'$'\xe4'$'\xe5'$'\xe6'$'\xe7'$'\xe8'$'\xe9'$'\xc3'"
 
 	#ala characters
-	#cat "${marcfile}.tmp" |tr '[\200-\377]\n\r\t' ' ' > "${marcfile}"
-	#pv "${marcfile}.tmp" |tr '\n\r\t\033' ' ' "${marcfile}"
-		
+	bad_char_regex=[$'\x80'-$'\xff]'
 
-	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v FILEROOT="${fileroot}" -b -f tmp_checkmarc "${marcfile}"
+	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_CHAR_REGEX=${bad_char_regex} -b -f tmp_checkmarc "${marcfile}"
 	sleep 1
 	
 	ls bad_*"${fileroot}" 2> /dev/null
