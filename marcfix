@@ -27,7 +27,7 @@ function check_fields() {
 	## normalize high ascii chars if coded as utf8
 	if (utf8 == "a") { 
 		if (match($0, BAD_CHAR_REGEX) > 1) {
-			gsub(BAD_CHAR_REGEX, " ", $0)
+			$0 = substr($0, 1, 9)" "substr($0, 11)
 		}
 	}
 
