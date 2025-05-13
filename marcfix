@@ -178,7 +178,7 @@ process_file() {
 	#bad_chars="$'\x1b'$'\xe1'$'\xe2'$'\xe3'$'\xe4'$'\xe5'$'\xe6'$'\xe7'$'\xe8'$'\xe9'$'\xc3'"
 
 	#ala characters
-	bad_char_regex=[$'\x80'-$'\xff]'
+	bad_char_regex=[$'\x80'-$'\xff']
 
 	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_CHAR_REGEX=${bad_char_regex} -b -f tmp_checkmarc "${marcfile}"
 	sleep 1
