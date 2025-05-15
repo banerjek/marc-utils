@@ -22,7 +22,7 @@ BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=bibcount=holdingscount=au
 }
 function check_fields() {
 	## get rid of bad subfield zeros that break links
-	gsub(subfield_0, subfield_9, $0)	
+	gsub(subfield_9, subfield_0, $0)	
 
 	## normalize high ascii chars if coded as utf8
 	if (utf8 == "a") { 
