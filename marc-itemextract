@@ -379,7 +379,7 @@ fi
 if [[ ${system} == "tlc" ]];then
 	identifier="001"
 	item_field="949g"
-	item_call_subfield="a"
+	item_call_subfield="j"
 	location_subfield="D"
 	bib_call_field="090"
 	bib_call_fallback="050"
@@ -396,6 +396,7 @@ if [[ ${system} == "tlc" ]];then
 	tags[9]="q"
 	tags[10]="7"
 	tags[11]="5"
+	tags[11]="x"
 
 	labels[1]="location"
 	labels[2]="call#"
@@ -408,6 +409,7 @@ if [[ ${system} == "tlc" ]];then
 	labels[9]="staff_note"
 	labels[10]="staff_note2"
 	labels[11]="status"
+	labels[12]="fund"
 fi
 
 if [[ ${system} == "virtua" ]];then
