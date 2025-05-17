@@ -193,7 +193,7 @@ if [[ $processType == "file" ]];then
 		temproot="tmp_bib_008"
 		if [[ -f ${temproot}.mrc ]];then
 			marc2text ${temproot}.mrc 
-			sed -i 's/^\(=LDR.*$\)/\1\n=008  780615s19uu    xx a                    d/' ${temproot}.txt
+			sed -i 's/^\(=LDR.*$\)/\1\n=008  780615s19uu    xx a                    d/;/^=0......\x1f[0-9a-z]$/d' ${temproot}.txt
 			text2marc ${temproot}.txt
 			cat ${temproot}.mrc  >> "${fileroot}_bib_fixed.mrc"
 			rm -f ${temproot}.*
