@@ -30,6 +30,10 @@ function check_fields() {
 			$0 = substr($0, 1, 9)" "substr($0, 11)
 		}
 	}
+	## Look for null identifiers
+	if (match($0, BAD_SUBFIELD_REGEX) > 1) {
+			badsubfields = 1
+	}
 
 	if (directory ~ /[^0-9A-Z]/){directory_check = 1;good_directory = 0}
 
@@ -95,7 +99,7 @@ function check_leader() {
 }
 {
 goodrec=good_directory=good_length=good_tag=1
-found004=found008=found245=override245=oversized=0
+found004=found008=found245=override245=oversized=badsubfields=0
 
 check_leader()
 check_fields()
@@ -117,10 +121,12 @@ if (rectype == "bib") {
 
 if ( good_tag == 0 && foundbad == 0) { print $0 > "bad_nonumeric_tag_"rectype"_"FILEROOT;badtag++;badtagtext = " (Nonnumeric tags: "badtag")";foundbad = 1 }
 
+if ( goodrec == 1 && badsubfields == 1){ goodrecs++;badsubfieldtotal++;badsubfieldstext = " (Bad subfields: "badsubfieldtotal")";foundbad = 1; print $0 > "tmp_"rectype"_badsubfields.mrc" }
+
 if ( goodrec == 1 && good_directory == 1 && good_length == 1 && foundbad == 0 && found008 == 1 ){ goodrecs++;print $0 > OUTFILE }
 
 if (foundbad == 1) { badrecs++ }
-if ( badrecs > 0 ){ badtext=baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext""badtagtext }
+if ( badrecs > 0 ){ badtext=baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext""badsubfieldstext""badtagtext }
 
 if (rectype == "bib") { bibcount++ }
 if (rectype == "holdings") { holdingscount++ }
@@ -176,9 +182,10 @@ process_file() {
 
 	# ala codes followed by tabs and line breaks	
 	bad_char_regex=[$'\x1b'$'\xe1'$'\xe2'$'\xe3'$'\xe4'$'\xe5'$'\xe6'$'\xe7'$'\xe8'$'\xe9'$'\xc3']
-	#bad_char_regex=[$'\x80'-$'\xff']
+	# null identifiers
+	bad_subfield_regex=$'\x1f'[0az]$'\x1e'
 
-	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_CHAR_REGEX=${bad_char_regex} -b -f tmp_checkmarc "${marcfile}"
+	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_CHAR_REGEX=${bad_char_regex} -v BAD_SUBFIELD_REGEX=${bad_subfield_regex} -b -f tmp_checkmarc "${marcfile}"
 	sleep 1
 	
 	ls bad_*"${fileroot}" 2> /dev/null
@@ -193,11 +200,21 @@ if [[ $processType == "file" ]];then
 		temproot="tmp_bib_008"
 		if [[ -f ${temproot}.mrc ]];then
 			marc2text ${temproot}.mrc 
-			sed -i 's/^\(=LDR.*$\)/\1\n=008  780615s19uu    xx a                    d/;/^=0......\x1f[0-9a-z]$/d' ${temproot}.txt
+			sed -i 's/^\(=LDR.*$\)/\1\n=008  780615s19uu    xx a                    d/;/^=0......\x1f[0az] *$/d' ${temproot}.txt
 			text2marc ${temproot}.txt
 			cat ${temproot}.mrc  >> "${fileroot}_bib_fixed.mrc"
 			rm -f ${temproot}.*
 			echo "Bib records lacking 008 were fixed and appended to ${fileroot}_bib_fixed.mrc"
+		fi
+		
+		temproot="tmp_bib_badsubfields"
+		if [[ -f ${temproot}.mrc ]];then
+			marc2text ${temproot}.mrc 
+			sed -i '/^=0......\x1f[0az] *$/d' ${temproot}.txt
+			text2marc ${temproot}.txt
+			cat ${temproot}.mrc  >> "${fileroot}_bib_fixed.mrc"
+			rm -f ${temproot}.*
+			echo "Bib records with null identifiers were fixed and appended to ${fileroot}_bib_fixed.mrc"
 		fi
 		
 		temproot="tmp_authority_008"
