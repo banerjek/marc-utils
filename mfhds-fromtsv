@@ -53,7 +53,7 @@ function build_mfhd() {
 	record_counter++
 
 	text_852 = ""
-	text_mfhd = "=LDR  00159cx  a22000733  4500"OFS"=001  "holdId""OFS"=004  "$bibId
+	text_mfhd = "=LDR  00159cx  a22000733  4500"OFS"=001  "holdId""OFS"=004  "$bibId""OFS"=008  9810090p    8   4001aueng0000000"
 
 	if (callType > 1) {
 		 $callType=tolower($callType)
