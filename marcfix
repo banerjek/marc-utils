@@ -24,12 +24,6 @@ function check_fields() {
 	## get rid of bad subfield zeros that break links
 	gsub(subfield_9, subfield_0, $0)	
 
-	## normalize high ascii chars if coded as utf8
-	if (utf8 == "a") { 
-		if (match($0, BAD_CHAR_REGEX) > 1) {
-			$0 = substr($0, 1, 9)" "substr($0, 11)
-		}
-	}
 	## Look for null identifiers
 	if (match($0, BAD_SUBFIELD_REGEX) > 1) {
 			badsubfields = 1
@@ -180,12 +174,10 @@ process_file() {
 	pv "${marcfile}.tmp" | tr -d '\000' | tr '\n\r\t' ' ' > "${marcfile}"
 	echo 
 
-	# ala codes followed by tabs and line breaks	
-	bad_char_regex=[$'\x1b'$'\xe1'$'\xe2'$'\xe3'$'\xe4'$'\xe5'$'\xe6'$'\xe7'$'\xe8'$'\xe9'$'\xc3']
 	# null identifiers
 	bad_subfield_regex=$'\x1f'[0az]$'\x1e'
 
-	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_CHAR_REGEX=${bad_char_regex} -v BAD_SUBFIELD_REGEX=${bad_subfield_regex} -b -f tmp_checkmarc "${marcfile}"
+	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX=${bad_subfield_regex} -b -f tmp_checkmarc "${marcfile}"
 	sleep 1
 	
 	ls bad_*"${fileroot}" 2> /dev/null
@@ -210,7 +202,7 @@ if [[ $processType == "file" ]];then
 		temproot="tmp_bib_badsubfields"
 		if [[ -f ${temproot}.mrc ]];then
 			marc2text ${temproot}.mrc 
-			sed -i '/^=0......\x1f[0az] *$/d' ${temproot}.txt
+			sed -i '/^=[0167]......\x1f[0az] *$/d' ${temproot}.txt
 			text2marc ${temproot}.txt
 			cat ${temproot}.mrc  >> "${fileroot}_bib_fixed.mrc"
 			rm -f ${temproot}.*
