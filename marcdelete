@@ -1,32 +1,147 @@
-if [[ -z $1 || -z $2  ]];then
-	echo "Deletes all specified tags or tags matching a regex"
+if [[ -z $1 ]];then
+	echo "Deletes specified tags matching a regex"
+	echo "If only a filename is specified, trailing spaces are trimmed from 001 and 004"
 	echo
 	echo "Usage: marcdelete [filename] [marcfield] '[regex]'"
-	echo "Regular expresions are supported for searchexpression"
-	echo "Subfields must be targeted by using hex 31 as part of the optional regex"
+	echo 
+
 	exit
 else
 	infile="${1}"
 	marctag=${2}
-	regex="${3}"
+	search="${3}"
+
+	tag=${marctag:0:3}
+
+	if [[ ${#marctag} == 4 ]];then
+        	subfield=${marctag:3:1}
+	fi
 
 fi
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
-
-cp "${infile}" "${fileroot}_fixed.mrc"
-
-echo "Converting file to text to facilitate processing"
-marc2text "${fileroot}_fixed.mrc"
-
-sed -i "/^=${marctag}.*${regex}/d" "${fileroot}_fixed.txt"
-
-echo "Rebuilding MARC file"
-text2marc "${fileroot}_fixed.txt"
-
-rm -f "${fileroot}_fixed.txt"
-
-echo "Temporary files have been removed"
+outfile="${fileroot}_fixed.mrc"
 
 
+read -r -d '' awkscript << "ENDOFAWK"
+#!/usr/bin/awk -f 
 
+BEGIN { 
+        if(length("а") != 2) {
+                badawk = 1
+                printf("Your version of awk does not support marcreplace -- you need a version that supports the -b switch\\n")
+                exit
+        }
+}
+
+
+function delete_matched_fields(){
+
+	if (TAG == marc_tag && match(field_content, SEARCH)) {
+		fix_directory = 1
+		deleted_fields_total++
+		deleted_fields_record++
+		next_entry_subtract = next_entry_subtract + length(field_content) # adjust next directory entry
+	} else {	
+		marc_tag = substr(directory_entry, 1, 3)
+		field_length = substr(directory_entry, 4, 4)
+		
+		field_address = substr(directory_entry, 8, 5) - next_entry_subtract
+
+		field_address = sprintf("%05d", field_address)
+
+		new_directory = new_directory""marc_tag""field_length""field_address
+		new_record_content = new_record_content""field_content
+	}
+}
+
+function rebuild_directory(){
+	offset_subtract = deleted_fields_record * 12
+
+	final_base_address = base_address - offset_subtract
+	final_base_address = sprintf("%05d", final_base_address)
+
+	new_directory_length=length(new_directory)
+	
+	final_directory = ""
+
+	for (i=1; i<=new_directory_length; i=i+12) {
+		directory_entry = substr(new_directory, i, 12)
+
+		marc_tag = substr(new_directory, i, 3)
+		field_length = substr(new_directory, i + 3, 4) 
+		starting_pos = substr(new_directory, i + 7, 5) 
+
+		starting_pos = sprintf("%05d", starting_pos)
+		final_directory = final_directory""marc_tag""field_length""starting_pos
+	}
+
+	new_directory = final_directory
+	new_base_address = final_base_address
+}
+
+{
+	leader=substr($0,1,24)
+	base_address=substr(leader,13, 5) 
+	final_base_address = base_address
+	base_address = base_address + 0
+
+	record_content=substr($0, base_address + 1)
+	leader_content=substr(leader, 6)
+	leader_content1=substr(leader, 6, 7)
+	leader_content2=substr(leader, 18)
+
+	directory=substr($0,25, base_address - 25)
+	directory_length=length(directory)
+	record_length = length($0) + 0
+
+	new_base_address = 0
+	new_record = ""
+	new_directory = ""
+	new_record_content = ""
+	fix_directory = 0
+	deleted_fields_record = 0
+	next_entry_subtract = 0
+
+	### no error correction for bad leaders, use marcfix first
+	for (i=1; i<=directory_length; i=i+12) {
+
+		directory_entry = substr(directory, i, 12)
+		marc_tag = substr(directory, i, 3)
+
+		field_length = substr(directory, i + 3, 4) ### includes field separator 
+		starting_pos = substr(directory, i + 7, 5) + 1 
+		
+		field_content = substr(record_content, starting_pos, field_length)
+
+		delete_matched_fields()
+	}
+
+	if (fix_directory == 1) {
+		rebuild_directory()
+		records_modified++
+	} 
+
+	new_directory = new_directory""OFS
+
+	new_record_length = 25 + directory_length + length(new_record_content) + 1 ### accounts for FS after leader and end of record marker
+	new_record_length = sprintf("%05d", new_record_length)
+
+	print new_record_length""leader_content1""final_base_address""leader_content2""new_directory""new_record_content > OUTFILE 
+	if (NR % 10000 == 0){ printf "Records processed: %d Records modified: %d Fields removed: %d \\r", NR, records_modified, deleted_fields_total}
+}
+
+END { 
+	ORS="\\n"
+	print "";print NR " records were output to "OUTFILE
+}
+
+ENDOFAWK
+
+echo -e "${awkscript}" > tmp_marcdelete
+chmod 700 tmp_marcdelete
+
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v OFS=$'\x1e' -v SFS=$'\x1f' -v TAG="${tag}" -v SUBFIELD="${subfield}" -v SEARCH="${search}" -v OUTFILE="${outfile}" -b -f tmp_marcdelete "${infile}"
+
+sleep 1
+rm -f tmp_marcreplace
