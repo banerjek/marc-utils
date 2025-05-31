@@ -86,7 +86,7 @@ Counts MARC records based on detection of end of record markers
 **Usage:** *marcdelete [filename] [tag] [regex]*   
 **Example:** *marcdelete myfile.mrc 856 ezproxy*   
 
-Delete MARC tag based on optional regex
+Delete MARC tag based on regex
 
 ## marcextract
 **Usage:** *Usage: marcextract [filename] [marcfield] [idtag]*   
