@@ -8,7 +8,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marctac**](#marctac) -- Reverse order of records in MARC file
 * [**marc2text**](#marc2text) -- Convert binary MARC files to text
 * [**marc2tsv**](#marc2tsv) -- Extract MARC fields into TSV file 
-* [**marcdelete**](#marcdelete) -- Delete MARC field based on tag with optional regex
+* [**marcdelete**](#marcdelete) -- Delete MARC field based on tag and regex
 * [**marcextract**](#marcextract) -- Extract record identifier and data from MARC tag 
 * [**marcextractbyid**](#marcextractbyid) -- Extract records matching or not matching a list of identifiers
 * [**marcfc**](#marcfc) -- Provide field and subfield counts
