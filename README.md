@@ -83,10 +83,11 @@ Copies one MARC field to another
 Counts MARC records based on detection of end of record markers
 
 ## marcdelete
-**Usage:** *marcdelete [filename] [tag] [regex]*   
+**Usage:** *marcdelete [filename] [tag_regex] [regex]*   
 **Example:** *marcdelete myfile.mrc 856 ezproxy*   
+**Example:** *marcdelete myfile.mrc ^65 .*   
 
-Delete MARC tag based on regex
+Delete MARC tag based on regex. Tag can be expressed as regex
 
 ## marcextract
 **Usage:** *Usage: marcextract [filename] [marcfield] [idtag]*   

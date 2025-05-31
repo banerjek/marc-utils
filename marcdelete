@@ -1,22 +1,16 @@
 if [[ -z $1 ]];then
 	echo "Deletes specified tags matching a regex"
-	echo "If only a filename is specified, trailing spaces are trimmed from 001 and 004"
+	echo "Tags can be expressed as a regex"
 	echo
 	echo "Usage: marcdelete [filename] [marcfield] '[regex]'"
+	echo "Example: marcdelete myfile.mrc 999 .'"
 	echo 
 
 	exit
 else
 	infile="${1}"
-	marctag=${2}
+	tag_regex="${2}"
 	search="${3}"
-
-	tag=${marctag:0:3}
-
-	if [[ ${#marctag} == 4 ]];then
-        	subfield=${marctag:3:1}
-	fi
-
 fi
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
@@ -37,7 +31,7 @@ BEGIN {
 
 function delete_matched_fields(){
 
-	if (TAG == marc_tag && match(field_content, SEARCH)) {
+	if (marc_tag ~ TAG_REGEX && match(field_content, SEARCH)) {
 		fix_directory = 1
 		deleted_fields_total++
 		deleted_fields_record++
@@ -141,7 +135,7 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_marcdelete
 chmod 700 tmp_marcdelete
 
-awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v OFS=$'\x1e' -v SFS=$'\x1f' -v TAG="${tag}" -v SUBFIELD="${subfield}" -v SEARCH="${search}" -v OUTFILE="${outfile}" -b -f tmp_marcdelete "${infile}"
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v OFS=$'\x1e' -v SFS=$'\x1f' -v TAG_REGEX="${tag_regex}" -v SUBFIELD="${subfield}" -v SEARCH="${search}" -v OUTFILE="${outfile}" -b -f tmp_marcdelete "${infile}"
 
 sleep 1
 rm -f tmp_marcreplace
