@@ -3,7 +3,7 @@ if [[ -z $1 ]];then
 	echo "Tags can be expressed as a regex"
 	echo
 	echo "Usage: marcdelete [filename] [marcfield] '[regex]'"
-	echo "Example: marcdelete myfile.mrc 999 .'"
+	echo "Example: marcdelete myfile.mrc ^9 .'"
 	echo 
 
 	exit
