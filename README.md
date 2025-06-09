@@ -20,6 +20,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marcless**](#marcless) -- Page through MARC records through unix less command
 * [**marcremap**](#marcremap) -- Remap one MARC field to another 
 * [**marcreplace**](#marcreplace) -- MARC regex replacement within a field tag
+* [**marcsample**](#marcsample) -- Extract at least one record with every field/subfield combination from a MARC stream and delivers field/subfield counts for the entire file 
 * [**marcsearch**](#marcsearch) -- Extract MARC records containing a search pattern
 * [**marcslice**](#marcslice) -- Extract sequence of records from a MARC file
 * [**marcsort**](#marcsort) -- Sort MARC files by field
@@ -163,6 +164,12 @@ Remaps one MARC field to another. Currently only does whole field content, not i
 **Example:** *marcreplace myfile.mrc 001 $ _mysuffix* [suffixes the field]
 
 Replace contents of field based on regex replacement. 
+
+## marcsample
+**Usage:** *marcsample [filename] *   
+**Example:** *marcsample marcfile.mrc
+
+Extracts at least one record with every field/subfield combination from a MARC stream and delivers field/subfield counts for the entire file 
 
 ## marcsearch
 **Usage:** *marcsearch [filename] [marc-tag] [regex_search_expression] [count]*   
