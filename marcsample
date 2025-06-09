@@ -22,8 +22,8 @@ function extract_subfields() {
 			subfield = substr(subfields[subfield_index], 1, 1)
 
 			if (! tagcount[marctag""subfield]) {
-				print $0 > FILENAME"_sample"	
-				sample_size++
+				printrecord=1
+				tags_found++
 			}
 			tagcount[marctag""subfield]++ 
 		}	
@@ -52,11 +52,16 @@ function extract_subfields() {
 		marctag = substr(directory, i, 3)
 		extract_subfields()
 	}
+
+	if (printrecord == 1) {
+		print $0 > FILENAME"_sample"	
+		sample_size++
+	}
 	
-	if (NR % 1000 == 0){ printf "Records searched: "NR" Records extracted: %s\\r", sample_size }
+	if (NR % 1000 == 0){ printf "Records searched: "NR" Records extracted: %s Tags identified: %s\\r", sample_size, tags_found }
 }
 END {
-	printf "Records searched: "NR" Records extracted: %s\\n", sample_size
+	printf "Records searched: "NR" Records extracted: %s Tags identified: %s\\n", sample_size, tags_found
 	printf sample_size" records were sent to "FILENAME"_sample\\n"
 	n = asorti(tagcount, sorted_bytag)
 
