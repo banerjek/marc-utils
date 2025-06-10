@@ -36,7 +36,7 @@ function extract_subfields() {
 {
         if(length("а") != 2) {
                 badawk = 1
-                printf("Your version of awk does not support marcfc -- you need a version that supports the -b switch\\n")
+                printf("Your version of awk does not support marcsample -- you need a version that supports the -b switch\\n")
                 exit
         }
 
