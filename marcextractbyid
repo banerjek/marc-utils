@@ -1,26 +1,39 @@
-if [[ -z $1 || ! -f ids ]];then
+if [[ -z $1 ]];then
 	echo
    echo "Usage: marcextractbyid [filename] [marcid_field]"
-   echo "This program expects an input file of identifiers named 'ids'"
+   echo "This program expects a single identifier or input file of identifiers named 'ids'"
    echo "marcid_field is optional. If not specified, it will be 001"
    echo
    echo "Usage: marcextractbyid [filename] [marcid_field]"
    echo "Usage: marcextractbyid [filename]"
    echo
+   echo "Usage: marcextractbyid [id_value] [marcid_field]"
+   echo "Usage: marcextractbyid [id_value]"
+   echo
    exit
-else
-   infile="${1}"
-   idtag=${2}
-
-   if [[ -z $idtag ]];then idtag="001";fi
-
 fi	
+   infile="${1}"
 
-cat ids |tr "\n" $'\x1d' | tr -d "\r" > tmp_ids
+if [[ -f ids ]];then
+	idtag=${2}
+
+	echo "Finding records matching values in 'ids' file"
+	cat ids |tr "\n" $'\x1d' | tr -d "\r" > tmp_ids
+	singleid=0
+else
+	idtag=${3}
+	echo "${2}"  |tr "\n" $'\x1d'> tmp_ids
+	echo "Looking for first record matching ${infile}"
+	singleid=1
+fi
+
+if [[ -z $idtag ]];then idtag="001";fi
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
 matched="${fileroot}_matched.mrc"
 notmatched="${fileroot}_not-matched.mrc"
+
+rm -f "${matched}" "${notmatched}"
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
@@ -90,12 +103,19 @@ id_content = ""
 
 }
 
-if (found == 1 ) {
-        foundrecs++
-        print $0 > MATCHED
+if (SINGLEID == 0) {
+	if (found == 1 ) {
+	        foundrecs++
+	        print $0 > MATCHED
+	} else {
+	        notfoundrecs++
+	        print $0 > NOTMATCHED
+	}
 } else {
-        notfoundrecs++
-        print $0 > NOTMATCHED
+	if (found == 1 ) {
+		print $0 > MATCHED
+		exit
+	}
 }
 
 recordcounter++
@@ -110,12 +130,20 @@ echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
 
-awk -v ORS=$'\x1d' -v FS=$'\x1e' -v RS=$'\x1d' -v SFS=$'\x1f' -v IDTAG=${idtag} -v MATCHED="${matched}" -v NOTMATCHED="${notmatched}" -b -f tmp_checkmarc "tmp_ids" "${infile}"
+awk -v ORS=$'\x1d' -v FS=$'\x1e' -v RS=$'\x1d' -v SFS=$'\x1f' -v IDTAG=${idtag} -v MATCHED="${matched}" -v NOTMATCHED="${notmatched}" -v SINGLEID=${singleid} -b -f tmp_checkmarc "tmp_ids" "${infile}"
 echo
 echo
 
-echo "Records matching ID file were output to ${matched}                     " 
-echo "Records not matching ID file were output to ${notmatched}                     " 
-echo
+if [[ ${singleid} == 0 ]];then
+	echo "Records matching ID file were output to ${matched}                     " 
+	echo "Records not matching ID file were output to ${notmatched}                     " 
+	echo
+fi
+if [[ ${singleid} == 1 && -f ${matched} ]];then
+	cat "${matched}" |text
+	echo
+	echo "Raw MARC record is in ${matched}"
+	echo
+fi
 
 rm -f tmp_checkmarc tmp_ids

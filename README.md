@@ -98,10 +98,13 @@ Outputs record identifier and MARC tag. The idtag parameter is optional. If left
 
 ## marcextractbyid
 **Usage:** *Usage: marcextractbyid [filename] [marcid_field]*   
+**Usage:** *Usage: marcextractbyid [id_value] [marcid_field]*   
 **Example:** *marcextractbyid marcfile.mrc 907a*   
 **Example:** *marcextractbyid marcfile.mrc*   
+**Example:** *marcextractbyid marcfile.mrc 1234567*   
+**Example:** *marcextractbyid 1234567 907a*   
 
-Extracts MARC records based on a list of identifiers contained in a file named "ids." The marcid_field is optional and will be presumed to be 001 unless otherwise specified. Separate output files are created for records matching and not matching the list of identifiers 
+Extracts MARC records based on a list of identifiers contained in a file named "ids" or a single identifier argument. The marcid_field is optional and will be presumed to be 001 unless otherwise specified. Separate output files are created for records matching and not matching the list of identifiers 
 
 ## marcfc
 **Usage:** *marcfc [filename]*   
