@@ -7,8 +7,8 @@ if [[ -z $1 ]];then
    echo "Usage: marcextractbyid [filename] [marcid_field]"
    echo "Usage: marcextractbyid [filename]"
    echo
-   echo "Usage: marcextractbyid [id_value] [marcid_field]"
-   echo "Usage: marcextractbyid [id_value]"
+   echo "Usage: marcextractbyid [filename] [id_value] [marcid_field]"
+   echo "Usage: marcextractbyid [filename] [id_value]"
    echo
    exit
 fi	
