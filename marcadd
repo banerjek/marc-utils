@@ -1,0 +1,110 @@
+if [[ -z $1 ]];then
+	echo "Adds a MARC field to every record in a file"
+	echo
+	echo "Usage: marcadd [filename] [tag] [value]"
+	echo 
+	echo "Indicators and subfield characters should be included in [value] but not the terminating end of field marker"
+	echo
+
+	exit
+else
+	infile="${1}"
+	marctag=${2}
+	value="${3}"
+
+	tag=${marctag:0:3}
+
+	if [[ ${#marctag} == 4 ]];then
+        	subfield=${marctag:3:1}
+	fi
+
+fi
+
+fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
+outfile="${fileroot}_fixed.mrc"
+
+read -r -d '' awkscript << "ENDOFAWK"
+#!/usr/bin/awk -f 
+
+BEGIN { 
+        if(length("а") != 2) {
+                badawk = 1
+                printf("Your version of awk does not support marcadd -- you need a version that supports the -b switch\\n")
+                exit
+        }
+	VALUE = VALUE""FS ### add end of field marker
+	VALUE_LENGTH=sprintf("%04d", length(VALUE))
+}
+
+{
+	### no error correction or accommodation for bad directories -- use marcfix first
+
+	leader=substr($0,1,24)
+	leader1=substr(leader, 6, 7)
+	leader2=substr(leader, 18)
+
+	old_base_address=substr(leader,13, 5) + 0
+	new_base_address=sprintf("%05d", old_base_address + 12)
+
+	old_record_length=substr(leader,1, 5) + 0
+	new_record_length = sprintf("%05d", old_record_length + VALUE_LENGTH + 12) ### plus directory entry
+
+	old_record_content=substr($0, old_base_address + 1)
+	new_record_content=old_record_content""VALUE
+	new_record_offset=sprintf("%05d", length(old_record_content))
+
+	old_directory=substr($0,25, old_base_address - 25)
+	old_directory_length=length(old_directory)
+
+	new_directory_length=length(old_directory) + 12
+
+	new_leader = new_record_length""leader1""new_base_address""leader2
+
+	new_directory=""
+	inserted = 0
+
+	for (i=1; i<=old_directory_length; i=i+12) {
+		old_entry = substr(old_directory, i, 12)
+		old_tag = substr(old_entry, 1, 3)
+		old_length = substr(old_entry, 4, 4)
+		old_starting_pos = substr(old_entry, 8, 5) 
+
+
+		if (inserted == 1) {
+			new_starting_pos = sprintf("%05d", old_starting_pos + VALUE_LENGTH) ### shift by length of new field 
+			new_entry = old_tag""old_length""new_starting_pos
+		}
+
+		if (inserted == 0) {
+			if (TAG > old_tag) { new_entry = old_entry }
+
+			if (TAG < old_tag || (i + 12 > old_directory_length)) {
+				inserted =1
+				new_entry = TAG""VALUE_LENGTH""new_record_offset ### place new tag where last tag was
+				new_starting_pos = sprintf("%05d", old_starting_pos + VALUE_LENGTH) ### shift by length of new field
+
+				new_entry = new_entry""old_tag""old_length""new_starting_pos ### concatenate new and old entries
+			}
+		}
+		new_directory = new_directory""new_entry	
+	}
+	new_directory = new_directory""OFS
+
+	print new_leader""new_directory""new_record_content > OUTFILE 
+	if (NR % 10000 == 0){ printf "Records processed: %d \\r", NR}
+}
+
+END { 
+	ORS="\\n"
+	print "";print NR " records were output to "OUTFILE
+}
+
+ENDOFAWK
+
+echo -e "${awkscript}" > tmp_marcadd
+chmod 700 tmp_marcadd
+
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v OFS=$'\x1e' -v SFS=$'\x1f' -v TAG="${tag}" -v VALUE="${value}" -v OUTFILE="${outfile}" -b -f tmp_marcadd "${infile}"
+
+sleep 1
+rm -f tmp_marcadd
