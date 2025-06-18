@@ -69,22 +69,19 @@ BEGIN {
 		old_length = substr(old_entry, 4, 4)
 		old_starting_pos = substr(old_entry, 8, 5) 
 
-
-		if (inserted == 1) {
-			new_starting_pos = sprintf("%05d", old_starting_pos + VALUE_LENGTH) ### shift by length of new field 
-			new_entry = old_tag""old_length""new_starting_pos
-		}
+		new_entry = old_entry
 
 		if (inserted == 0) {
-			if (TAG > old_tag) { new_entry = old_entry }
-
-			if (TAG < old_tag || (i + 12 > old_directory_length)) {
+			if (TAG < old_tag) {
 				inserted =1
 				new_entry = TAG""VALUE_LENGTH""new_record_offset ### place new tag where last tag was
-				new_starting_pos = sprintf("%05d", old_starting_pos + VALUE_LENGTH) ### shift by length of new field
-
-				new_entry = new_entry""old_tag""old_length""new_starting_pos ### concatenate new and old entries
-			}
+				new_entry = new_entry""old_entry ### concatenate new and old entries
+			} 
+			if (i + 12 > old_directory_length) {
+				inserted =1
+				new_entry = TAG""VALUE_LENGTH""new_record_offset ### place new tag where last tag was
+				new_entry = old_entry""new_entry"" ### reverse order so it is last
+			} 
 		}
 		new_directory = new_directory""new_entry	
 	}
