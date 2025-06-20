@@ -64,12 +64,10 @@ BEGIN {
 	inserted = 0
 
 	for (i=1; i<=old_directory_length; i=i+12) {
-		old_entry = substr(old_directory, i, 12)
+		new_entry = substr(old_directory, i, 12) ### new entry is same as old, inserted field is simply added
 		old_tag = substr(old_entry, 1, 3)
 		old_length = substr(old_entry, 4, 4)
 		old_starting_pos = substr(old_entry, 8, 5) 
-
-		new_entry = old_entry
 
 		if (inserted == 0) {
 			if (TAG < old_tag) {
