@@ -4,7 +4,7 @@ infile="${filelist[0]}"
 if [[ -z ${infile} ]];then echo "You must supply a file name, wildcards ok";fi
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
-outfile="${fileroot}_fixed.mrc"
+outfile="${fileroot}_sorted.mrc"
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
