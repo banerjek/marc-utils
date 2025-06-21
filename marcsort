@@ -3,56 +3,66 @@ infile="${filelist[0]}"
 
 if [[ -z ${infile} ]];then echo "You must supply a file name, wildcards ok";fi
 
-if [[ ${infile} =~ \.mrc ]];then
-	infile=$(sed 's/\.mrc$/.txt/' <<< ${infile})
-	numfiles=${#filelist[@]}
-
-	echo "MARC files detected. Converting to text before processing"
-
-	for ((i=0; i<${numfiles}; i++));do
-		filename="${filelist[$i]}"
-		marc2text "${filename}"
-		filelist[$i]=$(sed 's/\.mrc$/.txt/' <<< "${filename}")
-	done
-fi
+fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
+outfile="${fileroot}_fixed.mrc"
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
-BEGIN {
-	FS=OFS="\\n"
-	RS=ORS="\\n\\n"
+
+BEGIN { 
+        if(length("а") != 2) {
+                badawk = 1
+                printf("Your version of awk does not support marcadd -- you need a version that supports the -b switch\\n")
+                exit
+        }
 }
-{                             
-	split($0, fields)                
-	fields[1]="=000  "substr(fields[1],7)
 
-	asort(fields)
+{
+	### no error correction or accommodation for bad directories -- use marcfix first
 
-	fields[1]="=LDR  "substr(fields[1],7)
+	leader=substr($0,1,24)
+	base_address=substr(leader,13, 5) + 0
+	record_content=substr($0, base_address + 1)
 
-	for(i = 1; i <= NF; ++i) {  
-		$i = fields[i]
+	directory=substr($0,25, base_address - 25)
+	directory_length=length(directory)
+
+	dir_pos = 0 
+	new_directory = ""
+
+	for (i=1; i<=directory_length; i=i+12) {
+		dir_pos++
+		entry = substr(directory, i, 12) 
+		directory_arr[dir_pos] = entry
 	}
-	record_counter++
-print $0 > OUTFILE
-if (NR % 1000 == 0){ printf "Records sorted: "NR"\r" }
+
+	num_entries = asort(directory_arr)
+
+	for (i=1; i<=num_entries; i++) {
+		new_directory = new_directory""directory_arr[i] 
+	} 
+	new_directory = new_directory""OFS
+	delete directory_arr
+
+	print leader""new_directory""record_content > OUTFILE 
+	if (NR % 10000 == 0){ printf "Records processed: %d \\r", NR}
 }
-END {
-	printf ("\\n\\n %d records were output to %s\\n", record_counter, OUTFILE)
+
+END { 
+	ORS="\\n"
+	print "";print NR " records were output to "OUTFILE
 }
 
 ENDOFAWK
 
-echo -e "${awkscript}" > tmp_checkmarc
-chmod 700 tmp_checkmarc
+echo -e "${awkscript}" > tmp_marcsort
+chmod 700 tmp_marcsort
 
 for file in "${filelist[@]}";do
 	fileroot=$(echo "${file}" | sed 's/\.....\?$//')
-	outfile="${fileroot}_sorted.txt"
-	awk  -v OUTFILE="${outfile}" -f tmp_checkmarc "${file}"
-	echo "Building sorted MARC file"
-	text2marc "${outfile}"
+	outfile="${fileroot}_sorted.mrc"
+	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v OFS=$'\x1e' -v OUTFILE="${outfile}" -b -f tmp_marcsort "${file}"
 done
 
-rm -f tmp_checkmarc
- 
+sleep 1
+rm -f tmp_marcsort
