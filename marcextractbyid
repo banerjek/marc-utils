@@ -18,11 +18,11 @@ if [[ -f ids ]];then
 	idtag=${2}
 
 	echo "Finding records matching values in 'ids' file"
-	cat ids |tr "\n" $'\x1d' | tr -d "\r" > tmp_ids
+	cat ids |tr "\n" $'\x1d' | tr -d "\r" |tr -d '"' > tmp_ids
 	singleid=0
 else
 	idtag=${3}
-	echo "${2}"  |tr "\n" $'\x1d'> tmp_ids
+	echo "${2}"  |tr "\n" $'\x1d' |tr -d '"' > tmp_ids
 	echo "Looking for first record matching ${infile}"
 	singleid=1
 fi
@@ -81,7 +81,7 @@ if (directory_check == 0) {
 	
 		   if (length(IDTAG) == 4) {
 		      search_subfield = substr(IDTAG, 4, 1)
-				field_content = substr(record_content, starting_pos + 1, field_length - 2)
+				field_content = substr(record_content, starting_pos + 1, field_length - 1)
 	
 		      split(field_content, subfields, SFS)
 		
