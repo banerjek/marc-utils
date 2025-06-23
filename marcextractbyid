@@ -25,7 +25,9 @@ if [[ -f ids ]];then
 	singleid=0
 else
 	idtag=${3}
-	echo $idtag | grep -qP "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" && idtag="999i"
+	if [[ -z $idtag ]];then
+		echo $idtag | grep -qP "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" && idtag="999i"
+	fi
 	echo "${2}"  |tr "\n" $'\x1d' |tr -d '"' > tmp_ids
 	echo "Looking for first record matching ${infile}"
 	singleid=1
