@@ -18,7 +18,7 @@ if [[ -f ids ]];then
 	idtag=${2}
 	if [[ -z $idtag ]];then
 		head ids | grep -qP "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" && idtag="999i"
-		head ids | grep -qP "grep -P "^\.?b\d{6}"" && idtag="907a"
+		head ids | grep -qP "^\.?b\d{6}" && idtag="907a"
 	fi
 
 	echo "Finding records matching values in 'ids' file"
@@ -28,7 +28,7 @@ else
 	idtag=${3}
 	if [[ -z $idtag ]];then
 		echo $idtag | grep -qP "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" && idtag="999i"
-		echo ${idtag} | grep -qP "grep -P "^\.?b\d{6}"" && idtag="907a"
+		echo ${idtag} | grep -qP "^\.?b\d{6}" && idtag="907a"
 	fi
 	echo "${2}"  |tr "\n" $'\x1d' |tr -d '"' > tmp_ids
 	echo "Looking for first record matching ${infile}"
