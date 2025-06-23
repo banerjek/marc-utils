@@ -2,7 +2,7 @@ if [[ -z $1 ]];then
 	echo
    echo "Usage: marcextractbyid [filename] [marcid_field]"
    echo "This program expects a single identifier or input file of identifiers named 'ids'"
-   echo "marcid_field is optional. If not specified, it will be 001"
+   echo "marcid_field is optional. If not specified, it will be 999i if UUID is detected, 001 otherwise"
    echo
    echo "Usage: marcextractbyid [filename] [marcid_field]"
    echo "Usage: marcextractbyid [filename]"
@@ -16,12 +16,16 @@ fi
 
 if [[ -f ids ]];then
 	idtag=${2}
+	if [[ -z $idtag ]];then
+		head ids | grep -qP "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" && idtag="999i"
+	fi
 
 	echo "Finding records matching values in 'ids' file"
 	cat ids |tr "\n" $'\x1d' | tr -d "\r" |tr -d '"' > tmp_ids
 	singleid=0
 else
 	idtag=${3}
+	echo $idtag | grep -qP "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}" && idtag="999i"
 	echo "${2}"  |tr "\n" $'\x1d' |tr -d '"' > tmp_ids
 	echo "Looking for first record matching ${infile}"
 	singleid=1
