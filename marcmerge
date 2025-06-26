@@ -44,19 +44,20 @@ function extractsubfields() {
 
 function firstxdigits(getstring, numchars) {
 	delete temp_arr
-	count = 0
 	longest_match = ""
 
-	while (match(getstring, "[0-9]+", temparray)) {
-		current_match = temp_arr[0]
-		count++
+	match(getstring, "[0-9]+", temp_arr)
+	lengthtemp = length(temp_arr)
+
+	for (i = 0; i <= lengthtemp - 1; i++) {
+		current_match = temp_arr[i]
 
 		if (length(current_match) > length(longest_match)) {
 			longest_match = current_match
-			if (length(current_match) > numchars) { break } 
+			if (length(current_match) >= numchars) { break } 
 		}
-		getstring = substr(getstr, RSTART + RLENGTH)
 	}
+	return longest_match
 }
 
 function getfixedfield() {
@@ -116,7 +117,7 @@ function extract_tags() {
 			if (tag245 ~ subp) { tag245p = gensub(subfieldp, "\\\1", "1", tag245) }
 			tag245 = tolower(tag245a""tag245b""tag245p)
 			gsub(/[^[:alnum:]]/, "", tag245)
-			tag245 = substr(tag245, 1, 70)
+			tag245 = pad(tag245, 70)
 		}
 		if (marc_tag == "250") {
 			getvarfield()
@@ -159,9 +160,20 @@ function extract_tags() {
 			getvarfield()
 			tag300 = varfield
 			tag300 = tolower(gensub(subfielda, "\\\1", "1", tag300))
-			gsub(/[^[:alnum:]]/, "", tag300)
+			tag300 = firstxdigits(tag300, 4)
+			tag300 = pad(tag300, 4)
 		}
 	}
+}
+
+function pad(checkstring, neededlength) {
+	checkstring = substr(checkstring, 1, neededlength)
+    
+	if (length(checkstring) < neededlength) {
+		num_underscores = neededlength - length(checkstring);
+		for (i = 0; i < num_underscores; i++) { checkstring = checkstring"_" }
+	}
+	return checkstring
 }
 
 {
@@ -181,7 +193,6 @@ pubdate="0000"
 if (directory_check == 0) {
 	record_type = substr(leader, 7, 1)
 	extract_tags()
-	#print tag245""pubdate""tag300"\\n"
 }
 
 if (NR % 10000 == 0){ printf "Records processed: "NR"\r" }
