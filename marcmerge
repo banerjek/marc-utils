@@ -45,22 +45,20 @@ function extractsubfields() {
 	fixedfield = substr(record_content, starting_pos + 1, field_length - 1)
 }
 
-function firstxdigits(getstring, numchars) {
-	delete temp_arr
-	longest_match = ""
+function longest_number(getstring) {
+	longest_num = ""
+	max_len = 0
+	startpos = 1
 
-	match(getstring, "[0-9]+", temp_arr)
-	lengthtemp = length(temp_arr)
-
-	for (i = 0; i <= lengthtemp - 1; i++) {
-		current_match = temp_arr[i]
-
-		if (length(current_match) > length(longest_match)) {
-			longest_match = current_match
-			if (length(current_match) >= numchars) { break } 
+	while (match(substr(getstring, startpos), /[[:digit:]]+/)) {
+		num = substr(getstring, startpos + RSTART - 1, RLENGTH)
+		if (RLENGTH > max_len) {
+			max_len = RLENGTH
+			longest_num = num
 		}
+		startpos = startpos + RSTART + RLENGTH - 1
 	}
-	return longest_match
+	return longest_num
 }
 
 function getfixedfield() {
@@ -107,7 +105,7 @@ function extract_tags() {
 		if (marc_tag == "086") {
 			getvarfield()
 			tag086 = varfield
-			tag086 = tolower(gensub(subfielda, "\\\1", "1", tag086))
+			tag086 = extract_subfield("a")
 			gsub(/[:punct:][:space:]/, "", tag086)
 			tag086 = tag086"_"
 		}
@@ -129,14 +127,14 @@ function extract_tags() {
 			if (tag245 ~ subb) { tag245b = gensub(subfieldb, "\\\1", "1", tag245) }
 			if (tag245 ~ subp) { tag245p = gensub(subfieldp, "\\\1", "1", tag245) }
 			tag245 = tag245a""tag245b""tag245p
-			gsub(/[:punct:][:space:]/, "", tag245)
+			gsub(/[[:punct:][:space:]]/, "", tag245)
 			tag245 = substr(tag245, 1, 70)"_"
 			tag245 = tag245"_"
 		}
 		if (marc_tag == "250") {
 			getvarfield()
-			tag250 = varfield
-			check250 = firstxdigits(tag250, 3)
+			tag250 = extract_subfield("a")
+			check250 = longest_number(tag250)
 
 			if (! check250 ~ /[1-9]/) {
 				tag250 = substr(tolower(gensub(subfielda, "\\\1", "1", tag250)), 1, 3)
@@ -183,8 +181,8 @@ function extract_tags() {
 		if (marc_tag == "300") {
 			getvarfield()
 			tag300 = varfield
-			tag300 = tolower(gensub(subfielda, "\\\1", "1", tag300))
-			tag300 = firstxdigits(tag300, 4)"_"
+			tag300 = extract_subfield("a")
+			tag300 = longest_number(tag300)"_"
 		}
 
 		if (marc_tag == "880") {
@@ -245,10 +243,10 @@ record_content=substr($0, baseaddress + 1)
 bib_mattype=substr(leader, 7, 1)
 holdings_type=substr(leader, 8, 1)
 
-tag001=tag008=tag086i=tag245=tag245a=tag245b=tag245p=tag250=tag260=tag264=date260=date264=tag300=tag907a=""
-pubdate="0000_"
+tag001=tag008=tag245=tag245a=tag245b=tag245p=tag250=tag260=tag264=date260=date264=tag907a=""
 tag250="1_"
-tagme=""
+tagme=pubdate=tag300=tag086="_"
+format="p"
 
 if (directory_check == 0) {
 	record_type = substr(leader, 7, 1)
@@ -266,6 +264,8 @@ if (directory_check == 0) {
 
 	} 
 	extract_tags()
+	mergeId = tag245""tagme""pubdate""tag250""tag300""tag086""format
+	printf "%s\\n", mergeId
 }
 
 if (NR % 10000 == 0){ printf "Records processed: "NR"\r" }
