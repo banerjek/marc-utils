@@ -21,6 +21,8 @@ BEGIN {
 	subb=SFS"b"
 	subp=SFS"p"
 	subfielda = ".*"SFS"a([^"SFS"]*).*"
+	subfieldp = ".*"SFS"p([^"SFS"]*).*"
+	subfieldn = ".*"SFS"n([^"SFS"]*).*"
 	validdate="^[^0-9]*([0-9][0-9][0-9][0-9])[^0-9].*"
 
 
@@ -80,6 +82,12 @@ function extract_tags() {
 			tag001 = fixedfield
 		}
 
+		if (marc_tag == "007") {
+			getfixedfield()
+			tag007 = fixedfield
+			if (tag007 ~ /^cr/){ format="e"}
+		}
+
 		if (marc_tag == "008") {
 			gooddate = 0
 			getfixedfield()
@@ -119,6 +127,7 @@ function extract_tags() {
 		if (marc_tag == "245" && tag245 == "") {
 			getvarfield()
 			tag245 = tolower(varfield)
+			gsub(/&/, "", tag245)
 			tag245a = extract_subfield("a")
 			gsub(/^a /, "", tag245a)
 			gsub(/^an /, "", tag245a)
@@ -126,6 +135,7 @@ function extract_tags() {
 		
 			if (tag245 ~ subb) { tag245b = gensub(subfieldb, "\\\1", "1", tag245) }
 			if (tag245 ~ subp) { tag245p = gensub(subfieldp, "\\\1", "1", tag245) }
+			if (tag245 ~ subn) { tag245n = gensub(subfieldn, "\\\1", "1", tag245) }
 			tag245 = tag245a""tag245b""tag245p
 			gsub(/[[:punct:][:space:]]/, "", tag245)
 			tag245 = substr(tag245, 1, 70)"_"
@@ -246,6 +256,7 @@ holdings_type=substr(leader, 8, 1)
 tag001=tag008=tag245=tag245a=tag245b=tag245p=tag250=tag260=tag264=date260=date264=tag907a=""
 tag250="1_"
 tagme=pubdate=tag300=tag086="_"
+author=title=edition=pagination=mainidentifier=sierraid=""
 format="p"
 
 if (directory_check == 0) {
