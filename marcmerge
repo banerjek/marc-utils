@@ -111,12 +111,15 @@ function extract_tags() {
 		}
 		if (marc_tag == "245") {
 			getvarfield()
-			tag245 = varfield
-			tag245a = gensub(subfielda, "\\\1", "1", tag245) 
+			tag245 = tolower(varfield)
+			tag245a = gensub(subfielda, "\\\1", "1", tag245)
+			gsub(/^a /, "", tag245)
+			gsub(/^an /, "", tag245)
+			gsub(/^the /, "", tag245)
 			
 			if (tag245 ~ subb) { tag245b = gensub(subfieldb, "\\\1", "1", tag245) }
 			if (tag245 ~ subp) { tag245p = gensub(subfieldp, "\\\1", "1", tag245) }
-			tag245 = tolower(tag245a""tag245b""tag245p)
+			tag245 = tag245a""tag245b""tag245p
 			gsub(/[^[:alnum:]]/, "", tag245)
 			tag245 = pad(tag245, 70)
 		}
