@@ -1,11 +1,11 @@
-filelist=("$@")
-infile="${filelist[0]}"
+sourcefile="${1}"
+mergefile="${2}"
 
-if [[ -z ${infile} ]];then
+if [[ -z "${mergefile}" ]];then
 	echo
-	echo "You must supply a filename or list of files (wildcards ok)"
+	echo "You must supply a source file and a merge file"
 	echo
-	echo "Usage: marcmerge [filelist]"
+	echo "Usage: marcmerge [sourcefile] [mergefile]"
 	echo 
 	exit
 fi
@@ -20,12 +20,7 @@ BEGIN {
 	subfield_regex=SFS"."
 	subb=SFS"b"
 	subp=SFS"p"
-	subfielda=".*"SFS"a([^"SFS"]*).*"
-	subfieldb=".*"SFS"b([^"SFS"]*).*"
-	subfieldc=".*"SFS"c([^"SFS"]*).*"
-	subfieldf=".*"SFS"f([^"SFS"]*).*"
-	subfieldn=".*"SFS"n([^"SFS"]*).*"
-	subfieldp=".*"SFS"p([^"SFS"]*).*"
+	subfielda = ".*"SFS"a([^"SFS"]*).*"
 	validdate="^[^0-9]*([0-9][0-9][0-9][0-9])[^0-9].*"
 
 
@@ -36,6 +31,14 @@ BEGIN {
       }
 }
 
+function extract_subfield(subfield) {
+	subregex = ".*"SFS""subfield"([^"SFS"]*).*"
+
+	getvarfield()
+	retvalue = varfield
+	retvalue = gensub(subregex, "\\\1", "1", retvalue)
+	return retvalue
+}
 
 function extractsubfields() {
 	# still needs to be written
@@ -74,6 +77,11 @@ function extract_tags() {
 		field_length = substr(directory, d_iter + 3, 4) + 0
 		starting_pos = substr(directory, d_iter + 7, 5) + 0
 
+		if (marc_tag == "001") {
+			getfixedfield()
+			tag001 = fixedfield
+		}
+
 		if (marc_tag == "008") {
 			gooddate = 0
 			getfixedfield()
@@ -83,14 +91,14 @@ function extract_tags() {
 
 			if (date008 ~ /[12][0-9][0-9][0-9]/) {
 				gooddate = 1
-				pubdate = date008
+				pubdate = date008"_"
 			}
 
 			if (gooddate == 0){ 
 				date008 = substr(tag008, 8, 4)
 				if (date008 ~ /[12][0-9][0-9][0-9]/) {
 					gooddate = 1
-					pubdate = date008
+					pubdate = date008"_"
 				}
 			} 
 
@@ -100,28 +108,30 @@ function extract_tags() {
 			getvarfield()
 			tag086 = varfield
 			tag086 = tolower(gensub(subfielda, "\\\1", "1", tag086))
-			gsub(/[^[:alnum:]]/, "", tag086)
+			gsub(/[:punct:][:space:]/, "", tag086)
+			tag086 = tag086"_"
 		}
 		if (marc_tag == "100" || marc_tag == "110" || marc_tag == "111" || marc_tag == "130") {
 			getvarfield()
 			tagme = varfield
 			tagme = tolower(gensub(subfielda, "\\\1", "1", tagme))
-			gsub(/[^[:alnum:]]/, "", tagme)
-			tagme = substr(tagme, 1, 5)
+			gsub(/[:punct:][:space:]/, "", tagme)
+			tagme = substr(tagme, 1, 5)"_"
 		}
-		if (marc_tag == "245") {
+		if (marc_tag == "245" && tag245 == "") {
 			getvarfield()
 			tag245 = tolower(varfield)
-			tag245a = gensub(subfielda, "\\\1", "1", tag245)
-			gsub(/^a /, "", tag245)
-			gsub(/^an /, "", tag245)
-			gsub(/^the /, "", tag245)
-			
+			tag245a = extract_subfield("a")
+			gsub(/^a /, "", tag245a)
+			gsub(/^an /, "", tag245a)
+			gsub(/^the /, "", tag245a)
+		
 			if (tag245 ~ subb) { tag245b = gensub(subfieldb, "\\\1", "1", tag245) }
 			if (tag245 ~ subp) { tag245p = gensub(subfieldp, "\\\1", "1", tag245) }
 			tag245 = tag245a""tag245b""tag245p
-			gsub(/[^[:alnum:]]/, "", tag245)
-			tag245 = pad(tag245, 70)
+			gsub(/[:punct:][:space:]/, "", tag245)
+			tag245 = substr(tag245, 1, 70)"_"
+			tag245 = tag245"_"
 		}
 		if (marc_tag == "250") {
 			getvarfield()
@@ -132,31 +142,28 @@ function extract_tags() {
 				tag250 = substr(tolower(gensub(subfielda, "\\\1", "1", tag250)), 1, 3)
 				sub(/fir/, "1", tag250)
 				sub(/sec/, "2", tag250)
-				sub(/th[ir]/, "3", tag250)
+				sub(/thi/, "3", tag250)
 				sub(/fou/, "4", tag250)
-				sub(/fi[vf]/, "5", tag250)
+				sub(/fif/, "5", tag250)
 				sub(/six/, "6", tag250)
 				sub(/sev/, "7", tag250)
 				sub(/eig/, "8", tag250)
 				sub(/nin/, "9", tag250)
-				sub(/10/, "10", tag250)
+				sub(/ten/, "10", tag250)
 			} else {
 				tag250 = check250
 			}
-			tag250 = pad(tag250, 3)
-			if (tag250 == "___") {tag250 = "1__"}
+			tag250 = tag250"_"
 		}
 		if (marc_tag == "260") {
 			if (gooddate == 0) {
-				getvarfield()
-				tag260 = varfield
-				tag260a = gensub(subfielda, "\\\1", "1", tag260)
-				tag260b = gensub(subfieldb, "\\\1", "1", tag260)
+				tag260a = extract_subfield("a")
+				tag260b = extract_subfield("b")
 				date260 = gensub(validdate, "\\\1", "1", tag260b)
 
 				if (date260 ~ /[0-9][0-9][0-9][0-9]/) { 
 					gooddate = 2 
-					pubdate = date260
+					pubdate = date260"_"
 				}
 			}
 		}
@@ -167,15 +174,52 @@ function extract_tags() {
 				tag264 = gensub(subfieldb, "\\\1", "1", tag264)
 				date264 = gensub(validdate, "\\\1", "1", date264)
 
-				if (date264 ~ /[0-9][0-9][0-9][0-9]/) { pubdate = date264 }
+				if (date264 ~ /[0-9][0-9][0-9][0-9]/) { 
+					pubdate = date264 
+					pubdate = pubdate"_"
+				}
 			} 
 		}
 		if (marc_tag == "300") {
 			getvarfield()
 			tag300 = varfield
 			tag300 = tolower(gensub(subfielda, "\\\1", "1", tag300))
-			tag300 = firstxdigits(tag300, 4)
-			tag300 = pad(tag300, 4)
+			tag300 = firstxdigits(tag300, 4)"_"
+		}
+
+		if (marc_tag == "880") {
+			getvarfield()
+			tag880 = varfield
+			subtag=substr(tag880, 3, 3)
+
+			switch(subtag) {
+				case "100":
+					tagme = gensub(subfielda, "\\\1", "1", tag880)
+					gsub(/[[:punct:][:space:]]/, "", tagme)
+					break
+				case "110":
+					tagme = gensub(subfielda, "\\\1", "1", tag880)
+					gsub(/[[:punct:][:space:]]/, "", tagme)
+					break
+				case "111":
+					tagme = gensub(subfielda, "\\\1", "1", tag880)
+					gsub(/[[:punct:][:space:]]/, "", tagme)
+					break
+				case "130":
+					tagme = gensub(subfielda, "\\\1", "1", tag880)
+					gsub(/[[:punct:][:space:]]/, "", tagme)
+					break
+				case "245":
+					tag245a = gensub(subfielda, "\\\1", "1", tag880)
+					if (tag880 ~ subb) { tag245b = gensub(subfieldb, "\\\1", "1", tag880) }
+					if (tag880 ~ subp) { tag245p = gensub(subfieldp, "\\\1", "1", tag880) }
+					tag245 = tag245a""tag245b""tag245p
+					gsub(/[[:punct:][:space:]]/, "", tag245)
+					tag245 = substr(tag245, 1, 70)"_"
+					break
+				default:
+					break	
+			}
 		}
 	}
 }
@@ -201,13 +245,26 @@ record_content=substr($0, baseaddress + 1)
 bib_mattype=substr(leader, 7, 1)
 holdings_type=substr(leader, 8, 1)
 
-tag008=tag086i=tag245=tag245a=tag245b=tag245p=tag250=tag260=tag264=date260=date264=tag300=""
-pubdate="0000"
-tag250="1__"
-tagme="_____"
+tag001=tag008=tag086i=tag245=tag245a=tag245b=tag245p=tag250=tag260=tag264=date260=date264=tag300=tag907a=""
+pubdate="0000_"
+tag250="1_"
+tagme=""
 
 if (directory_check == 0) {
 	record_type = substr(leader, 7, 1)
+	if (NR == FNR) { 
+
+		### extract UUIDs from source
+		for (d_iter=1; d_iter<=directory_length; d_iter=d_iter+12) {
+			marc_tag = substr(directory, d_iter, 3)
+			field_length = substr(directory, d_iter + 3, 4) + 0
+			starting_pos = substr(directory, d_iter + 7, 5) + 0
+			if (marc_tag == "999") {
+				record_uuid = extract_subfield("i")
+			}
+		}
+
+	} 
 	extract_tags()
 }
 
@@ -221,7 +278,7 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
-awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -b -f tmp_checkmarc "${sourcefile}" "${mergefile}"
 echo
 
 rm -f tmp_checkmarc
