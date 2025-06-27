@@ -18,6 +18,7 @@ read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
 BEGIN { 
+	merged_records=not_merged_records=0
 	subfield_regex=SFS"."
 	subb=SFS"b"
 	subb=SFS"c"
@@ -33,6 +34,12 @@ BEGIN {
 	NOTMERGEFILE = "not_merged_records.mrc"
 	
 	printf "%s", "tag999\\ttag001\\ttag907a\\ttitle\\tpubdata\\tedition\\tpagination\\n" > MERGEREPORT
+	printf "%s\\n\\n", "Creating ids for source file. Please be patient."
+
+	MERGEMAP = "merged_map.tsv"
+	NOTMERGEMAP = "not_merged_map.tsv"
+	printf "mergeId\\toriginal_999i\\tnew_999i\\t001\\t907a\\n" > MERGEMAP
+	printf "mergeId\\t999i\\t001\\t907a\\n" > NOTMERGEMAP
 
 
       if (length("а") != 2) {
@@ -123,7 +130,7 @@ function extract_tags() {
 			getvarfield()
 			tag086 = varfield
 			tag086 = extract_subfield("a")
-			gsub(/[:punct:][:space:]/, "", tag086)
+			gsub(/[[:punct:][:space:]]/, "", tag086)
 			tag086 = tag086"_"
 		}
 		if (marc_tag == "100" || marc_tag == "110" || marc_tag == "111" || marc_tag == "130") {
@@ -316,31 +323,38 @@ if (directory_check == 0) {
 	if (NR == FNR) {
 		source_record[mergeId] = outstring
 		source_999i[mergeId] = tag999i
+		if (NR % 1000 == 0){ printf "Source IDs created: "NR"\\r" }
 	} else {
 		if (source_record[mergeId]) {
-			sub(tag999i, source_999i[mergeId], $0)
+			if (tag999i != "") { sub(tag999i, source_999i[mergeId], $0) }
+			merged_records++
 
 			if (mergeId != lastMergeId) {
 				lastMergeId = mergeId
 				printf "%s%s\\n", "(source)", outstring > "merged_records.tsv"
 				printf "%s\\n", outstring > MERGEREPORT
 				print $0 > MERGEFILE
+				printf mergeId"\\t"source_999i[mergeId]"\\t"tag999i"\\t"tag001"\\t"tag907a"\\n" > MERGEMAP
 			} else {
 				printf "%s\\n", outstring > MERGEREPORT
 				print $0 > MERGEFILE
+				printf mergeId"\\t"source_999i[mergeId]"\\t"tag999i"\\t"tag001"\\t"tag907a"\\n" > MERGEMAP
 			}
 		} else { 
+			not_merged_records++
 			printf "%s\\n", outstring > NOTMERGEREPORT
 			print $0 > NOTMERGEFILE
+			printf mergeId"\\t"tag999i"\\t"tag001"\\t"tag907a"\\n" > NOTMERGEMAP
+		}
+		if (NR % 1000 == 0) {
+			printf "Merged records: %s Not merged records: %s\\r", merged_records, not_merged_records
 		}
 	}
 }
 
-if (NR % 10000 == 0){ printf "Records processed: "NR"\\r" }
 
 }
-END { print NR" MARC records have been processed.\\n\\nReports can be found in merged_records.tsv and not_merged_records.tsv. \\nFiles can be found in merged_records.mrc and not_merged_records.mrc\\n\\n" }
-
+END { printf "\\n\\nProcessing complete. Reports can be found in merged_records.tsv and not_merged_records.tsv.\\nMaps of merge activity can be found in merged_map.tsv and not_merged_map.tsv \\nFiles can be found in merged_records.mrc and not_merged_records.mrc\\n\\n" }
 ENDOFAWK
 
 echo -e "${awkscript}" > tmp_checkmarc
