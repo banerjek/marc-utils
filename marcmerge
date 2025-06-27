@@ -19,7 +19,9 @@ read -r -d '' awkscript << "ENDOFAWK"
 BEGIN { 
 	subfield_regex=SFS"."
 	subb=SFS"b"
+	subb=SFS"c"
 	subp=SFS"p"
+	subn=SFS"n"
 	subfielda = ".*"SFS"a([^"SFS"]*).*"
 	subfieldp = ".*"SFS"p([^"SFS"]*).*"
 	subfieldn = ".*"SFS"n([^"SFS"]*).*"
@@ -118,17 +120,17 @@ function extract_tags() {
 			tag086 = tag086"_"
 		}
 		if (marc_tag == "100" || marc_tag == "110" || marc_tag == "111" || marc_tag == "130") {
-			getvarfield()
-			tagme = varfield
-			tagme = tolower(gensub(subfielda, "\\\1", "1", tagme))
-			gsub(/[:punct:][:space:]/, "", tagme)
-			tagme = substr(tagme, 1, 5)"_"
+			tagme = extract_subfield("a")
+			author = tagme
+			gsub(/[[:punct:][:space:]]/, "", tagme)
+			tagme = tolower(substr(tagme, 1, 5)"_")
 		}
 		if (marc_tag == "245" && tag245 == "") {
 			getvarfield()
-			tag245 = tolower(varfield)
+			tag245 = varfield
 			gsub(/&/, "", tag245)
 			tag245a = extract_subfield("a")
+			title = tag245a
 			gsub(/^a /, "", tag245a)
 			gsub(/^an /, "", tag245a)
 			gsub(/^the /, "", tag245a)
@@ -139,11 +141,12 @@ function extract_tags() {
 			tag245 = tag245a""tag245b""tag245p
 			gsub(/[[:punct:][:space:]]/, "", tag245)
 			tag245 = substr(tag245, 1, 70)"_"
-			tag245 = tag245"_"
+			tag245 = tolower(tag245"_")
 		}
 		if (marc_tag == "250") {
 			getvarfield()
 			tag250 = extract_subfield("a")
+			edition = tag250
 			check250 = longest_number(tag250)
 
 			if (! check250 ~ /[1-9]/) {
@@ -164,10 +167,17 @@ function extract_tags() {
 			tag250 = tag250"_"
 		}
 		if (marc_tag == "260") {
+			tag260 = varfield
+			if (tag260 ~ subb) { tag260b = extract_subfield("b") }
+			if (tag260 ~ subc) { tag260c = extract_subfield("c") }
+
+			publisher = tag260b
+			pubdate = tag260c
+			tag260b = tolower(substr(tag260b, 1, 5))
+			gsub(/[[:punct:][:space:]]/, "", tag260b)
+
 			if (gooddate == 0) {
-				tag260a = extract_subfield("a")
-				tag260b = extract_subfield("b")
-				date260 = gensub(validdate, "\\\1", "1", tag260b)
+				date260 = gensub(validdate, "\\\1", "1", tag260c)
 
 				if (date260 ~ /[0-9][0-9][0-9][0-9]/) { 
 					gooddate = 2 
@@ -176,14 +186,20 @@ function extract_tags() {
 			}
 		}
 		if (marc_tag == "264") {
-			if (gooddate != 1 ) {
-				getvarfield()
-				tag264 = varfield
-				tag264 = gensub(subfieldb, "\\\1", "1", tag264)
-				date264 = gensub(validdate, "\\\1", "1", date264)
+			tag264 = varfield
+			if (tag264 ~ subb) { tag264b = extract_subfield("b") }
+			if (tag264 ~ subc) { tag264c = extract_subfield("c") }
 
-				if (date264 ~ /[0-9][0-9][0-9][0-9]/) { 
-					pubdate = date264 
+			publisher = tag264b
+			pubdate = tag264c
+			tag264b = tolower(substr(tag264b, 1, 5))
+			gsub(/[[:punct:][:space:]]/, "", tag264b)
+
+			if (gooddate != 1 ) {
+				tag264c = gensub(validdate, "\\\1", "1", tag264c)
+
+				if (tag264c ~ /[0-9][0-9][0-9][0-9]/) { 
+					pubdate = tag264c
 					pubdate = pubdate"_"
 				}
 			} 
@@ -253,7 +269,7 @@ record_content=substr($0, baseaddress + 1)
 bib_mattype=substr(leader, 7, 1)
 holdings_type=substr(leader, 8, 1)
 
-tag001=tag008=tag245=tag245a=tag245b=tag245p=tag250=tag260=tag264=date260=date264=tag907a=""
+tag001=tag008=tag245=tag245a=tag245b=tag245p=tag250=tag260=tag264=tag264b=tag264c=date260=date264=tag907a=""
 tag250="1_"
 tagme=pubdate=tag300=tag086="_"
 author=title=edition=pagination=mainidentifier=sierraid=""
@@ -275,7 +291,7 @@ if (directory_check == 0) {
 
 	} 
 	extract_tags()
-	mergeId = tag245""tagme""pubdate""tag250""tag300""tag086""format
+	mergeId = tag245""tagme""tag264b""pubdate""tag250""tag300""tag086""format
 	printf "%s\\n", mergeId
 }
 
