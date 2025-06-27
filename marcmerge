@@ -172,7 +172,6 @@ function extract_tags() {
 			if (tag260 ~ subc) { tag260c = extract_subfield("c") }
 
 			publisher = tag260b
-			pubdate = tag260c
 			tag260b = tolower(substr(tag260b, 1, 5))
 			gsub(/[[:punct:][:space:]]/, "", tag260b)
 
@@ -180,6 +179,8 @@ function extract_tags() {
 				date260 = gensub(validdate, "\\\1", "1", tag260c)
 
 				if (date260 ~ /[0-9][0-9][0-9][0-9]/) { 
+					gsub(/^[0-9]/, "", date260)
+					date260 = substr(date260, 1, 4)
 					gooddate = 2 
 					pubdate = date260"_"
 				}
@@ -199,6 +200,8 @@ function extract_tags() {
 				tag264c = gensub(validdate, "\\\1", "1", tag264c)
 
 				if (tag264c ~ /[0-9][0-9][0-9][0-9]/) { 
+					gsub(/^[0-9]/, "", tag264c)
+					tag264c = substr(tag264c, 1, 4)
 					pubdate = tag264c
 					pubdate = pubdate"_"
 				}
