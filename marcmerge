@@ -10,8 +10,9 @@ if [[ -z "${mergefile}" ]];then
 	exit
 fi
 
-
+echo
 echo "Starting processing. Please wait"
+echo
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
@@ -314,8 +315,11 @@ if (directory_check == 0) {
 
 	if (NR == FNR) {
 		source_record[mergeId] = outstring
+		source_999i[mergeId] = tag999i
 	} else {
 		if (source_record[mergeId]) {
+			sub(tag999i, source_999i[mergeId], $0)
+
 			if (mergeId != lastMergeId) {
 				lastMergeId = mergeId
 				printf "%s%s\\n", "(source)", outstring > "merged_records.tsv"
@@ -330,13 +334,12 @@ if (directory_check == 0) {
 			print $0 > NOTMERGEFILE
 		}
 	}
-	printf "%s\\n", mergeId
 }
 
-if (NR % 10000 == 0){ printf "Records processed: "NR"\r" }
+if (NR % 10000 == 0){ printf "Records processed: "NR"\\r" }
 
 }
-END { print NR" MARC records have been processed and sent to "OUTFILE }
+END { print NR" MARC records have been processed.\\n\\nReports can be found in merged_records.tsv and not_merged_records.tsv. \\nFiles can be found in merged_records.mrc and not_merged_records.mrc\\n\\n" }
 
 ENDOFAWK
 
