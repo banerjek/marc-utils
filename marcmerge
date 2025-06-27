@@ -26,6 +26,12 @@ BEGIN {
 	subfieldp = ".*"SFS"p([^"SFS"]*).*"
 	subfieldn = ".*"SFS"n([^"SFS"]*).*"
 	validdate="^[^0-9]*([0-9][0-9][0-9][0-9])[^0-9].*"
+	MERGEREPORT = "merged_records.tsv"
+	MERGEFILE = "merged_records.mrc"
+	NOTMERGEREPORT = "not_merged_records.tsv"
+	NOTMERGEFILE = "not_merged_records.mrc"
+	
+	printf "%s", "tag999\\ttag001\\ttag907a\\ttitle\\tpubdata\\tedition\\tpagination\\n" > MERGEREPORT
 
 
       if (length("а") != 2) {
@@ -121,16 +127,17 @@ function extract_tags() {
 		}
 		if (marc_tag == "100" || marc_tag == "110" || marc_tag == "111" || marc_tag == "130") {
 			tagme = extract_subfield("a")
-			author = tagme
 			gsub(/[[:punct:][:space:]]/, "", tagme)
 			tagme = tolower(substr(tagme, 1, 5)"_")
 		}
 		if (marc_tag == "245" && tag245 == "") {
 			getvarfield()
 			tag245 = varfield
+			title = tag245
+			gsub(subfield_regex, " ", title)
+
 			gsub(/&/, "", tag245)
 			tag245a = extract_subfield("a")
-			title = tag245a
 			gsub(/^a /, "", tag245a)
 			gsub(/^an /, "", tag245a)
 			gsub(/^the /, "", tag245a)
@@ -145,8 +152,10 @@ function extract_tags() {
 		}
 		if (marc_tag == "250") {
 			getvarfield()
+			edition = varfield
+			gsub(subfield_regex, " ", edition)
+
 			tag250 = extract_subfield("a")
-			edition = tag250
 			check250 = longest_number(tag250)
 
 			if (! check250 ~ /[1-9]/) {
@@ -167,11 +176,14 @@ function extract_tags() {
 			tag250 = tag250"_"
 		}
 		if (marc_tag == "260") {
+			getvarfield()
 			tag260 = varfield
+			pubdata = tag260
+			gsub(subfield_regex, " ", pubdata)
+
 			if (tag260 ~ subb) { tag260b = extract_subfield("b") }
 			if (tag260 ~ subc) { tag260c = extract_subfield("c") }
 
-			publisher = tag260b
 			tag260b = tolower(substr(tag260b, 1, 5))
 			gsub(/[[:punct:][:space:]]/, "", tag260b)
 
@@ -188,11 +200,16 @@ function extract_tags() {
 		}
 		if (marc_tag == "264") {
 			tag264 = varfield
+			pubdata = tag264
+			gsub(subfield_regex, " ", pubdata)
+
 			if (tag264 ~ subb) { tag264b = extract_subfield("b") }
 			if (tag264 ~ subc) { tag264c = extract_subfield("c") }
 
 			publisher = tag264b
 			pubdate = tag264c
+			year = tag264c
+
 			tag264b = tolower(substr(tag264b, 1, 5))
 			gsub(/[[:punct:][:space:]]/, "", tag264b)
 
@@ -210,6 +227,8 @@ function extract_tags() {
 		if (marc_tag == "300") {
 			getvarfield()
 			tag300 = varfield
+			pagination = tag300
+			gsub(subfield_regex, " ", pagination)
 			tag300 = extract_subfield("a")
 			tag300 = longest_number(tag300)"_"
 		}
@@ -248,6 +267,14 @@ function extract_tags() {
 					break	
 			}
 		}
+
+		if (marc_tag == "907") {
+			tag907a = extract_subfield("a")
+		}
+
+		if (marc_tag == "999") {
+			tag999i = extract_subfield("i")
+		}
 	}
 }
 
@@ -272,29 +299,37 @@ record_content=substr($0, baseaddress + 1)
 bib_mattype=substr(leader, 7, 1)
 holdings_type=substr(leader, 8, 1)
 
-tag001=tag008=tag245=tag245a=tag245b=tag245p=tag250=tag260=tag264=tag264b=tag264c=date260=date264=tag907a=""
+tag001=tag008=tag245=tag245a=tag245b=tag245p=tag250=tag260=tag264=tag264b=tag264c=date260=date264=tag907a=tag999i=""
 tag250="1_"
 tagme=pubdate=tag300=tag086="_"
-author=title=edition=pagination=mainidentifier=sierraid=""
+title=pubdata=edition=pagination=tag001=""
 format="p"
 
 if (directory_check == 0) {
 	record_type = substr(leader, 7, 1)
-	if (NR == FNR) { 
-
-		### extract UUIDs from source
-		for (d_iter=1; d_iter<=directory_length; d_iter=d_iter+12) {
-			marc_tag = substr(directory, d_iter, 3)
-			field_length = substr(directory, d_iter + 3, 4) + 0
-			starting_pos = substr(directory, d_iter + 7, 5) + 0
-			if (marc_tag == "999") {
-				record_uuid = extract_subfield("i")
-			}
-		}
-
-	} 
 	extract_tags()
 	mergeId = tag245""tagme""tag264b""pubdate""tag250""tag300""tag086""format
+
+	outstring = tag999i"\\t"tag001"\\t"tag907a"\\t"title"\\t"pubdata"\\t"edition"\\t"pagination
+
+	if (NR == FNR) {
+		source_record[mergeId] = outstring
+	} else {
+		if (source_record[mergeId]) {
+			if (mergeId != lastMergeId) {
+				lastMergeId = mergeId
+				printf "%s%s\\n", "(source)", outstring > "merged_records.tsv"
+				printf "%s\\n", outstring > MERGEREPORT
+				print $0 > MERGEFILE
+			} else {
+				printf "%s\\n", outstring > MERGEREPORT
+				print $0 > MERGEFILE
+			}
+		} else { 
+			printf "%s\\n", outstring > NOTMERGEREPORT
+			print $0 > NOTMERGEFILE
+		}
+	}
 	printf "%s\\n", mergeId
 }
 
@@ -308,7 +343,7 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
-awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -b -f tmp_checkmarc "${sourcefile}" "${mergefile}"
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS=$'\x1e' -b -f tmp_checkmarc "${sourcefile}" "${mergefile}"
 echo
 
 rm -f tmp_checkmarc
