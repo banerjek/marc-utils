@@ -238,6 +238,7 @@ function extract_tags() {
 						tagme = tagme"_"
 						break
 					case "245":
+						sub(/ =.*/, "", varfield) ## remove parallel entry
 						tag245a =  extract_subfield("a")
 						tag245b =  extract_subfield("b")
 						tag245p =  extract_subfield("p")
