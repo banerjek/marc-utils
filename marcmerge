@@ -40,12 +40,11 @@ BEGIN {
 
 function extract_subfield(subfield) {
 	subregex = SFS""subfield"([^"SFS"]*)"
-	if (match(varfield, subregex)) {
-    		retvalue = substr(varfield, RSTART + 2, RLENGTH - 2)
+	if (match(varfield, subregex, subarray)) {
+    		return subarray[1]
 	} else {
-		retvalue = ""
+		return ""
 	}
-	return retvalue
 }
 
 function longest_number(getstring) {
@@ -78,196 +77,187 @@ function extract_tags() {
 		field_length = substr(directory, d_iter + 3, 4) + 0
 		starting_pos = substr(directory, d_iter + 7, 5) + 0
 
-		if (marc_tag == "001") {
-			getfixedfield()
-			tag001 = fixedfield
-		}
+		switch(marc_tag) {
+			case "001":
+				getfixedfield()
+				tag001 = fixedfield
+				break
+			case "007":
+				getfixedfield()
+				tag007 = fixedfield
+				if (substr(tag007, 1, 2) == "cr"){ format="e"}
+				break
+			case "008":
+				gooddate = 0
+				getfixedfield()
 
-		if (marc_tag == "007") {
-			getfixedfield()
-			tag007 = fixedfield
-			if (substr(tag007, 1, 2) == "cr"){ format="e"}
-		}
-
-		if (marc_tag == "008") {
-			gooddate = 0
-			getfixedfield()
-			tag008 = fixedfield
-
-			date008 = substr(tag008, 12, 4)
-
-			if (date008 ~ /[12][0-9][0-9][0-9]/) {
-				gooddate = 1
-				pubdate = date008"_"
-			}
-
-			if (gooddate == 0){ 
-				date008 = substr(tag008, 8, 4)
+				tag008 = fixedfield
+	
+				date008 = substr(tag008, 12, 4)
 				if (date008 ~ /[12][0-9][0-9][0-9]/) {
 					gooddate = 1
 					pubdate = date008"_"
 				}
-			} 
-
-		}
-
-		if (marc_tag == "086") {
-			getvarfield()
-			tag086 = varfield
-			tag086 = extract_subfield("a")
-			gsub(/[[:punct:][:space:]]/, "", tag086)
-			tag086 = tag086"_"
-		}
-		if (marc_tag == "100" || marc_tag == "110" || marc_tag == "111" || marc_tag == "130") {
-			getvarfield()
-			tagme = extract_subfield("a")
-			gsub(/[[:punct:][:space:]]/, "", tagme)
-			tagme = tolower(substr(tagme, 1, 5)"_")
-		}
-		if (marc_tag == "245" && tag245 == "") {
-			getvarfield()
-			tag245 = varfield
-			title = tag245
-			gsub(subfield_regex, " ", title)
-
-			gsub(/&/, "", tag245)
-			tag245a = extract_subfield("a")
-			tag245b = extract_subfield("b")
-			tag245h = extract_subfield("h")
-			tag245p = extract_subfield("p")
-			tag245n = extract_subfield("n")
-			sub(/^(a |an |the )/, "", tag245a)
-
-			if (match(/electronic/, 245h)){ format="e"}
-		
-			tag245 = tag245a""tag245b""tag245p
-			gsub(/[[:punct:][:space:]]/, "", tag245)
-			tag245 = substr(tag245, 1, 70)"_"
-			tag245 = tolower(tag245"_")
-		}
-		if (marc_tag == "250") {
-			getvarfield()
-			edition = varfield
-			gsub(subfield_regex, " ", edition)
-
-			tag250 = extract_subfield("a")
-			check250 = longest_number(tag250)
-
-			if (! check250 ~ /[1-9]/) {
-				sub(/fir/, "1", tag250)
-				sub(/sec/, "2", tag250)
-				sub(/thi/, "3", tag250)
-				sub(/fou/, "4", tag250)
-				sub(/fif/, "5", tag250)
-				sub(/six/, "6", tag250)
-				sub(/sev/, "7", tag250)
-				sub(/eig/, "8", tag250)
-				sub(/nin/, "9", tag250)
-				sub(/ten/, "10", tag250)
-			} else {
-				tag250 = check250
-			}
-			tag250 = tag250"_"
-		}
-		if (marc_tag == "260") {
-			getvarfield()
-			tag260 = varfield
-			pubdata = tag260
-			gsub(subfield_regex, " ", pubdata)
-			tag260b = extract_subfield("b")
-
-			tag260b = tolower(substr(tag260b, 1, 5))
-			gsub(/[[:punct:][:space:]]/, "", tag260b)
-
-			if (gooddate == 0) {
-				tag260c = extract_subfield("c")
-				date260 = gensub(validdate, "\\\1", "1", tag260c)
-
-				if (date260 ~ /[0-9][0-9][0-9][0-9]/) { 
-					gsub(/^[0-9]/, "", date260)
-					date260 = substr(date260, 1, 4)
-					gooddate = 2 
-					pubdate = date260"_"
+	
+				if (gooddate == 0){ 
+					date008 = substr(tag008, 8, 4)
+					if (date008 ~ /[12][0-9][0-9][0-9]/) {
+						gooddate = 1
+						pubdate = date008"_"
+					}
 				}
-			}
-		}
-		if (marc_tag == "264") {
-			getvarfield()
-			tag264 = varfield
-			pubdata = tag264
-			gsub(subfield_regex, " ", pubdata)
-
-			tag264b = extract_subfield("b")
-
-			publisher = tag264b
-
-			tag264b = tolower(substr(tag264b, 1, 5))
-			gsub(/[[:punct:][:space:]]/, "", tag264b)
-
-			if (gooddate != 1 ) {
-				tag264c = extract_subfield("c")
-				tag264c = gensub(validdate, "\\\1", "1", tag264c)
-
-				if (tag264c ~ /[0-9][0-9][0-9][0-9]/) { 
-					gsub(/^[0-9]/, "", tag264c)
-					tag264c = substr(tag264c, 1, 4)
-					pubdate = tag264c
-					pubdate = pubdate"_"
+				break
+			case "086":
+				getvarfield()
+				tag086 = varfield
+				tag086 = extract_subfield("a")
+				gsub(/[[:punct:][:space:]]/, "", tag086)
+				tag086 = tag086"_"
+				break
+			case "100":
+			case "110":
+			case "111":
+			case "130":
+				getvarfield()
+				tagme = extract_subfield("a")
+				gsub(/[[:punct:][:space:]]/, "", tagme)
+				tagme = tolower(substr(tagme, 1, 5)"_")
+				break
+			case "245":
+				getvarfield()
+				tag245 = varfield
+				title = tag245
+				gsub(subfield_regex, " ", title)
+	
+				gsub(/&/, "", tag245)
+				tag245a = extract_subfield("a")
+				tag245b = extract_subfield("b")
+				tag245h = extract_subfield("h")
+				tag245p = extract_subfield("p")
+				tag245n = extract_subfield("n")
+				sub(/^(a |an |the )/, "", tag245a)
+	
+				if (match(/electronic/, 245h)){ format="e"}
+			
+				tag245 = tag245a""tag245b""tag245p
+				gsub(/[[:punct:][:space:]]/, "", tag245)
+				tag245 = substr(tag245, 1, 70)"_"
+				tag245 = tolower(tag245"_")
+				break
+			case "250":
+				getvarfield()
+				edition = varfield
+				gsub(subfield_regex, " ", edition)
+	
+				tag250 = extract_subfield("a")
+				check250 = longest_number(tag250)
+	
+				if (! check250 ~ /[1-9]/) {
+					sub(/fir/, "1", tag250)
+					sub(/sec/, "2", tag250)
+					sub(/thi/, "3", tag250)
+					sub(/fou/, "4", tag250)
+					sub(/fif/, "5", tag250)
+					sub(/six/, "6", tag250)
+					sub(/sev/, "7", tag250)
+					sub(/eig/, "8", tag250)
+					sub(/nin/, "9", tag250)
+					sub(/ten/, "10", tag250)
+				} else {
+					tag250 = check250
 				}
-			} 
-		}
-		if (marc_tag == "300") {
-			getvarfield()
-			tag300 = varfield
-			pagination = tag300
-			gsub(subfield_regex, " ", pagination)
-			tag300 = extract_subfield("a")
-			tag300 = longest_number(tag300)"_"
-		}
-
-		if (marc_tag == "880") {
-			getvarfield()
-			tag880 = varfield
-			subtag=substr(tag880, 3, 3)
-
-			switch(subtag) {
-				case "100":
-					tagme = extract_subfield("a")
-					gsub(/[[:punct:][:space:]]/, "", tagme)
-					break
-				case "110":
-					tagme = extract_subfield("a")
-					gsub(/[[:punct:][:space:]]/, "", tagme)
-					break
-				case "111":
-					tagme = extract_subfield("a")
-					gsub(/[[:punct:][:space:]]/, "", tagme)
-					break
-				case "130":
-					tagme = extract_subfield("a")
-					gsub(/[[:punct:][:space:]]/, "", tagme)
-					break
-				case "245":
-					tag245a =  extract_subfield("a")
-					tag245b =  extract_subfield("b")
-					tag245p =  extract_subfield("p")
-					tag245 = tag245a""tag245b""tag245p
-					gsub(/[[:punct:][:space:]]/, "", tag245)
-					tag245 = substr(tag245, 1, 70)"_"
-					break
-				default:
-					break	
-			}
-		}
-
-		if (marc_tag == "907") {
-			getvarfield()
-			tag907a = extract_subfield("a")
-		}
-
-		if (marc_tag == "999") {
-			getvarfield()
-			tag999i = extract_subfield("i")
+				tag250 = tag250"_"
+				break
+			case "260":
+				getvarfield()
+				tag260 = varfield
+				pubdata = tag260
+				gsub(subfield_regex, " ", pubdata)
+				tag260b = extract_subfield("b")
+	
+				tag260b = tolower(substr(tag260b, 1, 5))
+				gsub(/[[:punct:][:space:]]/, "", tag260b)
+	
+				if (gooddate == 0) {
+					tag260c = extract_subfield("c")
+					date260 = gensub(validdate, "\\\1", "1", tag260c)
+	
+					if (date260 ~ /[0-9][0-9][0-9][0-9]/) { 
+						gsub(/^[0-9]/, "", date260)
+						date260 = substr(date260, 1, 4)
+						gooddate = 2 
+						pubdate = date260"_"
+					}
+				}
+				break
+			case "264":
+				getvarfield()
+				tag264 = varfield
+				pubdata = tag264
+				gsub(subfield_regex, " ", pubdata)
+	
+				tag264b = extract_subfield("b")
+	
+				publisher = tag264b
+	
+				tag264b = tolower(substr(tag264b, 1, 5))
+				gsub(/[[:punct:][:space:]]/, "", tag264b)
+	
+				if (gooddate != 1 ) {
+					tag264c = extract_subfield("c")
+					tag264c = gensub(validdate, "\\\1", "1", tag264c)
+	
+					if (tag264c ~ /[0-9][0-9][0-9][0-9]/) { 
+						gsub(/^[0-9]/, "", tag264c)
+						tag264c = substr(tag264c, 1, 4)
+						pubdate = tag264c
+						pubdate = pubdate"_"
+					}
+				} 
+				break
+			case "300":
+				getvarfield()
+				tag300 = varfield
+				pagination = tag300
+				gsub(subfield_regex, " ", pagination)
+				tag300 = extract_subfield("a")
+				tag300 = longest_number(tag300)"_"
+				break
+			case "880":
+				getvarfield()
+				tag880 = varfield
+				subtag=substr(tag880, 3, 3)
+	
+				switch(subtag) {
+					case "100":
+					case "110":
+					case "111":
+					case "130":
+						tagme = extract_subfield("a")
+						gsub(/[[:punct:][:space:]]/, "", tagme)
+						break
+					case "245":
+						tag245a =  extract_subfield("a")
+						tag245b =  extract_subfield("b")
+						tag245p =  extract_subfield("p")
+						tag245 = tag245a""tag245b""tag245p
+						gsub(/[[:punct:][:space:]]/, "", tag245)
+						tag245 = substr(tag245, 1, 70)"_"
+						break
+					default:
+						break	
+				}
+				break
+			case "907":
+				getvarfield()
+				tag907a = extract_subfield("a")
+				break
+			case "999":
+				getvarfield()
+				tag999i = extract_subfield("i")
+				break
+			default:
+				break
 		}
 	}
 }
