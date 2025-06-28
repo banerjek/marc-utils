@@ -175,8 +175,8 @@ function extract_tags() {
 				gsub(subfield_regex, " ", pubdata)
 				tag260b = extract_subfield("b")
 	
-				tag260b = tolower(substr(tag260b, 1, 5))
 				gsub(/[[:punct:][:space:]]/, "", tag260b)
+				tag260b = tolower(substr(tag260b, 1, 5))
 	
 				if (gooddate == 0) {
 					tag260c = extract_subfield("c")
@@ -235,6 +235,7 @@ function extract_tags() {
 					case "130":
 						tagme = extract_subfield("a")
 						gsub(/[[:punct:][:space:]]/, "", tagme)
+						tagme = tagme"_"
 						break
 					case "245":
 						tag245a =  extract_subfield("a")
@@ -242,7 +243,8 @@ function extract_tags() {
 						tag245p =  extract_subfield("p")
 						tag245 = tag245a""tag245b""tag245p
 						gsub(/[[:punct:][:space:]]/, "", tag245)
-						tag245 = substr(tag245, 1, 70)"_"
+						tag245 = tag245"_"
+						#tag245 = substr(tag245, 1, 70)"_"
 						break
 					default:
 						break	
