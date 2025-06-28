@@ -137,7 +137,7 @@ function extract_tags() {
 				tag245n = extract_subfield("n")
 				sub(/^(a |an |the )/, "", tag245a)
 	
-				if (match(/electronic/, 245h)){ format="e"}
+				if (index(245h, "electronic")){ format="e"}
 			
 				tag245 = tag245a""tag245b""tag245p
 				gsub(/[[:punct:][:space:]]/, "", tag245)
