@@ -177,7 +177,7 @@ process_file() {
 
 	# null identifiers
 	bad_subfield_regex1=$'\x1f'[0az]$'\x1e'
-	bad_subfield_regex2=$'\x1f'[^0a-z]'
+	bad_subfield_regex2=$'\x1f'[^0a-z]
 
 	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX1=${bad_subfield_regex1} -v BAD_SUBFIELD_REGEX2=${bad_subfield_regex2} -b -f tmp_checkmarc "${marcfile}"
 	sleep 1
