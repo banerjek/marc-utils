@@ -597,7 +597,7 @@ function extract_subfields() {
 
 function extract_identifiers() {
 
-	tag001=tag004=bib_subtype=bibno=bib_call=holdid=callnum=location=""
+	tag001=tag004=bibno=bib_call=holdid=callnum=location=""
 	tagid = substr(IDENTIFIER, 4, 1)
 
 	for (i=1; i<=directory_length; i=i+12) {
@@ -617,15 +617,6 @@ function extract_identifiers() {
 
 			tag004 = substr(record_content, starting_pos, field_length - 1)
 			gsub(/^ *+| +$/, "", tag004)
-		}
-		if (substr(directory, i, 3) == "008") {
-
-			field_length = substr(directory, i + 3, 4) + 0
-			starting_pos = substr(directory, i + 7, 5) 
-
-			bib_subtype = substr(record_content, starting_pos + 24, 1)
-			gsub(/[^a-z]/, "", bib_subtype)
-			bib_mattype = bib_mattype""bib_subtype
 		}
 
 		if (bibno == "") {
