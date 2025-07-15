@@ -25,9 +25,10 @@ function check_fields() {
 	gsub(subfield_9, subfield_0, $0)	
 
 	## Look for null identifiers
-	if (match($0, BAD_SUBFIELD_REGEX) > 1) {
-			badsubfields = 1
-	}
+	if (index($0, BAD_SUBFIELD_REGEX1) > 0) { badsubfields = 1 }
+
+	## Look for invalid subfields
+	if (index($0, BAD_SUBFIELD_REGEX2) > 0) { badsubfields = 1 }
 
 	if (directory ~ /[^0-9A-Z]/){directory_check = 1;good_directory = 0}
 
@@ -113,7 +114,7 @@ if (rectype == "bib") {
 	if ( found245 == 0 && foundbad == 0){ print $0 > "bad_missing245_"rectype"_"FILEROOT;bad245++;bad245text = " (245: "bad245")";foundbad = 1 }
 }
 
-if ( good_tag == 0 && foundbad == 0) { print $0 > "bad_nonumeric_tag_"rectype"_"FILEROOT;badtag++;badtagtext = " (Nonnumeric tags: "badtag")";foundbad = 1 }
+if ( good_tag == 0 && foundbad == 0) { " (Valid records with nonnumeric tags: "badtag")" }
 
 if ( goodrec == 1 && badsubfields == 1){ goodrecs++;badsubfieldtotal++;badsubfieldstext = " (Bad subfields: "badsubfieldtotal")";foundbad = 1; print $0 > "tmp_"rectype"_badsubfields.mrc" }
 
@@ -175,9 +176,10 @@ process_file() {
 	echo 
 
 	# null identifiers
-	bad_subfield_regex=$'\x1f'[0az]$'\x1e'
+	bad_subfield_regex1=$'\x1f'[0az]$'\x1e'
+	bad_subfield_regex2=$'\x1f'[^0a-z]'
 
-	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX=${bad_subfield_regex} -b -f tmp_checkmarc "${marcfile}"
+	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX1=${bad_subfield_regex1} -v BAD_SUBFIELD_REGEX2=${bad_subfield_regex2} -b -f tmp_checkmarc "${marcfile}"
 	sleep 1
 	
 	ls bad_*"${fileroot}" 2> /dev/null
