@@ -1,0 +1,96 @@
+filelist=("$@")
+infile="${filelist[0]}"
+
+if [[ "${infile}" =~ \....$ ]];then
+	finalfile=$(echo "${infile}" |sed 's/\(.*\)\(\....$\)/\1_utf8.mrc/')
+else
+	finalfile="${infile}_utf8.mrc"
+fi
+
+rm -f "${finalfile}" 
+rm -f tmp_marc2utf8*
+
+if [[ -z ${infile} ]];then echo "You must supply a file name or expression (wildcards OK). Usage: marc2utf8 [filename]";fi
+
+if [[ ! $(which yaz-marcdump |grep yaz) ]];then
+	echo 
+	echo "You must install yaz to use this utility"
+	echo "sudo apt install yaz libyaz5"
+	echo
+	exit
+fi
+
+if [[ -z $1 ]];then
+	echo "This tool converts MARC8 files to UTF8 "
+	echo "It performs no checks or repairs -- run marcfix first"
+	echo 
+	echo "Usage: marc2utf8 [filename]"
+	echo
+	exit
+else
+	infile=${1}
+fi
+
+function fix_encoding() {
+	local infile="${1}"
+	local outfile="${infile}out"
+
+	if [[ ${infile} == "tmp_marc2utf8-2.mrc" ]];then
+		yaz-marcdump -f MARC-8 -t UTF-8 -o marc -l 9=97 ${infile} |pv -pt > ${outfile}
+	else
+		yaz-marcdump -f MARC-8 -t UTF-8 -o marc -l 9=97 ${infile} > ${outfile}
+	fi
+}
+
+function fix_file() {
+	local infile="${1}"
+	local outfile=$(echo "${infile}" |sed 's/\(.*\)\(\....$\)/\1_utf8.mrc/')
+	echo "Processessing ${infile}"
+
+echo
+
+read -r -d '' awkscript << "ENDOFAWK"
+#!/usr/bin/awk -f 
+BEGIN { filecounter = 1 } 
+{
+if (NR % NUMRECS == 0) {filecounter = filecounter + 1}
+outfile = sprintf("tmp_marc2utf8-%d.mrc", filecounter)
+
+if (filecounter == 2 && NR % 10000 == 0) {
+	printf "Records procesessed: "NR * 5"\r"
+}
+
+print $0 > outfile
+}
+
+ENDOFAWK
+echo -e "${awkscript}" > tmp_marc2utf8
+chmod 700 tmp_marc2utf8
+
+if [[ ! -f "${infile}" ]];then echo "The input file ${infile} could not be found";exit;fi
+
+numrecs=$(awk -v RS=$'\x1d' 'END{print NR}' "${infile}")
+num_per_file=$(($numrecs / 5 + 1))
+
+pv "${infile}" | awk -v RS=$'\x1d' -v ORS=$'\x1d' -v NUMRECS=$num_per_file -f tmp_marc2utf8
+echo
+
+splitlist=(tmp_marc2utf8-1.mrc tmp_marc2utf8-2.mrc tmp_marc2utf8-3.mrc tmp_marc2utf8-4.mrc tmp_marc2utf8-5.mrc)
+
+for splitfile in ${splitlist[@]};do 
+	fix_encoding ${splitfile} &
+done
+wait
+
+	cat tmp_marc2utf8-*out > "${outfile}"
+	rm -f tmp_marc2utf8-*
+	echo "Completed processing ${infile}"
+}
+
+
+for file in "${filelist[@]}";do
+	fix_file "${file}"
+done
+echo
+
+rm tmp_marc2utf8*
