@@ -21,10 +21,10 @@ if [[ ! $(which yaz-marcdump |grep yaz) ]];then
 fi
 
 if [[ -z $1 ]];then
-	echo "This tool converts MARC8 files to UTF8 "
+	echo "This tool converts Latin 1 (ISO-8859-1) files to UTF8 "
 	echo "It performs no checks or repairs -- run marcfix first"
 	echo 
-	echo "Usage: marc2utf8 [filename]"
+	echo "Usage: latin12marc [filename]"
 	echo
 	exit
 else
@@ -36,9 +36,9 @@ function fix_encoding() {
 	local outfile="${infile}out"
 
 	if [[ ${infile} == "tmp_marc2utf8-2.mrc" ]];then
-		yaz-marcdump -f MARC-8 -t UTF-8 -o marc -l 9=97 ${infile} |pv -pt > ${outfile}
+		yaz-marcdump -f  iso8859-1 -t UTF-8 -o marc -l 9=97 ${infile} |pv -pt > ${outfile}
 	else
-		yaz-marcdump -f MARC-8 -t UTF-8 -o marc -l 9=97 ${infile} > ${outfile}
+		yaz-marcdump -f iso8859-1 -t UTF-8 -o marc -l 9=97 ${infile} > ${outfile}
 	fi
 }
 
