@@ -79,6 +79,7 @@ function rebuild_directory(){
 	base_address=substr(leader,13, 5) 
 	final_base_address = base_address
 	base_address = base_address + 0
+	offset_subtract = 0
 
 	record_content=substr($0, base_address + 1)
 	leader_content=substr(leader, 6)
@@ -118,7 +119,7 @@ function rebuild_directory(){
 
 	new_directory = new_directory""OFS
 
-	new_record_length = 25 + directory_length + length(new_record_content) + 1 ### accounts for FS after leader and end of record marker
+	new_record_length = 25 + directory_length + length(new_record_content) - offset_subtract + 1 ### accounts for FS after leader and end of record marker
 	new_record_length = sprintf("%05d", new_record_length)
 
 	print new_record_length""leader_content1""final_base_address""leader_content2""new_directory""new_record_content > OUTFILE 
