@@ -140,7 +140,7 @@ function find_matching_tags() {
 	addlength = 0
 	newcontent = ""
 
-	for (key in marctag){
+	for (key in marccontent){
 		if (key ~ ("^" id_content FS)) {
 			split(key, newfield)
 			TAG = newfield[2]
