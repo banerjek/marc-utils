@@ -16,6 +16,8 @@ else
 
 fi
 
+### no error correction or accommodation for bad directories -- use marcfix first
+
 fileroot=$(echo "${marcfile}" | sed 's/\.....\?$//')
 outfile="${fileroot}_fixed.mrc"
 
@@ -78,11 +80,10 @@ function check_match() {
 	
 	gsub(" *$", "", id_content)
 	
-	if (marctag[id_content] == 1 ) { found = 1 }
+	if (processrecord[id_content] == 1 ) { found = 1 }
 }
 
 function add_tag() {
-	### no error correction or accommodation for bad directories -- use marcfix first
 	leader=substr($0,1,24)
 	leader1=substr(leader, 6, 7)
 	leader2=substr(leader, 18)
@@ -129,21 +130,39 @@ function add_tag() {
 	}
 	new_directory = new_directory""OFS
 
-	print new_leader""new_directory""new_record_content > OUTFILE 
+	$0 = new_leader""new_directory""new_record_content 
+}
+
+function find_matching_tags() {
+
+	### identify how many values will be added
+	newtags = 0
+	addlength = 0
+	newcontent = ""
+
+	for (key in marctag){
+		if (key ~ ("^" id_content FS)) {
+			split(key, newfield)
+			TAG = newfield[2]
+			VALUE = newfield[3]""FS
+			VALUE_LENGTH=sprintf("%04d", length(VALUE))
+			newtags += 1			
+			print $0 > OUTFILE
+		}
+	}
 }
 {
 	if (NR == FNR) {
 		gsub(" *$", "", $1)
 		processrecord[$1] = 1
-		marctag[$1""$2] = $2
-		marccontent[$1""$2] = $3
+		marccontent[$1""MARCFS""$2""MARCFS""$3] = 1
 		if (NR == NUMMAPPED){FS = MARCFS;RS = MARCORS}
 	} else {
 
 		check_match()
 		
 		if (found == 1) {
-			add_tags()
+			find_matching_tags()
 			matched_records += 1
 			found = 0
 		}		
