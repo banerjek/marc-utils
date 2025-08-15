@@ -146,8 +146,8 @@ function find_matching_tags() {
 			TAG = newfield[2]
 			VALUE = newfield[3]""FS
 			VALUE_LENGTH=sprintf("%04d", length(VALUE))
+			 add_tag()
 			newtags += 1			
-			print $0 > OUTFILE
 		}
 	}
 }
@@ -167,6 +167,7 @@ function find_matching_tags() {
 			found = 0
 		}		
 
+		print $0 > OUTFILE
 		if (FNR % 10000 == 0){ printf "Records processed: %d modified: %d \\r", FNR, matched_records }
 	}
 }
