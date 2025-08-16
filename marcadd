@@ -1,97 +1,201 @@
-if [[ -z $1 ]];then
+if [[ -z $3 ]];then
 	echo "Adds a MARC field to every record in a file"
 	echo
-	echo "Usage: marcadd [filename] [tag] [value]"
+	echo "Usage: marcadd [marcfile] [tagfile] [idtag]"
+	echo "Usage: marcadd [marcfile] [tag] [value]"
 	echo 
-	echo "Indicators and subfield characters should be included in [value] but not the terminating end of field marker"
+	echo "Tagfile should be 3 column tab delimited containing identifier, tag to insert, and content"
+	echo
+	echo "Marcadd assumes you're using an input file if a file named tagfile is present"
+	echo "Otherwise, it expects you to pass a tag and value"
 	echo
 
 	exit
 else
-	infile="${1}"
-	marctag=${2}
-	value="${3}"
+	marcfile="${1}"
 
-	tag=${marctag:0:3}
-
-	if [[ ${#marctag} == 4 ]];then
-        	subfield=${marctag:3:1}
+	if [[ -f ${2} ]];then
+		tagfile="${2}"
+		idtag=${3}
+	else
+		tagfile="tmp_tags"
+		tag=${2}
+		value=${3}
+		echo -e "Process all records\t${tag}\t${value}" > ${tagfile}
 	fi
+
+	num_mapped=$(wc -l ${tagfile} |cut -d " " -f1)
 
 fi
 
-fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
+### no error correction or accommodation for bad directories -- use marcfix first
+
+fileroot=$(echo "${marcfile}" | sed 's/\.....\?$//')
 outfile="${fileroot}_fixed.mrc"
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
 BEGIN { 
-        if(length("а") != 2) {
-                badawk = 1
-                printf("Your version of awk does not support marcadd -- you need a version that supports the -b switch\\n")
-                exit
-        }
-	VALUE = VALUE""FS ### add end of field marker
-	VALUE_LENGTH=sprintf("%04d", length(VALUE))
+	if(length("а") != 2) {
+		badawk = 1
+		printf("Your version of awk does not support marcaddfromfile -- you need a version that supports the -b switch\\n")
+		exit
+	}
+	
+	found = 0
+	matched_records = 0
 }
 
-{
-	### no error correction or accommodation for bad directories -- use marcfix first
-
+function check_match() {
 	leader=substr($0,1,24)
-	leader1=substr(leader, 6, 7)
-	leader2=substr(leader, 18)
+	baseaddress=substr(leader,13, 5) + 0
+	directory=substr($0,25, baseaddress - 25)
+	directory_length=length(directory) 
+	directory_check=(directory_length % 12)
+	record_content=substr($0, baseaddress + 1)
+	
+	IDTAG3 = substr(IDTAG, 1, 3)
+	
+	found = 0
+	
+	if (directory_check == 0) {
+		for (i=1; i<=directory_length; i=i+12) {
+			if (substr(directory, i, 3) == IDTAG3) {
+				field_length = substr(directory, i + 3, 4) + 0
+				starting_pos = substr(directory, i + 7, 5)
+	
+				if (length(IDTAG) == 3) {
+					if (IDTAG == "001") { 
+						id_content = substr(record_content, starting_pos + 0, field_length - 1)
+					} else {
+						id_content = substr(record_content, starting_pos + 1, field_length - 1)
+					}
+				}
+		
+			   if (length(IDTAG) == 4) {
+			      search_subfield = substr(IDTAG, 4, 1)
+					field_content = substr(record_content, starting_pos + 1, field_length - 1)
+		
+			      split(field_content, subfields, SFS)
+			
+			      for (subfield in subfields) {
+			         if (substr(subfields[subfield], 1, 1) == search_subfield) {
+			            id_content = substr(subfields[subfield],2)
+							break
+			         }
+			      }
+			   }
+			}
+		}
+	
+	gsub(" *$", "", id_content)
+	if (processrecord[id_content] == 1 ) { found = 1 }
+	}
+}
 
-	old_base_address=substr(leader,13, 5) + 0
-	new_base_address=sprintf("%05d", old_base_address + 12)
+function add_tag() {
+	leader = substr($0, 1, 24)
+	leader1 = substr(leader, 6, 7)
+	leader2 = substr(leader, 18)
+	VALUE = VALUE""FS
+	VALUE_LENGTH = sprintf("%04d", length(VALUE))
 
-	old_record_length=substr(leader,1, 5) + 0
-	new_record_length = sprintf("%05d", old_record_length + VALUE_LENGTH + 12) ### plus directory entry
+	old_base_address = substr(leader, 13, 5) + 0
+	new_base_address = sprintf("%05d", old_base_address + 12)
 
-	old_record_content=substr($0, old_base_address + 1)
-	new_record_content=old_record_content""VALUE
-	new_record_offset=sprintf("%05d", length(old_record_content))
+	old_record_length = substr(leader, 1, 5) + 0
+	new_record_length = sprintf("%05d", old_record_length + length(VALUE) + 12)
 
-	old_directory=substr($0,25, old_base_address - 25)
-	old_directory_length=length(old_directory)
+	old_record_content = substr($0, old_base_address + 1)
+	new_record_offset = sprintf("%05d", length(old_record_content))
+	new_record_content = old_record_content VALUE
 
-	new_directory_length=length(old_directory) + 12
+	old_directory = substr($0, 25, old_base_address - 25)
+	old_directory_length = length(old_directory)
 
-	new_leader = new_record_length""leader1""new_base_address""leader2
-
-	new_directory=""
+	new_directory = ""
 	inserted = 0
 
-	for (i=1; i<=old_directory_length; i=i+12) {
-		new_entry = substr(old_directory, i, 12) ### new entry is same as old, inserted field is simply added
+	for (i = 1; i <= old_directory_length; i += 12) {
+		old_entry = substr(old_directory, i, 12)
 		old_tag = substr(old_entry, 1, 3)
-		old_length = substr(old_entry, 4, 4)
-		old_starting_pos = substr(old_entry, 8, 5) 
 
-		if (inserted == 0) {
-			if (TAG < old_tag) {
-				inserted =1
-				new_entry = TAG""VALUE_LENGTH""new_record_offset ### place new tag where last tag was
-				new_entry = new_entry""old_entry ### concatenate new and old entries
-			} 
-			if (i + 12 > old_directory_length) {
-				inserted =1
-				new_entry = TAG""VALUE_LENGTH""new_record_offset ### place new tag where last tag was
-				new_entry = old_entry""new_entry"" ### reverse order so it is last
-			} 
+		if (inserted == 0 && TAG < old_tag) {
+			new_entry = TAG VALUE_LENGTH new_record_offset
+			new_directory = new_directory new_entry
+			inserted = 1
 		}
-		new_directory = new_directory""new_entry	
-	}
-	new_directory = new_directory""OFS
 
-	print new_leader""new_directory""new_record_content > OUTFILE 
-	if (NR % 10000 == 0){ printf "Records processed: %d \\r", NR}
+		new_directory = new_directory old_entry
+	}
+
+	# If not inserted yet, append at the end
+	if (!inserted) {
+		new_entry = TAG VALUE_LENGTH new_record_offset
+		new_directory = new_directory new_entry
+		new_record_offset = sprintf("%05d", new_record_offset + VALUE_LENGTH)
+	}
+
+	new_directory = new_directory FS
+
+	new_leader = new_record_length leader1 new_base_address leader2
+	$0 = new_leader new_directory new_record_content
+}
+
+function find_matching_tags() {
+
+	### identify how many values will be added
+	newtags = 0
+	addlength = 0
+	newcontent = ""
+
+	for (key in marccontent){
+		if (key ~ ("^" id_content FS)) {
+			split(key, newfield)
+			TAG = newfield[2]
+			VALUE = newfield[3]
+			add_tag()
+			newtags += 1			
+		}
+	}
+}
+{
+	if (NR == FNR && NF == 3) {
+		gsub(" *$", "", $1)
+		processrecord[$1] = 1
+		if ($1 == "Process all records"){
+			process_all_records = 1
+			process_all_tag = $2
+			process_all_value = $3
+		}		
+
+		marccontent[$1""MARCFS""$2""MARCFS""$3] = 1
+		if (NR == NUMMAPPED){FS = MARCFS;RS = ORS}
+	} else {
+		if (! process_all_records) { 
+			check_match() 
+		} else { 
+			TAG = process_all_tag
+			VALUE = process_all_value
+			add_tag()
+		}
+		
+		if (found == 1) {
+			offset = 0
+			find_matching_tags()
+			matched_records += 1
+			found = 0
+		}		
+
+		print $0 > OUTFILE
+		if (FNR % 10000 == 0){ printf "Records processed: %d modified: %d \\r", FNR, matched_records }
+	}
 }
 
 END { 
 	ORS="\\n"
-	print "";print NR " records were output to "OUTFILE
+	print "";print FNR " records were output to "OUTFILE
 }
 
 ENDOFAWK
@@ -99,7 +203,7 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_marcadd
 chmod 700 tmp_marcadd
 
-awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v OFS=$'\x1e' -v SFS=$'\x1f' -v TAG="${tag}" -v VALUE="${value}" -v OUTFILE="${outfile}" -b -f tmp_marcadd "${infile}"
+awk -v MARCFS=$'\x1e' -v ORS=$'\x1d' -v OFS=$'\x1e' -v SFS=$'\x1f' -v RS=$'\n' -v FS=$'\t' -v NUMMAPPED=${num_mapped} -v IDTAG=${idtag} -v OUTFILE="${outfile}" -b -f tmp_marcadd "${tagfile}" "${marcfile}"
 
 sleep 1
-rm -f tmp_marcadd
+rm -f tmp_marcadd tmp_tags
