@@ -94,7 +94,7 @@ function add_tag() {
 
 	old_record_content=substr($0, old_base_address + 1)
 	new_record_content=old_record_content""VALUE
-	new_record_offset=sprintf("%05d", length(old_record_content))
+	new_record_offset=sprintf("%05d", length(old_record_content)) ### place new tag where last tag was
 
 	old_directory=substr($0,25, old_base_address - 25)
 	old_directory_length=length(old_directory)
@@ -144,7 +144,8 @@ function find_matching_tags() {
 			TAG = newfield[2]
 			VALUE = newfield[3]""FS
 			VALUE_LENGTH=sprintf("%04d", length(VALUE))
-			 add_tag()
+			printf "%s--%s--%d\\n", TAG, VALUE, VALUE_LENGTH
+			add_tag()
 			newtags += 1			
 		}
 	}
@@ -152,7 +153,6 @@ function find_matching_tags() {
 {
 	if (NR == FNR && NF == 3) {
 		gsub(" *$", "", $1)
-		printf "%s--%s--%s\\n", $1,$2,$3
 		processrecord[$1] = 1
 		marccontent[$1""MARCFS""$2""MARCFS""$3] = 1
 		if (NR == NUMMAPPED){FS = MARCFS;RS = ORS}
