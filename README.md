@@ -51,8 +51,8 @@ Lightweight conversion of MARC to text to simplify viewing binary MARC files wit
 ## marcadd
 **Usage:** *marcadd [marcfile] [tag] [value]*   
 **Usage:** *marcadd [marcfile] [tagfile] [idtag]*   
-**Example:** *marcadd marc_file.mrc 997 "  "$'\x1f'"asomevalue"* 
 **Example:** *marcadd marc_file.mrc values_to_add.tsv 001*
+**Example:** *marcadd marc_file.mrc 997 "  "$'\x1f'"asomevalue"* 
 
 Adds a MARC field to every record if given an interactive argument, adds specified tags to matching records in a tab delimited file containing identifier, tag, and value. Indicators and subfield characters should be included in [value] but not the terminating end of field marker
 
