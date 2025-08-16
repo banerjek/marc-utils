@@ -43,7 +43,7 @@ bash and a version of awk that understands the "-b" switch (i.e. anything from t
 
 ## marc
 **Usage:** *marc*   
-**Example:** *%! marc* (within vi subshell to convert text record to MARC)
+**Example:** *%! marc* (within vi subshell to convert text record to MARC)  
 **Example:** *cat marcfile.txt | marc > out.mrc*   
 
 Lightweight conversion of MARC to text to simplify viewing binary MARC files without creating temp files. Handy for converting text representations from marc2text(not Marcedit) into MARC while in a vi viewing pane. 
@@ -51,7 +51,7 @@ Lightweight conversion of MARC to text to simplify viewing binary MARC files wit
 ## marcadd
 **Usage:** *marcadd [marcfile] [tag] [value]*   
 **Usage:** *marcadd [marcfile] [tagfile] [idtag]*   
-**Example:** *marcadd marc_file.mrc values_to_add.tsv 001*
+**Example:** *marcadd marc_file.mrc values_to_add.tsv 001*  
 **Example:** *marcadd marc_file.mrc 997 "  "$'\x1f'"asomevalue"* 
 
 Adds a MARC field to every record if given an interactive argument, adds specified tags to matching records in a tab delimited file containing identifier, tag, and value. Indicators and subfield characters should be included in [value] but not the terminating end of field marker
@@ -236,7 +236,7 @@ Get a frequency count of all tags and subfields from raw MARC file on stdin
 
 ## text
 **Usage:** *text*   
-**Example:** *%! text* (within vi subshell to view binary record as text)
+**Example:** *%! text* (within vi subshell to view binary record as text)  
 **Example:** *cat marcfile.mrc | text > out.txt*   
 
 Lightweight conversion of MARC to text to simplify viewing binary MARC files without creating temp files. Handy for converting text representations from marc2text into MARC while in a vi viewing pane. 
