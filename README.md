@@ -48,20 +48,6 @@ bash and a version of awk that understands the "-b" switch (i.e. anything from t
 
 Lightweight conversion of MARC to text to simplify viewing binary MARC files without creating temp files. Handy for converting text representations from marc2text(not Marcedit) into MARC while in a vi viewing pane. 
 
-## marcadd
-**Usage:** *marcadd [marcfile] [tag] [value]*   
-**Usage:** *marcadd [marcfile] [tagfile] [idtag]*   
-**Example:** *marcadd marc_file.mrc values_to_add.tsv 001*  
-**Example:** *marcadd marc_file.mrc 997 "  "$'\x1f'"asomevalue"* 
-
-Adds a MARC field to every record if given an interactive argument, adds specified tags to matching records in a tab delimited file containing identifier, tag, and value. Indicators and subfield characters should be included in [value] but not the terminating end of field marker
-
-## marctac
-**Usage:** *marctac [filename]*   
-**Example:** *marctac marc_file.mrc*
-
-Reverses order of records in MARC file
-
 ## marc2text
 **Usage:** *marc2text [filename]*   
 **Example:** *marc2text marc_file\*.mrc*   
@@ -79,6 +65,14 @@ Extracts specific MARC tags or subfields into TSV file.
 Whole tags are extracted, leading subfield marker (usually a) is stripped. The subfield delimiter (hex 1F) is left in all but first field.
 
 001 is output by default, and repeated fields are subdelimited with a semicolon. Use "ldr" to extract the leader. Add a single subfield after tags to extract specific subfields
+
+## marcadd
+**Usage:** *marcadd [marcfile] [tag] [value]*   
+**Usage:** *marcadd [marcfile] [tagfile] [idtag]*   
+**Example:** *marcadd marc_file.mrc values_to_add.tsv 001*  
+**Example:** *marcadd marc_file.mrc 997 "  "$'\x1f'"asomevalue"* 
+
+Adds a MARC field to every record if given an interactive argument, adds specified tags to matching records in a tab delimited file containing identifier, tag, and value. Indicators and subfield characters should be included in [value] but not the terminating end of field marker
 
 ## marccopy
 **Usage:** *marccopy [filename] [sourcetag] [destinationtag]*   
@@ -214,6 +208,12 @@ Sort MARC records in tag order
 **Example:** *marcsplit marc_file.mrc -f 5*   
 
 Splits large MARC file into multiple files, each containing *num_records* records. If *num_records* isn't provided, default is 1000. If -f switch is provided, the number following is the number of files desired.
+
+## marctac
+**Usage:** *marctac [filename]*   
+**Example:** *marctac marc_file.mrc*
+
+Reverses order of records in MARC file
 
 ## marctail
 **Usage:** *marctail [numlines] [filename]*   
