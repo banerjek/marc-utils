@@ -150,16 +150,19 @@ function find_matching_tags() {
 	addlength = 0
 	newcontent = ""
 
-	for (key in marccontent){
-		if (key ~ ("^" id_content FS)) {
-			split(key, newfield)
-			TAG = newfield[2]
-			VALUE = newfield[3]
-			add_tag()
-			newtags += 1			
+	if (id_content in marccontent) {
+		for (tag in marccontent[id_content]) {
+			for (i in marccontent[id_content][tag]) {
+				TAG = tag
+				VALUE = marccontent[id_content][tag][i]
+				add_tag()
+				newtags += 1
+			}
 		}
 	}
+
 }
+
 {
 	if (NR == FNR && NF == 3) {
 		gsub(" *$", "", $1)
@@ -170,7 +173,8 @@ function find_matching_tags() {
 			process_all_value = $3
 		}		
 
-		marccontent[$1""MARCFS""$2""MARCFS""$3] = 1
+		marccontent[$1][$2][length(marccontent[$1][$2]) + 1] = $3
+	
 		if (NR == NUMMAPPED){FS = MARCFS;RS = ORS}
 	} else {
 		if (! process_all_records) { 
