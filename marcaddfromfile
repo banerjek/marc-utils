@@ -12,7 +12,6 @@ else
 	tagfile="${2}"
 	idtag=${3}
 	num_mapped=$(wc -l ${tagfile} |cut -d " " -f1)
-	fi
 
 fi
 
@@ -25,15 +24,14 @@ read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
 BEGIN { 
-        if(length("а") != 2) {
-                badawk = 1
-                printf("Your version of awk does not support marcadd -- you need a version that supports the -b switch\\n")
-                exit
-        }
+	if(length("а") != 2) {
+		badawk = 1
+		printf("Your version of awk does not support marcaddfromfile -- you need a version that supports the -b switch\\n")
+		exit
+	}
+	
 	found = 0
 	matched_records = 0
-	VALUE = VALUE""FS ### add end of field marker
-	VALUE_LENGTH=sprintf("%04d", length(VALUE))
 }
 
 function check_match() {
@@ -79,8 +77,8 @@ function check_match() {
 		}
 	
 	gsub(" *$", "", id_content)
-	
 	if (processrecord[id_content] == 1 ) { found = 1 }
+	}
 }
 
 function add_tag() {
@@ -152,13 +150,13 @@ function find_matching_tags() {
 	}
 }
 {
-	if (NR == FNR) {
+	if (NR == FNR && NF == 3) {
 		gsub(" *$", "", $1)
+		printf "%s--%s--%s\\n", $1,$2,$3
 		processrecord[$1] = 1
 		marccontent[$1""MARCFS""$2""MARCFS""$3] = 1
-		if (NR == NUMMAPPED){FS = MARCFS;RS = MARCORS}
+		if (NR == NUMMAPPED){FS = MARCFS;RS = ORS}
 	} else {
-
 		check_match()
 		
 		if (found == 1) {
@@ -182,7 +180,7 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_marcadd
 chmod 700 tmp_marcadd
 
-awk -v MARCRS=$'\x1d' -v MARCFS=$'\x1e' -v ORS=$'\x1d' -v OFS=$'\x1e' -v SFS=$'\x1f' -v RS=$'\n' -v FS=$'\t' -v MARCFILE="${marcfile}" -v TAGFILE="${tagfile}" -v NUMMAPPED=${num_mapped} -v IDTAG=${idtag} -v OUTFILE="${outfile}" -b -f tmp_marcadd "${infile}"
+awk -v MARCFS=$'\x1e' -v ORS=$'\x1d' -v OFS=$'\x1e' -v SFS=$'\x1f' -v RS=$'\n' -v FS=$'\t' -v NUMMAPPED=${num_mapped} -v IDTAG=${idtag} -v OUTFILE="${outfile}" -b -f tmp_marcadd "${tagfile}" "${marcfile}"
 
 sleep 1
 rm -f tmp_marcadd
