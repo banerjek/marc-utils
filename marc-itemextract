@@ -42,22 +42,7 @@ if [[ ${system} == "absysnet" ]];then
 	item_field="995s"
 	item_call_subfield="r5a"
 	location_subfield="h"
-
-	tags[1]="a"
-	tags[2]="d"
-	tags[3]="e"
-	tags[4]="f"
-	tags[4]="k"
-	tags[4]="s"
-	tags[4]="u"
-
-	labels[1]="copy"
-	labels[2]="loantype"
-	labels[3]="subject"
-	labels[4]="barcode"
-	labels[5]="call#"
-	labels[6]="mattype"
-	labels[7]="location"
+	taglabelmap="a:copy d:loantype e:subject f:barcode k:call# s:mattype u:location"
 fi
 
 if [[ ${system} == "destiny" ]];then
@@ -67,30 +52,7 @@ if [[ ${system} == "destiny" ]];then
 	item_field="852p"
 	item_call_subfield="h"
 	location_subfield="b"
-
-	tags[1]="p"
-	tags[2]="h"
-	tags[3]="u"
-	tags[4]="b"
-	tags[5]="j"
-	tags[6]="t"
-	tags[7]="z"
-	tags[8]="r"
-	tags[9]="n"
-	tags[10]="f"
-	tags[11]="9"
-
-	labels[1]="barcode"
-	labels[2]="call#"
-	labels[3]="itype"
-	labels[4]="location"
-	labels[5]="volume"
-	labels[6]="copy"
-	labels[7]="note"
-	labels[8]="catdate"
-	labels[9]="staffnote"
-	labels[10]="collectionnote"
-	labels[11]="price"
+	taglabelmap="p:barcode h:call# u:itype b:location j:volume t:copy z:note r:catdate n:staffnote f:collectionnote 9:price"
 fi
 
 if [[ ${system} == "eos" ]];then
@@ -98,16 +60,7 @@ if [[ ${system} == "eos" ]];then
 	item_field="949z"
 	item_call_subfield="a"
 	location_subfield="h"
-
-	tags[1]="z"
-	tags[2]="a"
-	tags[3]="o"
-	tags[4]="b"
-
-	labels[1]="barcode"
-	labels[2]="call#"
-	labels[3]="itype"
-	labels[4]="location"
+	taglabelmap="z:barcode a:call# o:itype b:location"
 fi
 
 if [[ ${system} == "janium" ]];then
@@ -115,38 +68,7 @@ if [[ ${system} == "janium" ]];then
 	item_field="999"
 	item_call_subfield="a"
 	location_subfield="l"
-
-	tags[1]="m"
-	tags[2]="l"
-	tags[3]="r"
-	tags[4]="i"
-	tags[5]="m"
-	tags[6]="t"
-	tags[7]="u"
-	tags[8]="v"
-	tags[9]="x"
-	tags[10]="z"
-	tags[11]="0"
-	tags[12]="r"
-	tags[13]="f"
-	tags[14]="g"
-	tags[15]="k"
-
-	labels[1]="library"
-	labels[2]="location"
-	labels[3]="call"
-	labels[4]="barcode2"
-	labels[5]="barcode"
-	labels[6]="mattype"
-	labels[7]="staff_note"
-	labels[8]="volume"
-	labels[9]="staff_note2"
-	labels[10]="staff_note3"
-	labels[11]="copy"
-	labels[12]="loan_type"
-	labels[13]="note"
-	labels[14]="note_inventory"
-	labels[15]="cat_date"
+	taglabelmap="m:library l:location r:call i:barcode2 m:barcode t:mattype u:staff_note v:volume x:staff_note2 z:staff_note3 0:copy r:loan_type f:note g:note_inventory k:cat_date"
 fi
 
 if [[ ${system} == "koha" ]];then
@@ -154,28 +76,7 @@ if [[ ${system} == "koha" ]];then
 	item_field="952p"
 	item_call_subfield="o"
 	location_subfield="b"
-
-	tags[1]="p"
-	tags[2]="8"
-	tags[3]="o"
-	tags[4]="t"
-	tags[5]="y"
-	tags[6]="g"
-	tags[7]="z"
-	tags[8]="d"
-	tags[9]="b"
-	tags[10]="7"
-
-	labels[1]="barcode"
-	labels[2]="call#prefix"
-	labels[3]="call#"
-	labels[4]="copy"
-	labels[5]="mattype"
-	labels[6]="price"
-	labels[7]="public_note"
-	labels[8]="inventory_date"
-	labels[9]="location"
-	labels[10]="loan_type"
+	taglabelmap="p:barcode 8:call#prefix o:call# t:copy y:mattype g:price z:public_note d:inventory_date b:location 7:loan_type"
 fi
 
 if [[ ${system} == "lc2" ]];then
@@ -184,32 +85,7 @@ if [[ ${system} == "lc2" ]];then
 	item_call_subfield="a"
 	location_subfield="h"
 	bib_mattype_field="380"
-
-	tags[1]="z"
-	tags[2]="a"
-	tags[3]="q"
-	tags[4]="s"
-	tags[5]="c"
-	tags[6]="v"
-	tags[7]="g"
-	tags[8]="d"
-	tags[9]="p"
-	tags[10]="h"
-	tags[11]="x"
-	tags[12]="i"
-
-	labels[1]="barcode"
-	labels[2]="call#"
-	labels[3]="call#suffix"
-	labels[4]="call#suffix2"
-	labels[5]="copy"
-	labels[6]="volume"
-	labels[7]="price"
-	labels[8]="volume_dates"
-	labels[9]="part"
-	labels[10]="location"
-	labels[11]="enum"
-	labels[12]="staff_note"
+	taglabelmap="z:barcode a:call# q:call#suffix s:call#suffix2 c:copy v:volume g:price d:volume_dates p:part h:location x:enum i:staff_note"
 fi
 
 if [[ ${system} == "opals" ]];then
@@ -217,26 +93,7 @@ if [[ ${system} == "opals" ]];then
 	item_field="852p"
 	item_call_subfield="h"
 	location_subfield="b"
-
-	tags[1]="p"
-	tags[2]="k"
-	tags[3]="h"
-	tags[4]="i"
-	tags[5]="m"
-	tags[6]="v"
-	tags[7]="t"
-	tags[8]="3"
-	tags[9]="9"
-
-	labels[1]="barcode"
-	labels[2]="call#prefix"
-	labels[3]="call#"
-	labels[4]="call#"
-	labels[5]="call#suffix"
-	labels[6]="volume"
-	labels[7]="copy"
-	labels[8]="mattype"
-	labels[9]="price"
+	taglabelmap="p:barcode k:call#prefix h:call# i:call# m:call#suffix v:volume t:copy 3:mattype 9:price"
 fi
 
 if [[ ${system}  == "sierra"  ]];then
@@ -246,109 +103,19 @@ if [[ ${system}  == "sierra"  ]];then
 	item_call_subfield="a"
 	location_subfield="l"
 
-	tags[1]="a"
-	tags[2]="b"
-	tags[3]="c"
-	tags[4]="g"
-	tags[5]="i"
-	tags[6]="j"
-	tags[7]="l"
-	tags[8]="m"
-	tags[9]="n"
-	tags[10]="o"
-	tags[11]="p"
-	tags[12]="q"
-	tags[13]="r"
-	tags[14]="s"
-	tags[15]="t"
-	tags[16]="u"
-	tags[17]="v"
-	tags[18]="w"
-	tags[19]="x"
-	tags[20]="y"
-	tags[21]="z"
-
-	labels[1]="call_marc"
-	labels[2]="call_nonmarc"
-	labels[3]="volume"
-	labels[4]="copy"
-	labels[5]="barcode"
-	labels[6]="agency"
-	labels[7]="location"
-	labels[8]="msg"
-	labels[9]="note"
-	labels[10]="icode2"
-	labels[11]="price"
-	labels[12]="imsg"
-	labels[13]="opacmsg"
-	labels[14]="status"
-	labels[15]="itype"
-	labels[16]="totchk"
-	labels[17]="totrenwl"
-	labels[18]="ytdcirc"
-	labels[19]="lycirc"
-	labels[20]="record#item"
-	labels[21]="created"
+	taglabelmap="y:record#item i:barcode l:location o:icode2 t:itype s:status a:call_marc b:call_nonmarc c:volume g:copy j:agency m:msg q:imsg r:opacmsg n:note u:totchk v:totrenwl w:ytdcirc z:created"
 fi
 
 if [[ ${system}  == "sirsi"  ]];then
 	bib_call_field="090"
 	bib_call_fallback="050"
-	identifier="991a"
+	identifier="997a"
 	item_field="999i"
 	item_call_subfield="a"
 	location_subfield="m"
 
-	tags[1]="a"
-	tags[2]="v"
-	tags[3]="w"
-	tags[4]="c"
-	tags[5]="h"
-	tags[6]="i"
-	tags[7]="m"
-	tags[8]="d"
-	tags[9]="e"
-	tags[10]="f"
-	tags[11]="g"
-	tags[12]="j"
-	tags[13]="k"
-	tags[14]="l"
-	tags[15]="n"
-	tags[16]="o"
-	tags[17]="p"
-	tags[18]="q"
-	tags[19]="r"
-	tags[20]="s"
-	tags[21]="t"
-	tags[22]="u"
-	tags[23]="x"
-	tags[24]="z"
+	taglabelmap="i:barcode  D:location G:temp_location X:itype t:mattype 3:volume x:imsg z:opacmsg o:staff_note p:public_note q:checkin_note G:temp_location s:status r:checkout_note e:accession 0:volume n:totalCharges u:acqDate x:itemCat1 z:itemCat2"
 
-	
-	labels[1]="call"
-	labels[2]="volume"
-	labels[3]="callType"
-	labels[4]="copy"
-	labels[5]="holdingCode"
-	labels[6]="barcode"
-	labels[7]="library"
-	labels[8]="catDate"
-	labels[9]="lastActivity"
-	labels[10]="lastCharged"
-	labels[11]="dateInventoried"
-	labels[12]="pieces"
-	labels[13]="status"
-	labels[14]="location"
-	labels[15]="totalCharges"
-	labels[16]="note"
-	labels[17]="price"
-	labels[18]="inHouseCharges"
-	labels[19]="circFlag"
-	labels[20]="permanentFlag"
-	labels[21]="mattype"
-	labels[22]="acqDate"
-	labels[23]="itemCat1"
-	labels[24]="itemCat2"
 fi
 
 if [[ ${system}  == "softlink"  ]];then
@@ -356,24 +123,7 @@ if [[ ${system}  == "softlink"  ]];then
 	item_field="995a"
 	item_call_subfield="k"
 	location_subfield="a"
-
-	tags[1]="a"
-	tags[2]="j"
-	tags[3]="y"
-	tags[4]="Z"
-	tags[5]="h"
-	tags[6]="e"
-	tags[7]="u"
-	tags[8]="J"
-	
-	labels[1]="location"
-	labels[2]="call"
-	labels[3]="barcode"
-	labels[4]="itype"
-	labels[5]="copy"
-	labels[6]="accession"
-	labels[7]="status"
-	labels[8]="note"
+	taglabelmap="a:location j:call y:barcode Z:itype h:copy e:accession u:status J:note"
 fi
 
 if [[ ${system} == "tlc" ]];then
@@ -384,36 +134,11 @@ if [[ ${system} == "tlc" ]];then
 	bib_call_field="090"
 	bib_call_fallback="050"
 	bib_mattype_field="380"
-
-	tags[1]="a"
-	tags[2]="c"
-	tags[3]="g"
-	tags[4]="n"
-	tags[5]="p"
-	tags[6]="i"
-	tags[7]="j"
-	tags[8]="k"
-	tags[9]="q"
-	tags[10]="7"
-	tags[11]="5"
-	tags[11]="x"
-
-	labels[1]="location"
-	labels[2]="call#"
-	labels[3]="barcode"
-	labels[4]="copy"
-	labels[5]="price"
-	labels[6]="volume"
-	labels[7]="enumeration"
-	labels[8]="enumeration_2"
-	labels[9]="staff_note"
-	labels[10]="staff_note2"
-	labels[11]="status"
-	labels[12]="fund"
+	taglabelmap="a:location c:call# g:barcode n:copy p:price i:volume j:enumeration k:enumeration_2 q:staff_note 7:staff_note2 5:status x:fund"
 fi
 
 if [[ ${system} == "virtua" ]];then
-	special[1]="949"
+	special[1]="949" # field "s" is a special function, disable if not used for status
 	identifier="001"
 	item_field="949D"
 	item_call_subfield="a"
@@ -421,35 +146,7 @@ if [[ ${system} == "virtua" ]];then
 	bib_call_field="090"
 	bib_call_fallback="050"
 
-	tags[1]="a"
-	tags[2]="b"
-	tags[3]="6"
-	tags[4]="F"
-	tags[5]="D"
-	tags[6]="X"
-	tags[7]="o"
-	tags[8]="p"
-	tags[9]="q"
-	tags[10]="G"
-	tags[11]="s" # special function, disable if not used for status
-	tags[12]="r"
-	tags[13]="e"
-	tags[14]="0"
-
-	labels[1]="call#"
-	labels[2]="call#cutter"
-	labels[3]="barcode"
-	labels[4]="copy"
-	labels[5]="location"
-	labels[6]="itype"
-	labels[7]="staff_note"
-	labels[8]="public_note"
-	labels[9]="checkin_note"
-	labels[10]="temp_location"
-	labels[11]="status"
-	labels[12]="checkout_note"
-	labels[13]="accession"
-	labels[14]="volume"
+	taglabelmap="a:call# b:call#cutter 6:barcode F:copy D:location X:itype o:staff_note p:public_note q:checkin_note G:temp_location s:status r:checkout_note e:accession 0:volume"
 fi
 
 if [[ ${system} == "wms"  ]];then
@@ -457,20 +154,9 @@ if [[ ${system} == "wms"  ]];then
 	item_field="876p"
 	item_call_subfield=""
 	location_subfield=""
-
-	tags[1]="p"
-	tags[2]="3"
-	tags[3]="x"
-	tags[4]="z"
-
-	labels[1]="barcode"
-	labels[2]="volume"
-	labels[3]="imsg"
-	labels[4]="opacmsg"
+	taglabelmap="p:barcode 3:volume x:imsg z:opacmsg"
 fi
 
-taglist="$(echo ${tags[@]})"
-labellist="$(echo ${labels[@]})"
 speciallist="$(echo ${special[@]})"
 
 echo "Starting processing. Please wait"
@@ -479,28 +165,23 @@ read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
 BEGIN { records_found = 0 
+	num_tags = split(TAGLABELMAP, pairs, " ")
 
-		subfield_regex=SFS"."
-
-		virtua_status_match = "("SFS"s[0-9]+):[0-9;:]+"
-
-      if (length("а") != 2) {
-                badawk = 1
-                printf("Your version of awk does not support  -- you need a version that supports the -b switch\\n")
-                exit
-        } else {
-
-		split(TAGLIST, tags, " ")
-		split(LABELLIST, labels, " ")
-		split(SPECIALLIST, special, " ")
-
-		for (j=1;j<=length(tags);j++) {value=tags[j];tag_index[value]=j}
-
-		num_tags = length(tags)
-
-		required_item_subfield = substr(ITEMFIELD, 4, 1)
-		ITEMFIELD = substr(ITEMFIELD, 1, 3)
+	for (i = 1; i <= num_tags; i++) {
+		split(pairs[i], kv, ":")
+		tags[i] = kv[1]
+		tag_index[tags[i]] = i
+		labels[i] = kv[2]
 	}
+
+	subfield_regex=SFS"."
+
+	virtua_status_match = "("SFS"s[0-9]+):[0-9;:]+"
+
+	split(SPECIALLIST, special, " ")
+
+	required_item_subfield = substr(ITEMFIELD, 4, 1)
+	ITEMFIELD = substr(ITEMFIELD, 1, 3)
 }
 
 function destiny_852() { 
@@ -597,7 +278,7 @@ function extract_subfields() {
 
 function extract_identifiers() {
 
-	tag001=tag004=bibno=bib_call=holdid=callnum=location=""
+	tag001=tag004=bib_subtype=bibno=bib_call=holdid=callnum=location=""
 	tagid = substr(IDENTIFIER, 4, 1)
 
 	for (i=1; i<=directory_length; i=i+12) {
@@ -733,7 +414,7 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
-awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${identifier}" -v ITEMFIELD="${item_field}" -v CALL="${item_call_subfield}" -v CALL_PREFIX="${item_call_prefix}" -v CALL_SUFFIX="${item_call_suffix}" -v BIB_CALL_FIELD="${bib_call_field}" -v BIB_CALL_FALLBACK="${bib_call_fallback}" -v BIB_MATTYPE_FIELD="${bib_mattype_field}" -v LOCATION="${location_subfield}" -v TAGLIST="${taglist}" -v LABELLIST="${labellist}" -v SPECIALLIST="${speciallist}" -v SYSTEM="${system}" -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${identifier}" -v ITEMFIELD="${item_field}" -v CALL="${item_call_subfield}" -v CALL_PREFIX="${item_call_prefix}" -v CALL_SUFFIX="${item_call_suffix}" -v BIB_CALL_FIELD="${bib_call_field}" -v BIB_CALL_FALLBACK="${bib_call_fallback}" -v BIB_MATTYPE_FIELD="${bib_mattype_field}" -v LOCATION="${location_subfield}" -v TAGLABELMAP="${taglabelmap}" -v SPECIALLIST="${speciallist}" -v SYSTEM="${system}" -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
 echo
 
 #rm -f tmp_checkmarc
