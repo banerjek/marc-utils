@@ -159,7 +159,7 @@ fi
 
 speciallist="$(echo ${special[@]})"
 
-echo "Starting processing. Please wait"
+echo "Evaluating file. Please wait."
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
@@ -392,7 +392,7 @@ bib_mattype=substr(leader, 7, 1)
 holdings_type=substr(leader, 8, 1)
 
 if (directory_check == 0) {
-	if (NR == 1) { 
+	if (NR == 1 && FILENAME == "tmp_marcitemextract-1.mrc") { 
 		lineout = "tag001\tbib_no\tholdid\tbib_call\trectype\tbib_mattype"
 		for (i=1;i<=num_tags;i++) {
 			lineout = lineout"\t"labels[i]
@@ -404,17 +404,59 @@ if (directory_check == 0) {
 	extract_items()
 }
 
-if (NR % 1000 == 0){ printf "Records processed: "NR"\r" }
+if (NR % 1000 == 0 && FILENAME == "tmp_marcitemextract-4.mrc" ){ printf "Records processed: "NR*5"\r" }
 
 }
-END { print NR" MARC records have been processed. "numItems" item records were sent to "OUTFILE }
 
 ENDOFAWK
 
-echo -e "${awkscript}" > tmp_checkmarc
-chmod 700 tmp_checkmarc
+echo -e "${awkscript}" > tmp_itemextract
+chmod 700 tmp_itemextract
 
-awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${identifier}" -v ITEMFIELD="${item_field}" -v CALL="${item_call_subfield}" -v CALL_PREFIX="${item_call_prefix}" -v CALL_SUFFIX="${item_call_suffix}" -v BIB_CALL_FIELD="${bib_call_field}" -v BIB_CALL_FALLBACK="${bib_call_fallback}" -v BIB_MATTYPE_FIELD="${bib_mattype_field}" -v LOCATION="${location_subfield}" -v TAGLABELMAP="${taglabelmap}" -v SPECIALLIST="${speciallist}" -v SYSTEM="${system}" -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+numrecs=$(awk -v RS=$'\x1d' 'END{print NR}' "${infile}")
+num_per_file=$(($numrecs / 5 + 1))
+
+echo "Splitting into 5 files to speed processing"
+
+echo "${numrecs} MARC records detecting. Splitting into 5 files to speed processing."
+
+read -r -d '' awkscript << "ENDOFAWK"
+#!/usr/bin/awk -f
+#
+BEGIN { 
+	filecounter = 1
+	counter = 1
+	fname = "tmp_marcitemextract"
+	}
+{
+	if (counter > NUMPERFILE) { 
+		filecounter++
+		counter = 1
+	}
+
+	tmpfile = sprintf("%s-%d.mrc", fname, filecounter)
+	counter++
+	print $0 > tmpfile
+}
+ENDOFAWK
+echo -e "${awkscript}" > tmp_counter
+chmod 700 tmp_counter
+
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v NUMRECS=${numrecs} -v NUMPERFILE=${num_per_file} -f tmp_counter "${infile}"
+
+splitlist=(tmp_marcitemextract-1.mrc tmp_marcitemextract-2.mrc tmp_marcitemextract-3.mrc tmp_marcitemextract-4.mrc tmp_marcitemextract-5.mrc)
+
+for splitfile in ${splitlist[@]};do
+	tempout=${splitfile%????}.seq
+	awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${identifier}" -v ITEMFIELD="${item_field}" -v CALL="${item_call_subfield}" -v CALL_PREFIX="${item_call_prefix}" -v CALL_SUFFIX="${item_call_suffix}" -v BIB_CALL_FIELD="${bib_call_field}" -v BIB_CALL_FALLBACK="${bib_call_fallback}" -v BIB_MATTYPE_FIELD="${bib_mattype_field}" -v LOCATION="${location_subfield}" -v TAGLABELMAP="${taglabelmap}" -v SPECIALLIST="${speciallist}" -v SYSTEM="${system}" -v OUTFILE="${tempout}" -b -f tmp_itemextract "${splitfile}" &
+done
+wait
+
+cat tmp_marcitemextract*seq >> "${outfile}"
+rm -f tmp_marcitemextract*
+
+echo "${numrecs} MARC records have been processed. Item records have been sent to ${outfile}"
 echo
 
-#rm -f tmp_checkmarc
+
+rm -f tmp_itemextract* tmp_counter
