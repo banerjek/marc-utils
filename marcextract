@@ -1,17 +1,13 @@
-if [[ -z $1 || -z $2 ]];then
-	echo "Usage: marcextract [filename] [marcfield] [idtag]"
+if [[ -z $3 ]];then
+	echo "Usage: marcextract [filename] [marcfield1] [marcfield2] [marcfield3] ... [idtag]"
 	echo "Subfield delimiter in MARC is hex 1F"
-	echo
-	echo "By default, 001 will be output with the field. Specify 3 character id tag to specify an alternate identifier (whole field will be output)"
 	echo
 	exit
 else
 	infile="${1}"
-	marctag=${2}
-	idtag="${3}"
-
-	if [[ -z $idtag ]];then idtag="001";fi
-
+	idtag="${@: -1}"
+	shift
+	marctags=("${@:1:$#-1}")
 fi
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
@@ -26,13 +22,40 @@ BEGIN { records_found = 0
 		printf("Your version of awk does not support marcsearch -- you need a version that supports the -b switch\\n")
 		exit
 	}
-
 	id_field = IDTAG
 	id_subfield = ""
-
-	marc_field = substr(MARCTAG, 1, 3)
-	marc_subfield = substr(MARCTAG, 4, 1)
+	split(MARCTAGS, taglist, " ")
 	field_cleaning_regex = "^["FS" ]+|["FS"]+$"
+}
+
+function extract_content() {
+	if (directory_check == 0 && record_id != "") {
+		for (i=1; i<=directory_length; i=i+12) {
+			if (substr(directory, i, 3) == marc_field) {
+			  field_length = substr(directory, i + 3, 4) + 0
+				starting_pos = substr(directory, i + 7, 5)
+			
+				split(field_content, subfields, SFS)
+			
+			   	field_content = substr(record_content, starting_pos, field_length)
+				gsub(field_cleaning_regex, "", field_content)
+				split(field_content, subfields, SFS)
+		
+				if (marc_subfield == "") {
+					print record_id"\t"marc_field"\t"field_content > OUTFILE
+					foundrecs++
+					} else {
+			      		for (subfield in subfields) {
+			        		if (substr(subfields[subfield], 1, 1) == marc_subfield) {
+			           			field_content = substr(subfields[subfield],2)
+											print record_id"\t"marc_field""marc_subfield"\t"field_content > OUTFILE
+											foundrecs++
+			        		}		
+			      		}
+			   	}
+			}
+		}		
+	}
 }
 
 {
@@ -69,7 +92,7 @@ if (directory_check == 0 && record_id == "") {
 			record_id = field_content
 
 			if (id_subfield != "") {
-	      	split(record_id, subfields, SFS)
+	      split(record_id, subfields, SFS)
 	
 				for (subfield = 2; subfield <= length(subfields); subfield++) {
 					if (substr(subfields[subfield], 1, 1) == id_subfield) {
@@ -77,40 +100,19 @@ if (directory_check == 0 && record_id == "") {
 					}
 				break
 				}	
-	     	}
-	     	gsub(/^ *+| +$/, "", record_id)
+	     }
+	     gsub(/^ *+| +$/, "", record_id)
 		} 
 	}
 }
 
-########### extract the content 
-if (directory_check == 0 && record_id != "") {
-	for (i=1; i<=directory_length; i=i+12) {
-		if (substr(directory, i, 3) == marc_field) {
-		   	field_length = substr(directory, i + 3, 4) + 0
-			starting_pos = substr(directory, i + 7, 5)
-		
-			split(field_content, subfields, SFS)
-		
-		   	field_content = substr(record_content, starting_pos, field_length)
-			gsub(field_cleaning_regex, "", field_content)
-			split(field_content, subfields, SFS)
-	
-			if (marc_subfield == "") {
-				print record_id"\t"field_content > OUTFILE
-				foundrecs++
-				} else {
-		      		for (subfield in subfields) {
-		        		if (substr(subfields[subfield], 1, 1) == marc_subfield) {
-		           			field_content = substr(subfields[subfield],2)
-						print record_id"\t"field_content > OUTFILE
-						foundrecs++
-		        		}		
-		      		}
-		   	}
-		}
-	}		
+
+for (t in taglist) {
+	marc_field = substr(taglist[t], 1, 3)
+	marc_subfield = substr(taglist[t], 4, 1)
+	extract_content()
 }
+
 if (NR % 10000 == 0){ printf("Records searched: "NR" Fields found: %d \r"), foundrecs }
 
 }
@@ -120,12 +122,12 @@ END {
 
 ENDOFAWK
 
-echo -e "${awkscript}" > tmp_checkmarc
-chmod 700 tmp_checkmarc
+echo -e "${awkscript}" > tmp_marcextract
+chmod 700 tmp_marcextract
 
 
-awk -v RS=$'\x1d' -v ORS="\n" -v FS=$'\x1e' -v SFS=$'\x1f' -v OFS="\t" -v MARCTAG=${marctag} -v OUTFILE="${outfile}" -v IDTAG="${idtag}" -b -f tmp_checkmarc "${infile}"
+awk -v RS=$'\x1d' -v ORS="\n" -v FS=$'\x1e' -v SFS=$'\x1f' -v OFS="\t" -v MARCTAGS="${marctags[*]}" -v OUTFILE="${outfile}" -v IDTAG="${idtag}" -b -f tmp_marcextract "${infile}"
 echo
 echo
 
-rm -f tmp_checkmarc
+rm -f tmp_marcextract
