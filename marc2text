@@ -7,8 +7,6 @@ echo
 echo "This program generates files that Marcedit can read but which doesn't use dollar signs for subfields or provide mneumonics to increase speed and simplify analysis. If you need those features, use the text2marcedit utility"
 echo
 
-rm -f bad_*.txt
-
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
@@ -30,6 +28,8 @@ BEGIN {
 	directory_check=(directory_length % 12)
 	record_length = length($0) + 0
 
+	if (record_length > 99999) { large = 1 }
+
 	record = "=LDR  "leader
 
 	for (i=1; i<=directory_length; i=i+12) {
@@ -40,7 +40,11 @@ BEGIN {
 		starting_pos = substr(directory, i + 7, 5) + 1
 		field_content = substr(record_content, starting_pos, field_length)
 
-		if (starting_pos > last_pos && ((directory_length + starting_pos + field_length) < 99000)) {
+		if (large == 0) {
+			record = record"\\n="marc_tag"  "field_content
+			last_pos = starting_pos
+		}
+		else if (starting_pos > last_pos && ((directory_length + starting_pos + field_length) < 99000)) {
 			record = record"\\n="marc_tag"  "field_content
 			last_pos = starting_pos
 		} else {
