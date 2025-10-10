@@ -25,7 +25,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marcsearch**](#marcsearch) -- Extract MARC records containing a search pattern
 * [**marcslice**](#marcslice) -- Extract sequence of records from a MARC file
 * [**marcsort**](#marcsort) -- Sort MARC fields within records 
-* [**marcsortrecords*](#marcsortrecords) -- Sort MARC files by a single field
+* [**marcsortrecords**](#marcsortrecords) -- Sort MARC files by a single field
 * [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
 * [**marctail**](#marctail) -- Extract last part of MARC files 
 * [**tag**](#tag) -- Extract single MARC tag
