@@ -94,8 +94,8 @@ awk -v ORS='\n' -v FS=$'\x1e' -v RS=$'\x1d' -v SFS=$'\x1f' -v IDTAG=${idtag} -v 
 echo
 echo
 
-echo "Sorting MARC file. Please be patient"
-pv "${unsorted}" | sort -k1.1,1.100 > tmp_sorted
+echo "Sorting MARC file. For large files, this can appear to hang for several minutes after progress meter has stopped"
+pv "${unsorted}" | sort -k1,1 -t $'\x1d' > tmp_sorted
 
 echo "Post processing sorted file. Please be patient"
 pv tmp_sorted |sed 's/^.*\x1d//' |tr '\n' $'\x1d' > "${sorted}"
