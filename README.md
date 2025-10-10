@@ -24,7 +24,8 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marcsample**](#marcsample) -- Extract at least one record with every field/subfield combination from a MARC stream and delivers field/subfield counts for the entire file 
 * [**marcsearch**](#marcsearch) -- Extract MARC records containing a search pattern
 * [**marcslice**](#marcslice) -- Extract sequence of records from a MARC file
-* [**marcsort**](#marcsort) -- Sort MARC files by field
+* [**marcsort**](#marcsort) -- Sort MARC fields within records 
+* [**marcsortrecords*](#marcsortrecords) -- Sort MARC files by a single field
 * [**marcsplit**](#marcsplit) -- Split large MARC file into many small files
 * [**marctail**](#marctail) -- Extract last part of MARC files 
 * [**tag**](#tag) -- Extract single MARC tag
@@ -200,7 +201,13 @@ Output is to stdout. If you wish to view in text, run it through the |text filte
 **Usage:** *marcsort [filename] *   
 **Example:** *marcsort mrc_00\*.mrc*   
 
-Sort MARC records in tag order
+Sort tags within MARC records
+
+## marcsortrecords
+**Usage:** *marcsort [filename] [tag]   
+**Example:** *marcsortrecords marcfile.mrc 001*   
+
+Sort MARC records by a single field
 
 ## marcsplit
 **Usage:** *marcsplit [filename] [num_records]*   
