@@ -98,7 +98,7 @@ echo "Sorting MARC file. For large files, this can appear to hang for several mi
 pv "${unsorted}" | sort -k1,1 -t $'\x1d' > tmp_sorted
 
 echo "Post processing sorted file. Please be patient"
-pv tmp_sorted |sed 's/^.*\x1d//' |tr '\n' $'\x1d' > "${sorted}"
+pv tmp_sorted |cut -d $'\x1d' -f2 |tr '\n' $'\x1d' > "${sorted}"
 
 echo "Sorted records were output to ${sorted}                     " 
 
