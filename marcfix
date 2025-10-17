@@ -16,7 +16,7 @@ if [[ -z $processType ]];then echo "No files or directory matching the input can
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
-BEGIN { goodrecs=badrecs=bad001=badleader=baddirectory=bibcount=holdingscount=authoritycount=0
+BEGIN { goodrecs=badrecs=deletedrecs=bad001=badleader=baddirectory=bibcount=holdingscount=authoritycount=0
 	subfield_0 = SFS"0" 
 	subfield_9 = SFS"9"
 }
@@ -64,6 +64,7 @@ function check_leader() {
 
 	status_indicator=substr(leader, 6, 1)
 	if (status_indicator !~ /[acdnopsx]/) { $0 = substr($0, 1, 5)"c"substr($0, 7); }
+	if (status_indicator == "d") { deletedrecs++ }
 
 	control_indicator=substr(leader, 9, 1)
 	if (control_indicator != "a" && control_indicator != " ") { $0 = substr($0, 1, 8)" "substr($0, 10) }
@@ -121,7 +122,8 @@ if ( goodrec == 1 && badsubfields == 1){ goodrecs++;badsubfieldtotal++;badsubfie
 if ( goodrec == 1 && good_directory == 1 && good_length == 1 && foundbad == 0 && found008 == 1 ){ goodrecs++;print $0 > OUTFILE }
 
 if (foundbad == 1) { badrecs++ }
-if ( badrecs > 0 ){ badtext=baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext""badsubfieldstext""badtagtext }
+if (deletedrecs > 0) { deletedrecstext = " (deleted recs: "deletedrecs")"
+if ( badrecs > 0 ){ badtext=baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext""badsubfieldstext""badtagtext""deletedrecstext }
 
 if (rectype == "bib") { bibcount++ }
 if (rectype == "holdings") { holdingscount++ }
