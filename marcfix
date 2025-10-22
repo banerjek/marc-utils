@@ -175,6 +175,7 @@ process_file() {
 	
 	echo "Detecting and removing nulls and converting carriage returns, newlines, and tabs to spaces"
 	pv "${marcfile}.tmp" | tr -d '\000' | tr '\b\n\r\t' ' ' > "${marcfile}"
+	rm -f "${marcfile}.tmp"
 	echo 
 
 	# null identifiers
