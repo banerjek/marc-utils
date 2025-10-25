@@ -1,0 +1,34 @@
+infile="${1}"
+
+fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
+
+finalfile="${fileroot}_fixedencoding.mrc"
+
+rm -f "${finalfile}" 
+rm -f tmp_marcfixenc*
+
+if [[ -z ${infile} ]];then echo "You must supply a file name. Usage: marcfixeconding [filename]";fi
+
+if [[ ! $(which uconv |grep uconv) ]];then
+	echo 
+	echo "You must install uconv to use this utility"
+	echo "sudo apt install icu-devtool"
+	echo
+	exit
+fi
+
+if [[ -z "${infile}" ]];then
+	echo "This tool converts decomposed UTF8 MARC files to precomposed"
+	echo "It performs no checks or repairs -- run marcfix first"
+	echo 
+	echo "Usage: marcfixeconding [filename]"
+	echo
+	exit
+fi
+
+marc2text "${infile}"
+uconv -i -f utf-8 -t utf-8 "${fileroot}.txt" "${fileroot}.txt" > "${fileroot}_fixedencoding.txt"
+text2marc "${fileroot}_fixedencoding.txt"
+
+echo "A fixed file has been sent to ${fileroot}_fixedencoding.mrc"
+rm -f "${fileroot}" "${fileroot}.txt" "${fileroot}_fixedencoding.txt"
