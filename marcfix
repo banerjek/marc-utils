@@ -51,7 +51,6 @@ function check_fields() {
 function check_leader() {
 	leader=substr($0,1,24)
 	baseaddress=substr(leader,13, 5) + 0
-	utf8=substr(leader,10, 1)
 	directory=substr($0,25, baseaddress - 25)
 	directory_length=length(directory) 
 	directory_check=(directory_length % 12)
@@ -68,6 +67,9 @@ function check_leader() {
 
 	control_indicator=substr(leader, 9, 1)
 	if (control_indicator != "a" && control_indicator != " ") { $0 = substr($0, 1, 8)" "substr($0, 10) }
+
+	utf8=substr(leader,10, 1)
+	if (utf8 != "a" && utf8 != " ") { $0 = substr($0, 1, 9)"a"substr($0, 11) }
 
 	form_indicator=substr(leader, 17, 1)
 	if (form_indicator !~ /[ acinu]/) { $0 = substr($0, 1, 8)" "substr($0, 10) }
