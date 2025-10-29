@@ -255,6 +255,14 @@ function build_mfhd() {
 					location=i
 					printf ("Location found in "$i"\\n")
 					break
+				case "permanentlocation":
+					location=i
+					printf ("Location found in "$i"\\n")
+					break
+				case "permanentphysicallocation":
+					location=i
+					printf ("Location found in "$i"\\n")
+					break
 				case "callmarc":
 					callNumPos=i
 					printf ("Call number found in "$i"\\n")
