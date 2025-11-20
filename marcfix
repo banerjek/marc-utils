@@ -33,8 +33,8 @@ function check_fields() {
 	if (index($0, BAD_SUBFIELD_REGEX1) > 0) { badsubfields = 1 }
 
 	## Look for wrong number of indicators
-	if (index($0, BAD_INDICATOR_REGEX1) > 0){print "bad indicators"; badindicators = 1 }
-	if (index($0, BAD_INDICATOR_REGEX2) > 0){print "bad indicators"; badindicators = 1 }
+	if (index($0, BAD_INDICATOR_REGEX1) > 0){ badindicators = 1 }
+	if (index($0, BAD_INDICATOR_REGEX2) > 0){ badindicators = 1 }
 
 	if (directory ~ /[^0-9A-Z]/){directory_check = 1;good_directory = 0}
 
