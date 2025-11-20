@@ -19,6 +19,8 @@ read -r -d '' awkscript << "ENDOFAWK"
 BEGIN { goodrecs=badrecs=deletedrecs=bad001=badleader=baddirectory=bibcount=holdingscount=authoritycount=0
 	subfield_0 = SFS"0" 
 	subfield_9 = SFS"9"
+	BAD_INDICATOR_REGEX1=FS""SFS
+	BAD_INDICATOR_REGEX2=FS"."SFS
 }
 function check_fields() {
 	## get rid of bad subfield zeros that break links
@@ -28,7 +30,11 @@ function check_fields() {
 	if (index($0, BAD_SUBFIELD_REGEX1) > 0) { badsubfields = 1 }
 
 	## Look for invalid subfields
-	if (index($0, BAD_SUBFIELD_REGEX2) > 0) { badsubfields = 1 }
+	if (index($0, BAD_SUBFIELD_REGEX1) > 0) { badsubfields = 1 }
+
+	## Look for wrong number of indicators
+	if (index($0, BAD_INDICATOR_REGEX1) > 0){print "bad indicators"; badindicators = 1 }
+	if (index($0, BAD_INDICATOR_REGEX2) > 0){print "bad indicators"; badindicators = 1 }
 
 	if (directory ~ /[^0-9A-Z]/){directory_check = 1;good_directory = 0}
 
@@ -97,7 +103,7 @@ function check_leader() {
 }
 {
 goodrec=good_directory=good_length=good_tag=1
-found004=found008=found245=override245=oversized=badsubfields=0
+found004=found008=found245=override245=oversized=badsubfields=badindicators=0
 
 check_leader()
 check_fields()
@@ -121,11 +127,13 @@ if ( good_tag == 0 && foundbad == 0) { " (Valid records with nonnumeric tags: "b
 
 if ( goodrec == 1 && badsubfields == 1){ goodrecs++;badsubfieldtotal++;badsubfieldstext = " (Bad subfields: "badsubfieldtotal")";foundbad = 1; print $0 > "tmp_"rectype"_badsubfields.mrc" }
 
+if ( goodrec == 1 && badindicators == 1){ goodrecs++;badsubfieldtotal++;badindicatorstext = " (Bad indicators: "badsubfieldtotal")";foundbad = 1; print $0 > "tmp_"rectype"_badindicators.mrc" }
+
 if ( goodrec == 1 && good_directory == 1 && good_length == 1 && foundbad == 0 && found008 == 1 ){ goodrecs++;print $0 > OUTFILE }
 
 if (foundbad == 1) { badrecs++ }
 if (deletedrecs > 0) { deletedrecstext = " (deleted recs: "deletedrecs")" }
-if ( badrecs > 0 ){ badtext=baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext""badsubfieldstext""badtagtext""deletedrecstext }
+if ( badrecs > 0 ){ badtext=baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext""badindicatorstext""badsubfieldstext""badtagtext""deletedrecstext }
 
 if (rectype == "bib") { bibcount++ }
 if (rectype == "holdings") { holdingscount++ }
@@ -183,8 +191,9 @@ process_file() {
 	# null identifiers
 	bad_subfield_regex1=$'\x1f'[0az]$'\x1e'
 	bad_subfield_regex2=$'\x1f'[^0a-z]
+	bad_indicator_regex=$'\x1e(\x1f|.\x1f)'
 
-	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX1=${bad_subfield_regex1} -v BAD_SUBFIELD_REGEX2=${bad_subfield_regex2} -b -f tmp_checkmarc "${marcfile}"
+	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX1=${bad_subfield_regex1} -v BAD_SUBFIELD_REGEX2=${bad_subfield_regex2} -v BAD_INDICATOR_REGEX=${bad_indicator_regex} -b -f tmp_checkmarc "${marcfile}"
 	sleep 1
 	
 	ls bad_*"${fileroot}" 2> /dev/null
@@ -204,6 +213,17 @@ if [[ $processType == "file" ]];then
 			cat ${temproot}.mrc  >> "${fileroot}_bib_fixed.mrc"
 			rm -f ${temproot}.*
 			echo "Bib records lacking 008 were fixed and appended to ${fileroot}_bib_fixed.mrc"
+		fi
+		
+		temproot="tmp_bib_badindicators"
+		if [[ -f ${temproot}.mrc ]];then
+			marc2text ${temproot}.mrc 
+			awk '{if($0~/^=([1-9]|0[1-9])/){if(substr($0,7,1)=="\037")$0=substr($0,1,6)"  "substr($0,7);else if(substr($0,8,1)=="\037")$0=substr($0,1,7)" "substr($0,8)};print $0}' ${temproot}.txt > ${temproot}1.txt
+			mv ${temproot}1.txt ${temproot}.txt
+			text2marc ${temproot}.txt
+			cat ${temproot}.mrc  >> "${fileroot}_bib_fixed.mrc"
+			rm -f ${temproot}.*
+			echo "Bib records with bad indicators were fixed and appended to ${fileroot}_bib_fixed.mrc"
 		fi
 		
 		temproot="tmp_bib_badsubfields"
