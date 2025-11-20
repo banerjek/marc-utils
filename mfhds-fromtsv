@@ -3,10 +3,14 @@ infile="${1}"
 if [[ -z ${infile} ]];then echo "You must supply a file name for a tab delimited file\nYou will need to modify the fields in the awk script to match the headers of your input file";fi
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
+head -1 "${infile}" |grep -q "PortfolioURL" && portfoliofile=1
 
 if [[ "${fileroot}" =~ [Ii}[Tt][Ee][Mm] ]];then
 	echo -e "\nItem file detected -- ignoring note fields\n"
 	outfile="mfhds_fromitems.mrc"
+elif [[ portfoliofile -eq 1 ]];then
+	echo -e "\nAlma portfolio file detected -- Only records containing URLs will be processed\n"
+	outfile="mfhds_fromportfolios.mrc"
 else
 	echo -e  "\nCheckin file assumed. Place the string \"item\" in your source file name if this is not intended\n"
 	outfile="mfhds_fromcheckins.mrc"
@@ -19,6 +23,7 @@ BEGIN {
 	record_template="=LDR  00159cx  a22000733  4500"FS"=001  HOLDINGSID"FS"=004  BIBID"FS"=008  9810090p    8   4001aueng0000000"FS
 
 	#template_852="=852   CALLTYPE"SFS"bLOCATION"SFS"kCALLPREFIX"SFS"hCALLVALUE"SFS"mCALLSUFFIX"
+	#template_856="=856  40"SFS"aELECTRONICLOCATION"SFS"yLINKTEXT"
 	#######
 	# 0 = LC
 	# 1 = DDC
@@ -53,6 +58,7 @@ function build_mfhd() {
 	record_counter++
 
 	text_852 = ""
+	text_856 = ""
 	text_mfhd = "=LDR  00159cx  a22000733  4500"OFS"=001  "holdId""OFS"=004  "$bibId""OFS"=008  9810090p    8   4001aueng0000000"
 
 	if (callType > 1) {
@@ -101,7 +107,14 @@ function build_mfhd() {
 		$marc852 = gensub(alma_subfield, SFS"\\\1", "g", $marc852)
 		sub(not_delim, "", $marc852)
 		text_852 = text_852""$marc852 
-	} else { 
+	} else if ( portfoliofile == 1) { 
+		if (linktext > 0 && linktext ~ /[a-zA-Z]/) { linkdisplay = $linktext } else { linkdisplay = "Online access" }
+		text_852="=852    "SFS"b"defaultlocation""SFS"h"
+		text_856="=856  40"SFS"u"$electroniclocation""SFS"y"linkdisplay
+		text_852=text_852""OFS""text_856
+	} else {
+		if (callPrefix > 0) {CALLPREFIX = $callPrefix}
+		if (callSuffix > 0) {CALLSUFFIX = $callPrefix}
 		text_852="=852   "callNumberType""SFS"b"$location""SFS"k"CALLPREFIX""SFS"h"callNum""SFS"m"CALLSUFFIX
 	}
 
@@ -263,6 +276,17 @@ function build_mfhd() {
 					location=i
 					printf ("Location found in "$i"\\n")
 					break
+				case "portfoliourl":
+					electroniclocation=i
+					location=i
+					portfoliofile=1
+					printf ("Electronic location found in "$i" -- location code will be set to \"electronic\"\\n")
+					defaultlocation = "electronic"
+					break
+				case "electroniccollectionpublicname":
+					linktext=i
+					printf ("Link text found in "$i"\\n")
+					break
 				case "callmarc":
 					callNumPos=i
 					printf ("Call number found in "$i"\\n")
@@ -422,7 +446,7 @@ function build_mfhd() {
 
 	if (! bibId) {  printf ("\\nNo valid bib ID field could be found\\n"); exit }
 
-	if (alma_source == 0) {
+	if (alma_source == 0 && defaultlocation == "") {
 		if (! location ) {  printf ("\\nNo valid location field could be found\\n"); exit }
 		if (! callNumPos && ! callNumFallback ) {  emptyCall = 1 } else { emptyCall = 0 }
 		if (! callNumPos && callNumFallback > 0 ) { callNumPos = callNumFallback; callNumFallback = "" }
@@ -443,10 +467,16 @@ function build_mfhd() {
 
 	gsub(/"/, "", $0) 
 
-	if (alma_source == 0) {
+	if (alma_source == 0 && portfoliofile == 0) {
 		gsub(/^ */, "", $location) 
 		gsub(/ *$/, "", $location) 
-	
+		id_location = $location
+	}
+	if (portfoliofile == 1) {
+		emptyCall = 1
+		sub(/^.*http/, "http", $electroniclocation) 
+		id_location = $electroniclocation
+		if (substr($electroniclocation, 1, 4) == "http") { goodurl = 1 } else { goodurl = 0 }
 	}
 
 	if (emptyCall == 0) {
@@ -456,10 +486,15 @@ function build_mfhd() {
 		if (NR == 1) { callNum = "callNum" } else { callNum = "" }
 	}
 
-	if (! holdIdpos) {holdId = $bibId""$location""callNum; gsub(/[^a-zA-Z0-9]/, "", holdId)} else { holdId = $holdIdpos }
+	if (! holdIdpos) {holdId = $bibId""id_location""callNum; gsub(/[^a-zA-Z0-9]/, "", holdId)} else { holdId = $holdIdpos }
 
-
-	build_mfhd()
+	if (portfoliofile == 0) {
+		build_mfhd()
+	} else {
+		if (goodurl == 1) {
+			build_mfhd()
+		}
+	}
 }
 END { 
 	if (badawk != 1) {
