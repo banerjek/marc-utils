@@ -30,7 +30,7 @@ function check_fields() {
 	if ($0 ~ BAD_SUBFIELD_REGEX1){ badsubfields = 1 }
 
 	## Look for invalid subfields
-	if ($0 ~ BAD_SUBFIELD_REGEX1){ badsubfields = 1 }
+	if ($0 ~ BAD_SUBFIELD_REGEX2){ badsubfields = 1 }
 
 	## Look for wrong number of indicators
 	if ($0 ~ BAD_INDICATOR_REGEX1){ badindicators = 1 }
