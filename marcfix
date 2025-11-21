@@ -27,14 +27,14 @@ function check_fields() {
 	gsub(subfield_9, subfield_0, $0)	
 
 	## Look for null identifiers
-	if (index($0, BAD_SUBFIELD_REGEX1) > 0) { badsubfields = 1 }
+	if ($0 ~ BAD_SUBFIELD_REGEX1){ badsubfields = 1 }
 
 	## Look for invalid subfields
-	if (index($0, BAD_SUBFIELD_REGEX1) > 0) { badsubfields = 1 }
+	if ($0 ~ BAD_SUBFIELD_REGEX1){ badsubfields = 1 }
 
 	## Look for wrong number of indicators
-	if (index($0, BAD_INDICATOR_REGEX1) > 0){ badindicators = 1 }
-	if (index($0, BAD_INDICATOR_REGEX2) > 0){ badindicators = 1 }
+	if ($0 ~ BAD_INDICATOR_REGEX1){ badindicators = 1 }
+	if ($0 ~ BAD_INDICATOR_REGEX2){ badindicators = 1 }
 
 	if (directory ~ /[^0-9A-Z]/){directory_check = 1;good_directory = 0}
 
