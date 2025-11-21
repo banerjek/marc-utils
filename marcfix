@@ -48,17 +48,17 @@ function check_fields() {
 			if (tag == "008") {found008 = 1}
 			if (tag == "245") {override245=found245=1;rectype="bib"}
 			if (tag ~ /[A-Z]/) {
-				good_tag=0
-				if (!(tag in tag_seen)) {
+				if (!tag_seen[tag]) {
 					tag_count[tag]++
 					tag_seen[tag] = 1
+					if (good_tag == 1) { bad_tag++; good_tag = 0 }
 				}					
 			}
 		}
-	delete tag_seen
 	} else {
 		good_directory = 0
 	}
+	delete tag_seen
 }
 
 function check_leader() {
@@ -130,7 +130,7 @@ if (rectype == "bib") {
 	if ( found245 == 0 && foundbad == 0){ print $0 > "bad_missing245_"rectype"_"FILEROOT;bad245++;bad245text = " (245: "bad245")";foundbad = 1 }
 }
 
-if ( good_tag == 0 && foundbad == 0) { " (Valid records with nonnumeric tags: "badtag")" }
+if ( good_tag == 0 && goodrec == 1) { badtagtext = "(Nonnumeric tags: "bad_tag")" }
 
 if ( goodrec == 1 && badsubfields == 1){ goodrecs++;badsubfieldtotal++;badsubfieldstext = " (Bad subfields: "badsubfieldtotal")";foundbad = 1; print $0 > "tmp_"rectype"_badsubfields.mrc" }
 
@@ -140,13 +140,13 @@ if ( goodrec == 1 && good_directory == 1 && good_length == 1 && foundbad == 0 &&
 
 if (foundbad == 1) { badrecs++ }
 if (deletedrecs > 0) { deletedrecstext = " (deleted recs: "deletedrecs")" }
-if ( badrecs > 0 ){ badtext=baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext""badindicatorstext""badsubfieldstext""badtagtext""deletedrecstext }
+if ( badrecs > 0 || bad_tag > 0){badtext=badtagtext""baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext""badindicatorstext""badsubfieldstext""deletedrecstext }
 
 if (rectype == "bib") { bibcount++ }
 if (rectype == "holdings") { holdingscount++ }
 if (rectype == "authority") { authoritycount++ }
 
-if (NR % 10000 == 0){ printf "Bib: %d Holdings: %d Authority: %s Bad: %d Issues: %s\r", bibcount, holdingscount, authoritycount, badrecs, badtext }
+if (NR % 10000 == 0){ printf "Bib: %d Holdings: %d Authority: %d Bad: %d Issues: %s\r", bibcount, holdingscount, authoritycount, badrecs, badtext }
 
 }
 END { 
@@ -164,13 +164,13 @@ printf "Bib records: %d Holdings records: %d Authority records : %s             
 print bibmsg""holdingsmsg""authoritymsg""
 
 count = 0
-for (t in tag_seen) {
+for (t in tag_count) {
 	count++
 }
 if (count > 0){
 	printf "The following nonnumeric tags were detected followed by the number of records that contained them\\n"		
-  for (t in tag_seen) {
- 	  printf "%s : %d\\n", k, tag_seen[t]
+  for (t in tag_count) {
+ 	  printf "%s : %d\\n", t, tag_count[t]
    }
 }
 
