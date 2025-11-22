@@ -134,7 +134,7 @@ if ( good_tag == 0 && goodrec == 1) { badtagtext = "(Nonnumeric tags: "bad_tag")
 
 if ( goodrec == 1 && badsubfields == 1){ goodrecs++;badsubfieldtotal++;badsubfieldstext = " (Bad subfields: "badsubfieldtotal")";foundbad = 1; print $0 > "tmp_"rectype"_badsubfields.mrc" }
 
-if ( goodrec == 1 && badindicators == 1){ goodrecs++;badsubfieldtotal++;badindicatorstext = " (Bad indicators: "badsubfieldtotal")";foundbad = 1; print $0 > "tmp_"rectype"_badindicators.mrc" }
+if ( goodrec == 1 && badindicators == 1){ goodrecs++;badindicatortotal++;badindicatorstext = " (Bad indicators: "badindicatortotal")";foundbad = 1; print $0 > "tmp_"rectype"_badindicators.mrc" }
 
 if ( goodrec == 1 && good_directory == 1 && good_length == 1 && foundbad == 0 && found008 == 1 ){ goodrecs++;print $0 > OUTFILE }
 
@@ -208,7 +208,7 @@ process_file() {
 
 	# null identifiers
 	bad_subfield_regex1=$'\x1f'[0az]$'\x1e'
-	bad_subfield_regex2=$'\x1f'[^0a-z]
+	bad_subfield_regex2=$'\x1f'[^0-9a-z]
 
 	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX1=${bad_subfield_regex1} -v BAD_SUBFIELD_REGEX2=${bad_subfield_regex2} -b -f tmp_checkmarc "${marcfile}"
 	sleep 1
