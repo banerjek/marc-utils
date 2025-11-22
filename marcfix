@@ -245,7 +245,7 @@ if [[ $processType == "file" ]];then
 		temproot="tmp_bib_badsubfields"
 		if [[ -f ${temproot}.mrc ]];then
 			marc2text ${temproot}.mrc 
-			sed -i '/^=[0167]......\x1f[0az] *$/d' ${temproot}.txt
+			sed -iE 's/\x1F[^a-z0-9][^\x1F]*//g;/^=[0167]......\x1f[0az] *$/d' ${temproot}.txt
 			text2marc ${temproot}.txt
 			cat ${temproot}.mrc  >> "${fileroot}_bib_fixed.mrc"
 			rm -f ${temproot}.*
