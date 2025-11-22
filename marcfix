@@ -19,8 +19,7 @@ read -r -d '' awkscript << "ENDOFAWK"
 BEGIN { goodrecs=badrecs=deletedrecs=bad001=badleader=baddirectory=bibcount=holdingscount=authoritycount=0
 	subfield_0 = SFS"0" 
 	subfield_9 = SFS"9"
-	BAD_INDICATOR_REGEX1=FS""SFS
-	BAD_INDICATOR_REGEX2=FS"."SFS
+	BAD_INDICATOR_REGEX=FS".?"SFS
 }
 function check_fields() {
 	## get rid of bad subfield zeros that break links
@@ -33,8 +32,7 @@ function check_fields() {
 	if ($0 ~ BAD_SUBFIELD_REGEX2){ badsubfields = 1 }
 
 	## Look for wrong number of indicators
-	if ($0 ~ BAD_INDICATOR_REGEX1){ badindicators = 1 }
-	if ($0 ~ BAD_INDICATOR_REGEX2){ badindicators = 1 }
+	if ($0 ~ BAD_INDICATOR_REGEX){ badindicators = 1 }
 
 	if (directory ~ /[^0-9A-Z]/){directory_check = 1;good_directory = 0}
 
