@@ -1,6 +1,6 @@
 # sirsi was inadvertantly modified to accommodate NALIS -- must be modified
 
-knownsystems=("absysnet" "destiny" "eos" "janium" "koha" "lc2" "opals" "sierra" "sirsi" "softlink" "tlc" "tinycat" "virtua" "wms")
+knownsystems=("absysnet" "aleph" "destiny" "eos" "janium" "koha" "lc2" "opals" "sierra" "sirsi" "softlink" "tlc" "tinycat" "virtua" "wms")
 
 if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] "
@@ -43,6 +43,13 @@ if [[ ${system} == "absysnet" ]];then
 	item_call_subfield="r5a"
 	location_subfield="h"
 	taglabelmap="a:copy d:loantype e:subject f:barcode k:call# s:mattype u:location"
+fi
+
+if [[ ${system} == "aleph" ]];then
+	identifier="001"
+	item_field="LKRb"
+	location_subfield="l"
+	taglabelmap="a:link_type b:sysno l:library r:marc_tag s:order_sequence v:volume y:year i:enumeration p:part m:note1 n:note2" 
 fi
 
 if [[ ${system} == "destiny" ]];then
@@ -128,12 +135,12 @@ fi
 
 if [[ ${system} == "tinycat" ]];then
 	identifier="001"
-	item_field="952o"
-	item_call_subfield="o"
-	location_subfield="2"
+	item_field="991b"
+	item_call_subfield="h"
+	location_subfield="b"
 	bib_call_field="090"
 	bib_call_fallback="050"
-	taglabelmap="2:location o:call# p:barcode"
+	taglabelmap="b:location h:call# p:barcode"
 fi
 
 if [[ ${system} == "tlc" ]];then
