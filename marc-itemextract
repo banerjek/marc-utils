@@ -47,7 +47,7 @@ fi
 
 if [[ ${system} == "aleph" ]];then
 	identifier="001"
-	item_field="LKRb"
+	item_field="LKRa"
 	location_subfield="l"
 	taglabelmap="a:link_type b:sysno l:library r:marc_tag s:order_sequence v:volume y:year i:enumeration p:part m:note1 n:note2" 
 fi
