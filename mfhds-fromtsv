@@ -105,8 +105,9 @@ function build_mfhd() {
 	if (marc852 > 0) { 
 		if (NR == 1) { next }
 		$marc852 = gensub(alma_subfield, SFS"\\\1", "g", $marc852)
+		ind1=substr($marc852, 4, 1)
 		sub(not_delim, "", $marc852)
-		text_852 = text_852""$marc852 
+		text_852 = "=852  "ind1" "text_852""$marc852 
 	} else if ( portfoliofile == 1) { 
 		if (linktext > 0 && linktext ~ /[a-zA-Z]/) { linkdisplay = $linktext } else { linkdisplay = "Online access" }
 		text_852="=852    "SFS"b"defaultlocation""SFS"h"
@@ -256,6 +257,12 @@ function build_mfhd() {
 					bibId=i
 					printf ("Bib ID found in "$i"\\n")
 					break
+				case "oclcnumber":
+					if (bibId == 0) {
+						bibId=i
+						printf ("Bib ID found in "$i"\\n")
+					}
+					break
 				case "loc":
 					location=i
 					printf ("Location found in "$i"\\n")
@@ -265,6 +272,14 @@ function build_mfhd() {
 					printf ("Location found in "$i"\\n")
 					break
 				case "locationcode":
+					location=i
+					printf ("Location found in "$i"\\n")
+					break
+				case "itempermanentlocation":
+					location=i
+					printf ("Location found in "$i"\\n")
+					break
+				case "itempermanentshelvinglocation":
 					location=i
 					printf ("Location found in "$i"\\n")
 					break
