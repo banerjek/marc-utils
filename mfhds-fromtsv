@@ -233,27 +233,13 @@ function build_mfhd() {
 					alma_source = 1
 					template_852="=852   0"
 					break
-				case "bibno":
-					bibId=i
-					printf ("Bib ID found in "$i"\\n")
-					break
 				case "bibid":
-					bibId=i
-					printf ("Bib ID found in "$i"\\n")
-					break
+				case "bibno":
 				case "mmsid":
-					bibId=i
-					printf ("Bib ID found in "$i"\\n")
-					break
 				case "mmsrecordid":
-					bibId=i
-					printf ("Bib ID found in "$i"\\n")
-					break
-				case "recordbibliographic":
-					bibId=i
-					printf ("Bib ID found in "$i"\\n")
-					break
 				case "recordbiblio":
+				case "recordbibliographic":
+				case "recordnumberbibliographic":
 					bibId=i
 					printf ("Bib ID found in "$i"\\n")
 					break
@@ -263,30 +249,12 @@ function build_mfhd() {
 						printf ("Bib ID found in "$i"\\n")
 					}
 					break
-				case "loc":
-					location=i
-					printf ("Location found in "$i"\\n")
-					break
-				case "location":
-					location=i
-					printf ("Location found in "$i"\\n")
-					break
-				case "locationcode":
-					location=i
-					printf ("Location found in "$i"\\n")
-					break
 				case "itempermanentlocation":
-					location=i
-					printf ("Location found in "$i"\\n")
-					break
 				case "itempermanentshelvinglocation":
-					location=i
-					printf ("Location found in "$i"\\n")
-					break
+				case "loc":
+				case "location":
+				case "locationcode":
 				case "permanentlocation":
-					location=i
-					printf ("Location found in "$i"\\n")
-					break
 				case "permanentphysicallocation":
 					location=i
 					printf ("Location found in "$i"\\n")
@@ -302,37 +270,19 @@ function build_mfhd() {
 					linktext=i
 					printf ("Link text found in "$i"\\n")
 					break
-				case "callmarc":
-					callNumPos=i
-					printf ("Call number found in "$i"\\n")
-					break
 				case "call":
-					callNumPos=i
-					printf ("Call number found in "$i"\\n")
-					break
+				case "callitem":
+				case "callmarc":
 				case "callno":
-					callNumPos=i
-					printf ("Call number found in "$i"\\n")
-					break
 				case "callnumber":
 					callNumPos=i
 					printf ("Call number found in "$i"\\n")
 					break
+				case "callnumbertype":
 				case "callnumtype":
-					callType=i
-					printf ("Call number type found in "$i"\\n")
-					break
 				case "calltype":
 					callType=i
 					printf ("Call number type found in "$i"\\n")
-					break
-				case "callnumbertype":
-					callType=i
-					printf ("Call number type found in "$i"\\n")
-					break
-				case "callitem":
-					callNumPos=i
-					printf ("Call number found in "$i"\\n")
 					break
 				case "callprefix":
 					callPrefix=i
@@ -342,49 +292,22 @@ function build_mfhd() {
 					callSuffix=i
 					printf ("Call number suffix found in "$i"\\n")
 					break
-				case "callbibliographic":
-					callNumFallback=i
-					printf ("Call number fallback found in "$i"\\n")
-					break
 				case "bibcall":
-					callNumFallback=i
-					printf ("Call number fallback found in "$i"\\n")
-					break
 				case "callbiblio":
-					callNumFallback=i
-					printf ("Call number fallback found in "$i"\\n")
-					break
+				case "callbibliographic":
 				case "callnonmarc":
 					callNumFallback=i
 					printf ("Call number fallback found in "$i"\\n")
 					break
 				case "libhas":
-					libHas=i
-					printf ("Lib has was found in "$i"\\n")
-					break
 				case "libhascheckin":
-					libHas=i
-					printf ("Lib has was found in "$i"\\n")
-					break
 				case "summaryholding":
 					libHas=i
 					printf ("Lib has was found in "$i"\\n")
 					break
 				case "holdid":
-					holdIdpos=i
-					holdId=i
-					printf ("Holdings ID found in "$i"\\n")
-					break
 				case "holdingid":
-					holdIdpos=i
-					holdId=i
-					printf ("Holdings ID found in "$i"\\n")
-					break
 				case "holdingsid":
-					holdIdpos=i
-					holdId=i
-					printf ("Holdings ID found in "$i"\\n")
-					break
 				case "holrecordid":
 					holdIdpos=i
 					holdId=i
