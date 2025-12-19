@@ -1,6 +1,6 @@
 # sirsi was inadvertantly modified to accommodate NALIS -- must be modified
 
-knownsystems=("absysnet" "aleph" "destiny" "eos" "janium" "koha" "lc2" "opals" "sierra" "sirsi" "softlink" "tlc" "tinycat" "virtua" "wms")
+knownsystems=("absysnet" "aleph" "destiny" "eos" "hylib" "janium" "koha" "lc2" "opals" "sierra" "sirsi" "softlink" "tlc" "tinycat" "virtua" "wms")
 
 if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] "
@@ -68,6 +68,14 @@ if [[ ${system} == "eos" ]];then
 	item_call_subfield="a"
 	location_subfield="h"
 	taglabelmap="z:barcode a:call# o:itype b:location"
+fi
+
+if [[ ${system} == "hylib" ]];then
+	identifier="001"
+	item_field="095b"
+	item_call_subfield="d"
+	location_subfield="h"
+	taglabelmap="c:barcode d:call# p:itype b:location m:status z:loantype k:copy y:volume n:note m:code1"
 fi
 
 if [[ ${system} == "janium" ]];then
