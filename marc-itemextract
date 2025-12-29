@@ -67,7 +67,7 @@ if [[ ${system} == "eos" ]];then
 	item_field="949z"
 	item_call_subfield="a"
 	location_subfield="h"
-	taglabelmap="z:barcode a:call# o:itype b:location"
+	taglabelmap="z:序號barcode a:call# o:itype b:location"
 fi
 
 if [[ ${system} == "hylib" ]];then
@@ -75,7 +75,7 @@ if [[ ${system} == "hylib" ]];then
 	item_field="095b"
 	item_call_subfield="d"
 	location_subfield="h"
-	taglabelmap="c:barcode d:call# p:itype b:location m:status z:loantype k:copy y:volume n:note m:code1"
+	taglabelmap="c:序號barcode d:呼叫號碼call# p:館藏類型itype b:館藏室location m:狀態status z:貸款狀態loantype k:編號copy y:卷號volume n:館藏備註note m:code1"
 fi
 
 if [[ ${system} == "janium" ]];then
