@@ -418,7 +418,7 @@ holdings_type=substr(leader, 8, 1)
 
 if (directory_check == 0) {
 	if (NR == 1 && FILENAME == "tmp_marcitemextract-1.mrc") { 
-		lineout = "tag001\tbib_no\tholdid\tbib_call\trectype\tbib_mattype"
+		lineout = "tag_001\tbib_no\tholdid\tbib_call\trectype\tbib_mattype"
 		for (i=1;i<=num_tags;i++) {
 			lineout = lineout"\t"labels[i]
 		}
