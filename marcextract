@@ -1,4 +1,5 @@
-f [[ -z $3 ]];then
+#!/usr/bin/bash
+if [[ -z $3 ]];then
 	echo "Usage: marcextract [filename] [marcfield1] [marcfield2] [marcfield3] ... [idtag]"
 	echo "Subfield delimiter in MARC is hex 1F"
 	echo
