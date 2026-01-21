@@ -1,4 +1,4 @@
-if [[ -z $3 ]];then
+f [[ -z $3 ]];then
 	echo "Usage: marcextract [filename] [marcfield1] [marcfield2] [marcfield3] ... [idtag]"
 	echo "Subfield delimiter in MARC is hex 1F"
 	echo
@@ -25,7 +25,11 @@ BEGIN { records_found = 0
 	id_field = IDTAG
 	id_subfield = ""
 	split(MARCTAGS, taglist, " ")
-	field_cleaning_regex = "^["FS" ]+|["FS"]+$"
+	if (length(IDTAG) == 4) {
+		field_cleaning_regex = "^["FS" ]+|["FS"]+$"
+	} else {
+		field_cleaning_regex = "["FS"]+$"
+	}
 }
 
 function extract_content() {
