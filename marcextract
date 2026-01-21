@@ -29,7 +29,7 @@ BEGIN { records_found = 0
 	if (length(IDTAG) == 4) {
 		field_cleaning_regex = "^["FS" ]+|["FS"]+$"
 	} else {
-		field_cleaning_regex = "["FS"]+$"
+		field_cleaning_regex = "^["FS"]|["FS"]+$"
 	}
 }
 
