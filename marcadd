@@ -1,6 +1,5 @@
 #!/usr/bin/bash
 
-rm -f "unmatched_records.txt"
 show_nonmatch="no"
 
 while getopts "n" opt; do
@@ -25,7 +24,7 @@ if [[ -z $3 ]];then
 	echo "Usage: marcadd [marcfile] [tag] [value]"
 	echo	
 	echo "Options:"
-	echo "-n Output identifiers of records where no match is found"
+	echo "-n Identify records in [tagfile] that didn't correspond with any records in [marcfile]"
 	echo 
 	echo "Tagfile should be 3 column tab delimited containing identifier, tag to insert, and content"
 	echo
@@ -68,7 +67,6 @@ BEGIN {
 	
 	found = 0
 	matched_records = 0
-	unmatched_records = 0
 }
 
 function check_match() {
@@ -217,22 +215,18 @@ function find_matching_tags() {
 			found = 0
 		}		
 
-		if ((matched_records == match_check) && (SHOWNONMATCH == "yes")) {
-			printf "%s\\n", id_content >> "unmatched_records.txt"
-			unmatched_records += 1
-		}
-
 		print $0 > OUTFILE
-		if (FNR % 10000 == 0){ printf "Records processed: %d modified: %d Unmatched records: \\r", FNR, matched_records, unmatched_records }
+		if (FNR % 10000 == 0){ printf "Records processed: %d modified: %d Unmatched records: \\r", FNR, matched_records }
+
+		if (SHOWNONMATCH == "yes") {
+			printf "%s\\n", id_content >> "tmp_nonmatch"
+		}
 	}
 }
 
 END { 
 	ORS="\\n"
 	print "";print FNR " records were output to "OUTFILE
-	if (SHOWNONMATCH == "yes") {
-		print "";print unmatched_records " records were output to unmatched_records.txt"
-	} 
 }
 
 ENDOFAWK
@@ -242,5 +236,10 @@ chmod 700 tmp_marcadd
 
 awk -v MARCFS=$'\x1e' -v ORS=$'\x1d' -v OFS=$'\x1e' -v SFS=$'\x1f' -v RS=$'\n' -v FS=$'\t' -v NUMMAPPED=${num_mapped} -v SHOWNONMATCH=${show_nonmatch} -v IDTAG=${idtag} -v OUTFILE="${outfile}" -b -f tmp_marcadd "${tagfile}" "${marcfile}"
 
+if [[ ${show_nonmatch} == "yes" ]];then 
+	awk 'BEGIN{FS=OFS="\t"}{if (NR==FNR){seen[$1]=1}else{if (!seen[$1]){print $0}}}' tmp_nonmatch "${tagfile}" > not_matched.tsv
+	echo "Tags that matched no records have been output to not_matched.tsv"
+fi
+
 sleep 1
-rm -f tmp_marcadd tmp_tags
+rm -f tmp_marcadd tmp_tags tmp_nonmatch
