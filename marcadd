@@ -1,8 +1,31 @@
+#!/usr/bin/bash
+
+rm -f "unmatched_records.txt"
+show_nonmatch="no"
+
+while getopts "n" opt; do
+	case $opt in
+		n)
+			show_nonmatch="yes"
+			;;
+		\?)
+			echo "Error: Invalid option -$OPTARG" >&2
+			echo "Usage: $0 [-n]" >&2
+			exit 1
+			;;
+	esac
+done
+
+shift $((OPTIND - 1))
+
 if [[ -z $3 ]];then
 	echo "Adds a MARC field to every record in a file"
 	echo
 	echo "Usage: marcadd [marcfile] [tagfile] [idtag]"
 	echo "Usage: marcadd [marcfile] [tag] [value]"
+	echo	
+	echo "Options:"
+	echo "-n Output identifiers of records where no match is found"
 	echo 
 	echo "Tagfile should be 3 column tab delimited containing identifier, tag to insert, and content"
 	echo
@@ -88,7 +111,6 @@ function check_match() {
 			   }
 			}
 		}
-	
 	gsub(" *$", "", id_content)
 	if (processrecord[id_content] == 1 ) { found = 1 }
 	}
@@ -184,6 +206,8 @@ function find_matching_tags() {
 			VALUE = process_all_value
 			add_tag()
 		}
+
+		match_check = matched_records
 		
 		if (found == 1) {
 			offset = 0
@@ -191,6 +215,10 @@ function find_matching_tags() {
 			matched_records += 1
 			found = 0
 		}		
+
+		if ((matched_records == match_check) && (SHOWNONMATCH == "yes")) {
+			printf "%s\\n", id_content >> "unmatched_records.txt"
+		}
 
 		print $0 > OUTFILE
 		if (FNR % 10000 == 0){ printf "Records processed: %d modified: %d \\r", FNR, matched_records }
@@ -207,7 +235,7 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_marcadd
 chmod 700 tmp_marcadd
 
-awk -v MARCFS=$'\x1e' -v ORS=$'\x1d' -v OFS=$'\x1e' -v SFS=$'\x1f' -v RS=$'\n' -v FS=$'\t' -v NUMMAPPED=${num_mapped} -v IDTAG=${idtag} -v OUTFILE="${outfile}" -b -f tmp_marcadd "${tagfile}" "${marcfile}"
+awk -v MARCFS=$'\x1e' -v ORS=$'\x1d' -v OFS=$'\x1e' -v SFS=$'\x1f' -v RS=$'\n' -v FS=$'\t' -v NUMMAPPED=${num_mapped} -v SHOWNONMATCH=${show_nonmatch} -v IDTAG=${idtag} -v OUTFILE="${outfile}" -b -f tmp_marcadd "${tagfile}" "${marcfile}"
 
 sleep 1
 rm -f tmp_marcadd tmp_tags
