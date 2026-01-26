@@ -68,6 +68,7 @@ BEGIN {
 	
 	found = 0
 	matched_records = 0
+	unmatched_records = 0
 }
 
 function check_match() {
@@ -218,16 +219,20 @@ function find_matching_tags() {
 
 		if ((matched_records == match_check) && (SHOWNONMATCH == "yes")) {
 			printf "%s\\n", id_content >> "unmatched_records.txt"
+			unmatched_records += 1
 		}
 
 		print $0 > OUTFILE
-		if (FNR % 10000 == 0){ printf "Records processed: %d modified: %d \\r", FNR, matched_records }
+		if (FNR % 10000 == 0){ printf "Records processed: %d modified: %d Unmatched records: \\r", FNR, matched_records, unmatched_records }
 	}
 }
 
 END { 
 	ORS="\\n"
 	print "";print FNR " records were output to "OUTFILE
+	if (SHOWNONMATCH == "yes") {
+		print "";print unmatched_records " records were output to unmatched_records.txt"
+	} 
 }
 
 ENDOFAWK
