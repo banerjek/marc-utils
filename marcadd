@@ -1,9 +1,16 @@
 #!/usr/bin/bash
 
 show_nonmatch="no"
+holdings_processing="no"
+checkpos=3
 
-while getopts "n" opt; do
+while getopts "nh" opt; do
 	case $opt in
+		h)
+			holdings_processing="yes"
+			idtag="004"
+			checkpos=2
+			;;
 		n)
 			show_nonmatch="yes"
 			;;
@@ -17,13 +24,15 @@ done
 
 shift $((OPTIND - 1))
 
-if [[ -z $3 ]];then
+if [[ -z ${!checkpos} ]];then
 	echo "Adds a MARC field to every record in a file"
 	echo
 	echo "Usage: marcadd [marcfile] [tagfile] [idtag]"
+	echo "Usage: marcadd -h [marcfile] [tagfile]"
 	echo "Usage: marcadd [marcfile] [tag] [value]"
 	echo	
 	echo "Options:"
+	echo "-h Holdings specific processing. Idtag is set to 004"
 	echo "-n Identify records in [tagfile] that didn't correspond with any records in [marcfile]"
 	echo 
 	echo "Tagfile should be 3 column tab delimited containing identifier, tag to insert, and content"
@@ -35,15 +44,18 @@ if [[ -z $3 ]];then
 	exit
 else
 	marcfile="${1}"
+	tagfile="${2}"
 
-	if [[ -f ${2} ]];then
-		tagfile="${2}"
-		idtag=${3}
-	else
-		tagfile="tmp_tags"
-		tag=${2}
-		value=${3}
-		echo -e "Process all records\t${tag}\t${value}" > ${tagfile}
+	if [[ holdings_processing == "no" ]];then
+		if [[ -f ${2} ]];then
+			tagfile="${2}"
+			idtag=${3}
+		else
+			tagfile="tmp_tags"
+			tag=${2}
+			value=${3}
+			echo -e "Process all records\t${tag}\t${value}" > ${tagfile}
+		fi
 	fi
 
 	num_mapped=$(wc -l ${tagfile} |cut -d " " -f1)
