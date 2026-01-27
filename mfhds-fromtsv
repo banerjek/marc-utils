@@ -1,19 +1,59 @@
+#!/usr/bin/bash
+
+bibsonly="no"
+loc_subfield="b"
+
+while getopts "bl:" opt; do
+  case $opt in
+    b)
+      bibsonly="yes"
+			outfile="mfhds_frombibids.mrc"
+      ;;
+		l) 
+			loc_subfield=$OPTARG
+			;;
+    \?)
+      echo "Error: Invalid option -$OPTARG" >&2
+      echo "Usage: $0 [-n]" >&2
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND - 1))
+
 infile="${1}"
+if [[ ${bibsonly} == "yes" ]];then
+	location="${2}"
+	if [[ -z $location ]];then
+		echo "You must supply a location argument"
+		echo
+		echo "Usage: mfhds-fromtsv [idfile] [location]"
+		echo
+		echo "Options:"
+		echo "-b Create from list of bib ids only"
+		echo "-l [subfield] Specify location subfield (default is b)"
+		echo
+		exit
+	fi
+fi
 
 if [[ -z ${infile} ]];then echo "You must supply a file name for a tab delimited file\nYou will need to modify the fields in the awk script to match the headers of your input file";fi
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
 head -1 "${infile}" |grep -q "PortfolioURL" && portfoliofile=1
 
-if [[ "${fileroot}" =~ [Ii}[Tt][Ee][Mm] ]];then
-	echo -e "\nItem file detected -- ignoring note fields\n"
-	outfile="mfhds_fromitems.mrc"
-elif [[ portfoliofile -eq 1 ]];then
-	echo -e "\nAlma portfolio file detected -- Only records containing URLs will be processed\n"
-	outfile="mfhds_fromportfolios.mrc"
-else
-	echo -e  "\nCheckin file assumed. Place the string \"item\" in your source file name if this is not intended\n"
-	outfile="mfhds_fromcheckins.mrc"
+if [[ ${bibsonly} == "no" ]];then
+	if [[ "${fileroot}" =~ [Ii}[Tt][Ee][Mm] ]];then
+		echo -e "\nItem file detected -- ignoring note fields\n"
+		outfile="mfhds_fromitems.mrc"
+	elif [[ portfoliofile -eq 1 ]];then
+		echo -e "\nAlma portfolio file detected -- Only records containing URLs will be processed\n"
+		outfile="mfhds_fromportfolios.mrc"
+	else
+		echo -e  "\nCheckin file assumed. Place the string \"item\" in your source file name if this is not intended\n"
+		outfile="mfhds_fromcheckins.mrc"
+	fi
 fi
 
 read -r -d '' awkscript << "ENDOFAWK"
@@ -21,7 +61,7 @@ read -r -d '' awkscript << "ENDOFAWK"
 
 BEGIN {
 	record_template="=LDR  00159cx  a22000733  4500"FS"=001  HOLDINGSID"FS"=004  BIBID"FS"=008  9810090p    8   4001aueng0000000"FS
-
+	
 	#template_852="=852   CALLTYPE"SFS"bLOCATION"SFS"kCALLPREFIX"SFS"hCALLVALUE"SFS"mCALLSUFFIX"
 	#template_856="=856  40"SFS"aELECTRONICLOCATION"SFS"yLINKTEXT"
 	#######
@@ -103,20 +143,24 @@ function build_mfhd() {
 	}
 
 	if (marc852 > 0) { 
-		if (NR == 1) { next }
+		if (LOCATION) {
+			if (NR == 1) { next }
+		}
 		$marc852 = gensub(alma_subfield, SFS"\\\1", "g", $marc852)
 		ind1=substr($marc852, 4, 1)
 		sub(not_delim, "", $marc852)
 		text_852 = "=852  "ind1" "text_852""$marc852 
 	} else if ( portfoliofile == 1) { 
 		if (linktext > 0 && linktext ~ /[a-zA-Z]/) { linkdisplay = $linktext } else { linkdisplay = "Online access" }
-		text_852="=852    "SFS"b"defaultlocation""SFS"h"
+		text_852="=852    "SFS""LOC_SUBFIELD""defaultlocation""SFS"h"
 		text_856="=856  40"SFS"u"$electroniclocation""SFS"y"linkdisplay
 		text_852=text_852""OFS""text_856
-	} else {
+	} else if ( ! LOCATION ) {
 		if (callPrefix > 0) {CALLPREFIX = $callPrefix}
 		if (callSuffix > 0) {CALLSUFFIX = $callPrefix}
-		text_852="=852   "callNumberType""SFS"b"$location""SFS"k"CALLPREFIX""SFS"h"callNum""SFS"m"CALLSUFFIX
+		text_852="=852   "callNumberType""SFS""LOC_SUBFIELD""$location""SFS"k"CALLPREFIX""SFS"h"callNum""SFS"m"CALLSUFFIX
+	}	else if (LOCATION) {
+		text_852="=852   "callNumberType""SFS""LOC_SUBFIELD""LOCATION""SFS"h"SFS
 	}
 
 	if (recType > 0) {
@@ -382,18 +426,24 @@ function build_mfhd() {
 			}
 		}
 
-	if (! bibId) {  printf ("\\nNo valid bib ID field could be found\\n"); exit }
+	if (BIBSONLY == "no") {
+		if (! bibId) {  printf ("\\nNo valid bib ID field could be found\\n"); exit }
 
-	if (alma_source == 0 && defaultlocation == "") {
-		if (! location ) {  printf ("\\nNo valid location field could be found\\n"); exit }
-		if (! callNumPos && ! callNumFallback ) {  emptyCall = 1 } else { emptyCall = 0 }
-		if (! callNumPos && callNumFallback > 0 ) { callNumPos = callNumFallback; callNumFallback = "" }
-	}
-
-	printf("\\n")
-	if (! recType) {  printf ("No record type field detected, defaulting to Single part holdings\\n") }
-	if (! callType) {  printf ("No call number type field detected, setting second indicator in 852 to "callTypeDefault"\\n") }
-	printf("\\n")
+		if (alma_source == 0 && defaultlocation == "") {
+			if (! location ) {  printf ("\\nNo valid location field could be found\\n"); exit }
+			if (! callNumPos && ! callNumFallback ) {  emptyCall = 1 } else { emptyCall = 0 }
+			if (! callNumPos && callNumFallback > 0 ) { callNumPos = callNumFallback; callNumFallback = "" }
+		}
+	
+		printf("\\n")
+		if (! recType) {  printf ("No record type field detected, defaulting to Single part holdings\\n") }
+		if (! callType) {  printf ("No call number type field detected, setting second indicator in 852 to "callTypeDefault"\\n") }
+		printf("\\n")
+	} else {
+		bibId = 1
+		printf("\\n")
+		printf ("Creating MARC records from bib numbers only\\n")
+		printf("\\n")
 	}
 
 	if (length($0) > 10000) {
@@ -405,23 +455,29 @@ function build_mfhd() {
 
 	gsub(/"/, "", $0) 
 
-	if (alma_source == 0 && portfoliofile == 0) {
-		gsub(/^ */, "", $location) 
-		gsub(/ *$/, "", $location) 
-		id_location = $location
-	}
-	if (portfoliofile == 1) {
-		emptyCall = 1
-		sub(/^.*http/, "http", $electroniclocation) 
-		id_location = $electroniclocation
-		if (substr($electroniclocation, 1, 4) == "http") { goodurl = 1 } else { goodurl = 0 }
-	}
-
-	if (emptyCall == 0) {
-		if (callNumPos > 0) {callNum = $callNumPos}
-		if (callNumFallback > 0 && length($callNumPos) == 0) {callNum = $callNumFallback}
+	if (BIBSONLY == "no") {
+		if (alma_source == 0 && portfoliofile == 0) {
+			gsub(/^ */, "", $location) 
+			gsub(/ *$/, "", $location) 
+			id_location = $location
+		}
+		if (portfoliofile == 1) {
+			emptyCall = 1
+			sub(/^.*http/, "http", $electroniclocation) 
+			id_location = $electroniclocation
+			if (substr($electroniclocation, 1, 4) == "http") { goodurl = 1 } else { goodurl = 0 }
+		}
+	
+		if (emptyCall == 0) {
+			if (callNumPos > 0) {callNum = $callNumPos}
+			if (callNumFallback > 0 && length($callNumPos) == 0) {callNum = $callNumFallback}
+		} else {
+			if (NR == 1) { callNum = "callNum" } else { callNum = "" }
+		}
 	} else {
-		if (NR == 1) { callNum = "callNum" } else { callNum = "" }
+		id_location = LOCATION
+		callNum = ""	
+	}
 	}
 
 	if (! holdIdpos) {holdId = $bibId""id_location""callNum; gsub(/[^a-zA-Z0-9]/, "", holdId)} else { holdId = $holdIdpos }
@@ -445,6 +501,6 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_mfhdsfromtsv
 chmod 700 tmp_mfhdsfromtsv
 
-awk -v ORS=$'\x1d' -v RS='\n' -v OFS=$'\x1e' -v FS='\t' -v SFS=$'\x1f' -v OUTFILE="${outfile}" -b -f tmp_mfhdsfromtsv "${infile}"
+awk -v ORS=$'\x1d' -v RS='\n' -v OFS=$'\x1e' -v FS='\t' -v SFS=$'\x1f' -v OUTFILE="${outfile}" -v BIBSONLY=${bibsonly} -v LOCATION="${location}" -v LOC_SUBFIELD=${loc_subfield} -b -f tmp_mfhdsfromtsv "${infile}"
 
 rm -f tmp_mfhdsfromtsv
