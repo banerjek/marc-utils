@@ -1,19 +1,44 @@
 #!/usr/bin/bash
-if [[ -z $3 ]];then
+
+checkpos=3
+holdings_process="no"
+
+while getopts "h" opt; do
+	case $opt in
+		h)
+			holdings_process="yes"
+			checkpos=2
+			;;
+		\?)
+			echo "Error: Invalid option -$OPTARG" >&2
+			echo "Usage: $0 [-n]" >&2
+			exit 1
+			;;
+	esac
+done
+
+shift $((OPTIND - 1))
+
+if [[ -z ${!checkpos} ]];then
 	echo "Usage: marcextract [filename] [marcfield1] [marcfield2] [marcfield3] ... [idtag]"
 	echo "Subfield delimiter in MARC is hex 1F"
 	echo
+	echo "Options:"
+	echo "-h Use holdings process"
 	exit
-else
+elif [[ ${holdings_process} == "no" ]];then
 	infile="${1}"
 	idtag="${@: -1}"
 	shift
 	marctags=("${@:1:$#-1}")
+elif [[ ${holdings_process} == "yes" ]];then
+	infile="${1}"
+	idtag="${2}"
+	marctags=(590 856)
 fi
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
 outfile="${fileroot}_extract.txt"
-
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
@@ -47,7 +72,15 @@ function extract_content() {
 				split(field_content, subfields, SFS)
 		
 				if (marc_subfield == "") {
-					print record_id"\t"marc_field"\t"field_content > OUTFILE
+					if (HOLDINGS_PROCESS == "yes" && marc_field == "590") {
+						print record_id"\t583\t"field_content > OUTFILE
+					} else if (HOLDINGS_PROCESS == "yes" && marc_field == "856") {
+							if (substr(field_content, 1, 2) == "40") {
+								print record_id"\t"marc_field"\t"field_content > OUTFILE
+							}
+					} else {
+						print record_id"\t"marc_field"\t"field_content > OUTFILE
+					}
 					foundrecs++
 					} else {
 			      		for (subfield in subfields) {
@@ -131,7 +164,7 @@ echo -e "${awkscript}" > tmp_marcextract
 chmod 700 tmp_marcextract
 
 
-awk -v RS=$'\x1d' -v ORS="\n" -v FS=$'\x1e' -v SFS=$'\x1f' -v OFS="\t" -v MARCTAGS="${marctags[*]}" -v OUTFILE="${outfile}" -v IDTAG="${idtag}" -b -f tmp_marcextract "${infile}"
+awk -v RS=$'\x1d' -v ORS="\n" -v FS=$'\x1e' -v SFS=$'\x1f' -v OFS="\t" -v MARCTAGS="${marctags[*]}" -v OUTFILE="${outfile}" -v IDTAG="${idtag}" -v HOLDINGS_PROCESS=${holdings_process} -b -f tmp_marcextract "${infile}"
 echo
 echo
 
