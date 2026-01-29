@@ -23,7 +23,11 @@ if [[ -z $1 ]];then
 	echo
 	echo "Usage: marcdelete [filename] [marcfield] '[regex]'"
 	echo "Example: marcdelete myfile.mrc ^9 .'"
+	echo "Example: marcdelete -n myfile.mrc 856 '^40'"
 	echo 
+	echo "Options:"
+	echo "-n Negative match"
+	echo
 
 	exit
 else
