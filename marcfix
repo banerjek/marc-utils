@@ -41,6 +41,9 @@ BEGIN { goodrecs=badrecs=deletedrecs=bad001=badleader=baddirectory=bibcount=hold
 	subfield_9 = SFS"9"
 	subfield_any = SFS"."
 	not_subfield = "[^"FS"]"
+	invalid_subfield_a = SFS"a"not_subfield
+
+	mandatory_numbers = " 100 110 111 130 245 600 610 611 650 651 700 710 711"
 	BAD_INDICATOR_REGEX=FS".?"SFS
 }
 function check_fields() {
@@ -78,12 +81,18 @@ function check_fields() {
 			if (tag == "245") {
 				override245=found245=1
 				rectype="bib"
-
 				if (DEEPCLEAN == "yes") {
 					### adds subfield a if missing
 					if (field_content !~ /subfield_a/) {	
 						sub(subfield_any, subfield_a, field_content)
 						$0 = substr($0, 1, field_start_address)""field_content""substr($0, field_end_address)
+					}
+				}
+			}
+			if (DEEPCLEAN == "yes") {
+				if (index(mandatory_numbers, tag)) {
+					if (field_content !~ invalid_subfield_a) {	
+						badmandatoryfield = 1
 					}
 				}
 			}
@@ -152,7 +161,7 @@ function check_leader() {
 }
 {
 goodrec=good_directory=good_length=good_tag=1
-found004=found008=found245=override245=oversized=badsubfields=badindicators=0
+found004=found008=found245=override245=oversized=badsubfields=badindicators=badmandatoryfield=0
 
 check_leader()
 check_fields()
@@ -176,13 +185,16 @@ if ( good_tag == 0 && goodrec == 1) { badtagtext = "(Nonnumeric tags: "bad_tag")
 
 if ( goodrec == 1 && badsubfields == 1){ goodrecs++;badsubfieldtotal++;badsubfieldstext = " (Bad subfields: "badsubfieldtotal")";foundbad = 1; print $0 > "tmp_"rectype"_badsubfields.mrc" }
 
+if ( goodrec == 1 && badmandatoryfield == 1){ goodrecs++;badmandatorytotal++;badmandatorytext = " (Bad mandatory field: "badmandatorytotal")";foundbad = 1; print $0 > "bad_bib_mandatoryfields"FILEROOT }
+
+
 if ( goodrec == 1 && badindicators == 1){ goodrecs++;badindicatortotal++;badindicatorstext = " (Bad indicators: "badindicatortotal")";foundbad = 1; print $0 > "tmp_"rectype"_badindicators.mrc" }
 
 if ( goodrec == 1 && good_directory == 1 && good_length == 1 && foundbad == 0 && found008 == 1 ){ goodrecs++;print $0 > OUTFILE }
 
 if (foundbad == 1) { badrecs++ }
 if (deletedrecs > 0) { deletedrecstext = " (deleted recs: "deletedrecs")" }
-if ( badrecs > 0 || bad_tag > 0){badtext=badtagtext""baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext""badindicatorstext""badsubfieldstext""deletedrecstext }
+if ( badrecs > 0 || bad_tag > 0){badtext=badtagtext""baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext""badindicatorstext""badsubfieldstext""deletedrecstext""badmandatorytext }
 
 if (rectype == "bib") { bibcount++ }
 if (rectype == "holdings") { holdingscount++ }
@@ -254,7 +266,7 @@ process_file() {
 
 	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX1=${bad_subfield_regex1} -v BAD_SUBFIELD_REGEX2=${bad_subfield_regex2} -v DEEPCLEAN=${deepclean} -b -f tmp_checkmarc "${marcfile}"
 	sleep 1
-	
+
 	ls bad_*"${fileroot}" 2> /dev/null
 	echo
 }
@@ -293,7 +305,7 @@ if [[ $processType == "file" ]];then
 			rm -f ${temproot}.*
 			echo "Bib records with null identifiers were fixed and appended to ${fileroot}_bib_fixed.mrc"
 		fi
-		
+
 		temproot="tmp_authority_008"
 		if [[ -f ${temproot}.mrc ]];then
 			marc2text ${temproot}.mrc 
