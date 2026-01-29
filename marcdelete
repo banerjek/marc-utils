@@ -1,3 +1,22 @@
+#!/usr/bin/bash
+
+posneg_regex='^[1-9]'
+
+while getopts "n" opt; do
+  case $opt in
+    n)
+      posneg_regex='^0'
+      ;;
+    \?)
+      echo "Error: Invalid option -$OPTARG" >&2
+      echo "Usage: $0 [-n]" >&2
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND - 1))
+
 if [[ -z $1 ]];then
 	echo "Deletes specified tags matching a regex"
 	echo "Tags can be expressed as a regex"
@@ -9,8 +28,15 @@ if [[ -z $1 ]];then
 	exit
 else
 	infile="${1}"
-	tag_regex="${2}"
-	search="${3}"
+	search="${@: -1}"
+	shift
+
+	if [[ "${search}" =~ ^[A-Z0-9]{3}$ ]]; then
+		deletetags=("$@")
+		search="."
+	else
+		deletetags=("${@:1:$#-1}")
+	fi
 fi
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
@@ -21,17 +47,19 @@ read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
 BEGIN { 
-        if(length("а") != 2) {
-                badawk = 1
-                printf("Your version of awk does not support marcreplace -- you need a version that supports the -b switch\\n")
-                exit
-        }
+ if(length("а") != 2) {
+    badawk = 1
+    printf("Your version of awk does not support marcreplace -- you need a version that supports the -b switch\\n")
+    exit
+ }
+	n = split(DELETETAGS, templist, " ")
+
+	for (i = 1;i <= n; i++) {deletelist[templist[i]] = 1}
 }
 
 
 function delete_matched_fields(){
-
-	if (marc_tag ~ TAG_REGEX && match(field_content, SEARCH)) {
+	if (marc_tag in deletelist && match(field_content, SEARCH)) {
 		fix_directory = 1
 		deleted_fields_total++
 		deleted_fields_record++
@@ -109,7 +137,22 @@ function rebuild_directory(){
 		
 		field_content = substr(record_content, starting_pos, field_length)
 
-		delete_matched_fields()
+		if (marc_tag in deletelist && (match(field_content, SEARCH) ~ POSNEG_REGEX)) {
+			fix_directory = 1
+			deleted_fields_total++
+			deleted_fields_record++
+			next_entry_subtract = next_entry_subtract + length(field_content) # adjust next directory entry
+		} else {	
+			marc_tag = substr(directory_entry, 1, 3)
+			field_length = substr(directory_entry, 4, 4)
+			
+			field_address = substr(directory_entry, 8, 5) - next_entry_subtract
+	
+			field_address = sprintf("%05d", field_address)
+	
+			new_directory = new_directory""marc_tag""field_length""field_address
+			new_record_content = new_record_content""field_content
+		}
 	}
 
 	if (fix_directory == 1) {
@@ -136,7 +179,7 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_marcdelete
 chmod 700 tmp_marcdelete
 
-awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v OFS=$'\x1e' -v SFS=$'\x1f' -v TAG_REGEX="${tag_regex}" -v SUBFIELD="${subfield}" -v SEARCH="${search}" -v OUTFILE="${outfile}" -b -f tmp_marcdelete "${infile}"
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v OFS=$'\x1e' -v SFS=$'\x1f' -v DELETETAGS="${deletetags[*]}" -v SUBFIELD="${subfield}" -v SEARCH="${search}" -v POSNEG_REGEX=${posneg_regex} -v OUTFILE="${outfile}" -b -f tmp_marcdelete "${infile}"
 
 sleep 1
 rm -f tmp_marcreplace
