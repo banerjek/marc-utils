@@ -14,7 +14,7 @@ while getopts "bl:" opt; do
 			;;
     \?)
       echo "Error: Invalid option -$OPTARG" >&2
-      echo "Usage: $0 [-n]" >&2
+      echo "Usage: $0 [-b]" >&2
       exit 1
       ;;
   esac
@@ -160,7 +160,7 @@ function build_mfhd() {
 		if (callSuffix > 0) {CALLSUFFIX = $callPrefix}
 		text_852="=852   "callNumberType""SFS""LOC_SUBFIELD""$location""SFS"k"CALLPREFIX""SFS"h"callNum""SFS"m"CALLSUFFIX
 	}	else if (LOCATION) {
-		text_852="=852   "callNumberType""SFS""LOC_SUBFIELD""LOCATION""SFS"h"SFS
+		text_852="=852   "callNumberType""SFS""LOC_SUBFIELD""LOCATION""SFS"h"
 	}
 
 	if (recType > 0) {
