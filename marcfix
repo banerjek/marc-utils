@@ -252,22 +252,21 @@ process_file() {
 	echo
 	echo "Processing ${marcfile}"	
 	echo
-	mv "${marcfile}" "${marcfile}.tmp"
 	
 	
 	echo "Detecting and removing nulls and converting carriage returns, newlines, and tabs to spaces"
-	pv "${marcfile}.tmp" | tr -d '\000' | tr '\b\n\r\t' ' ' > "${marcfile}"
-	rm -f "${marcfile}.tmp"
+	pv "${marcfile}" | tr -d '\000' | tr '\b\n\r\t' ' ' > "${marcfile}.tmp"
 	echo 
 
 	# null identifiers
 	bad_subfield_regex1=$'\x1f'[0az]$'\x1e'
 	bad_subfield_regex2=$'\x1f'[^0-9a-z]
 
-	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX1=${bad_subfield_regex1} -v BAD_SUBFIELD_REGEX2=${bad_subfield_regex2} -v DEEPCLEAN=${deepclean} -b -f tmp_checkmarc "${marcfile}"
+	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX1=${bad_subfield_regex1} -v BAD_SUBFIELD_REGEX2=${bad_subfield_regex2} -v DEEPCLEAN=${deepclean} -b -f tmp_checkmarc "${marcfile}.tmp"
 	sleep 1
 
 	ls bad_*"${fileroot}" 2> /dev/null
+	rm -f "${marcfile}.tmp"
 	echo
 }
 
