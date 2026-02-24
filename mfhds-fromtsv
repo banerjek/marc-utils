@@ -254,6 +254,8 @@ function build_mfhd() {
 		processed[holdId] = 1
 		created = created + 1
 	}
+	callNum = ""
+	id_location = ""
 
 	if (NR % 10000 == 0){ printf "Records processed: %d :created: %d \\r", record_counter, created }
 }
