@@ -353,6 +353,7 @@ function build_mfhd() {
 				case "holdingid":
 				case "holdingsid":
 				case "holrecordid":
+				case "recordcheckin":
 					holdIdpos=i
 					holdId=i
 					printf ("Holdings ID found in "$i"\\n")
