@@ -316,6 +316,7 @@ function build_mfhd() {
 					linktext=i
 					printf ("Link text found in "$i"\\n")
 					break
+				case "shelfmark":
 				case "call":
 				case "callitem":
 				case "callmarc":
