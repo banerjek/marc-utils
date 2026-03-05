@@ -322,6 +322,7 @@ function build_mfhd() {
 				case "callmarc":
 				case "callno":
 				case "callnumber":
+				case "permanentcallnumber":
 					callNumPos=i
 					printf ("Call number found in "$i"\\n")
 					break
@@ -332,10 +333,12 @@ function build_mfhd() {
 					printf ("Call number type found in "$i"\\n")
 					break
 				case "callprefix":
+				case "callnumberprefix":
 					callPrefix=i
 					printf ("Call number prefix found in "$i"\\n")
 					break
 				case "callsuffix":
+				case "callnumbersuffix":
 					callSuffix=i
 					printf ("Call number suffix found in "$i"\\n")
 					break
@@ -373,6 +376,7 @@ function build_mfhd() {
 						printf ("Checkin note was found in "$i"\\n")
 					}
 					break
+				case "nonpublicnote":
 				case "staffnote":
 					if (itemfile == 0) {
 						staffnote=i
@@ -391,6 +395,7 @@ function build_mfhd() {
 						printf ("Acq status note was found in "$i"\\n")
 					}
 					break
+				case "holdingsactionnote":
 				case "actionnote":
 					if (itemfile == 0) {
 						actionNote=i
@@ -409,6 +414,7 @@ function build_mfhd() {
 						printf ("Copy note was found in "$i"\\n")
 					}
 					break
+				case "ownershipandcustodialhistory":
 				case "ownershipnote":
 					if (itemfile == 0) {
 						ownershipNote=i
