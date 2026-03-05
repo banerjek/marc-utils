@@ -351,6 +351,7 @@ function build_mfhd() {
 					break
 				case "libhas":
 				case "libhascheckin":
+				case "holdings":
 				case "summaryholding":
 					libHas=i
 					printf ("Lib has was found in "$i"\\n")
