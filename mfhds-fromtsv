@@ -147,6 +147,7 @@ function build_mfhd() {
 			if (NR == 1) { next }
 		}
 		$marc852 = gensub(alma_subfield, SFS"\\\1", "g", $marc852)
+		$marc852 = gensub(doubledagger, SFS, "g", $marc852)
 		ind1=substr($marc852, 4, 1)
 		sub(not_delim, "", $marc852)
 		text_852 = "=852  "ind1" "text_852""$marc852 
@@ -157,7 +158,7 @@ function build_mfhd() {
 		text_852=text_852""OFS""text_856
 	} else if ( ! LOCATION ) {
 		if (callPrefix > 0) {CALLPREFIX = $callPrefix}
-		if (callSuffix > 0) {CALLSUFFIX = $callPrefix}
+		if (callSuffix > 0) {CALLSUFFIX = $callSuffix}
 		text_852="=852   "callNumberType""SFS""LOC_SUBFIELD""$location""SFS"k"CALLPREFIX""SFS"h"callNum""SFS"m"CALLSUFFIX
 	}	else if (LOCATION) {
 		text_852="=852   "callNumberType""SFS""LOC_SUBFIELD""LOCATION""SFS"h"
@@ -423,6 +424,7 @@ function build_mfhd() {
 					}
 					break
 				case "publicnote":
+				case "summaryholdingspublicnote":
 					if (itemfile == 0) {
 						publicNote=i
 						printf ("Public note was found in "$i"\\n")
