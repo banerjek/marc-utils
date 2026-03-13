@@ -79,6 +79,7 @@ BEGIN {
 	multispace = " +"
 	not_delim = "[^"SFS"]*"
 	alma_subfield = " *\\\$\\\$([a-z0-9]) *"
+	alma_subfield2 = " ([bchx]) "
 	bad_spaces = " *"SFS"([a-z0-9]) *"
 	doubledagger = " *‡ *"
 
@@ -149,6 +150,7 @@ function build_mfhd() {
 		}
 		$marc852 = gensub(alma_subfield, SFS"\\\1", "g", $marc852)
 		$marc852 = gensub(doubledagger, SFS, "g", $marc852)
+		$marc852 = gensub(alma_subfield2, SFS"\\\1", "g", $marc852)
 		ind1=substr($marc852, 4, 1)
 		sub(not_delim, "", $marc852)
 		$marc852 = gensub(bad_spaces, SFS"\\\1", "g", $marc852)
