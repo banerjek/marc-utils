@@ -145,7 +145,7 @@ function build_mfhd() {
 
 	if (marc852 > 0) { 
 		if (LOCATION) {
-			if (NR == 1) { next }
+			if (FNR == 1) { next }
 		}
 		$marc852 = gensub(alma_subfield, SFS"\\\1", "g", $marc852)
 		$marc852 = gensub(doubledagger, SFS, "g", $marc852)
@@ -261,7 +261,7 @@ function build_mfhd() {
 	callNum = ""
 	id_location = ""
 
-	if (NR % 10000 == 0){ printf "Records processed: %d :created: %d \\r", record_counter, created }
+	if (NR % 10000 == 0){ printf "Records processed ("FILENAME"): %d :created: %d \\r", record_counter, created }
 }
 {
 	sub("\r", "", $NF)
@@ -524,9 +524,6 @@ if [[ -z "${outfile}" ]]; then
 	outfile="mfhds_output.mrc"
 fi
 
-for infile in "${infiles[@]}"; do
-	echo "Processing: ${infile}"
-	awk -v ORS=$'\x1d' -v RS='\n' -v OFS=$'\x1e' -v FS='\t' -v SFS=$'\x1f' -v OUTFILE="${outfile}" -v BIBSONLY=${bibsonly} -v LOCATION="${location}" -v LOC_SUBFIELD=${loc_subfield} -b -f tmp_mfhdsfromtsv "${infile}"
-done
+awk -v ORS=$'\x1d' -v RS='\n' -v OFS=$'\x1e' -v FS='\t' -v SFS=$'\x1f' -v OUTFILE="${outfile}" -v BIBSONLY=${bibsonly} -v LOCATION="${location}" -v LOC_SUBFIELD=${loc_subfield} -b -f tmp_mfhdsfromtsv "${infiles[@]}"
 
 rm -f tmp_mfhdsfromtsv
