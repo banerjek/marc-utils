@@ -266,7 +266,7 @@ function build_mfhd() {
 {
 	sub("\r", "", $NF)
 
-	if (NR == 1) {
+	if (FNR == 1) {
 
 		itemfile = 0
 
@@ -489,7 +489,7 @@ function build_mfhd() {
 			if (callNumPos > 0) {callNum = $callNumPos}
 			if (callNumFallback > 0 && length($callNumPos) == 0) {callNum = $callNumFallback}
 		} else {
-			if (NR == 1) { callNum = "callNum" } else { callNum = "" }
+			if (FNR == 1) { callNum = "callNum" } else { callNum = "" }
 		}
 	} else {
 		id_location = LOCATION
