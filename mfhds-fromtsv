@@ -23,6 +23,8 @@ done
 shift $((OPTIND - 1))
 
 infiles=("$@")
+infile=${infiles[0]}
+
 if [[ ${bibsonly} == "yes" ]];then
 	location="${2}"
 	if [[ -z $location ]];then
@@ -468,10 +470,9 @@ function build_mfhd() {
 			if (length($field) > 9900) { $field = substr($field, 1, 9900) }
 		}
 	}
-
-
 	gsub(/"/, "", $0) 
 
+	}
 	if (BIBSONLY == "no") {
 		if (alma_source == 0 && portfoliofile == 0) {
 			gsub(/^ */, "", $location) 
@@ -494,7 +495,6 @@ function build_mfhd() {
 	} else {
 		id_location = LOCATION
 		callNum = ""	
-	}
 	}
 
 	if (! holdIdpos) {holdId = $bibId""id_location""callNum; gsub(/[^a-zA-Z0-9]/, "", holdId)} else { holdId = $holdIdpos }
