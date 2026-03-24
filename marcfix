@@ -40,6 +40,7 @@ BEGIN { goodrecs=badrecs=deletedrecs=bad001=badleader=baddirectory=bibcount=hold
 	subfield_0 = SFS"0" 
 	subfield_9 = SFS"9"
 	subfield_any = SFS"."
+	ESC = SFS"a"ESC
 	not_subfield = "[^"FS"]"
 	invalid_subfield_a = SFS"a"not_subfield
 
@@ -58,6 +59,9 @@ function check_fields() {
 
 	## Look for wrong number of indicators
 	if ($0 ~ BAD_INDICATOR_REGEX){ badindicators = 1 }
+
+	## Look for escape sequences
+	if ($0 ~ ESC){ badescape = 1; goodrec=0 }
 
 	if (directory ~ /[^0-9A-Z]/){directory_check = 1;good_directory = 0}
 
@@ -161,7 +165,7 @@ function check_leader() {
 }
 {
 goodrec=good_directory=good_length=good_tag=1
-found004=found008=found245=override245=oversized=badsubfields=badindicators=badmandatoryfield=0
+found004=found008=found245=override245=oversized=badescape=badsubfields=badindicators=badmandatoryfield=0
 
 check_leader()
 check_fields()
@@ -183,18 +187,20 @@ if (rectype == "bib") {
 
 if ( good_tag == 0 && goodrec == 1) { badtagtext = "(Nonnumeric tags: "bad_tag")" }
 
-if ( goodrec == 1 && badsubfields == 1){ goodrecs++;badsubfieldtotal++;badsubfieldstext = " (Bad subfields: "badsubfieldtotal")";foundbad = 1; print $0 > "tmp_"rectype"_badsubfields.mrc" }
+if ( goodrec == 1 && badsubfields == 1){ badsubfieldtotal++;badsubfieldstext = " (Bad subfields: "badsubfieldtotal")";foundbad = 1; print $0 > "tmp_"rectype"_badsubfields.mrc" }
 
-if ( goodrec == 1 && badmandatoryfield == 1){ goodrecs++;badmandatorytotal++;badmandatorytext = " (Bad mandatory field: "badmandatorytotal")";foundbad = 1; print $0 > "bad_bib_mandatoryfields"FILEROOT }
+if ( goodrec == 1 && badmandatoryfield == 1){ badmandatorytotal++;badmandatorytext = " (Bad mandatory field: "badmandatorytotal")";foundbad = 1; print $0 > "bad_bib_mandatoryfields"FILEROOT }
 
 
-if ( goodrec == 1 && badindicators == 1){ goodrecs++;badindicatortotal++;badindicatorstext = " (Bad indicators: "badindicatortotal")";foundbad = 1; print $0 > "tmp_"rectype"_badindicators.mrc" }
+if ( goodrec == 1 && badindicators == 1){ badindicatortotal++;badindicatorstext = " (Bad indicators: "badindicatortotal")";foundbad = 1; print $0 > "tmp_"rectype"_badindicators.mrc" }
+
+if ( badescape == 1){ badescapetotal++;badescapetext = " (Bad escape: "badescapetotal")";foundbad = 1; print $0 > "bad_"rectype"_badescape.mrc" }
 
 if ( goodrec == 1 && good_directory == 1 && good_length == 1 && foundbad == 0 && found008 == 1 ){ goodrecs++;print $0 > OUTFILE }
 
 if (foundbad == 1) { badrecs++ }
 if (deletedrecs > 0) { deletedrecstext = " (deleted recs: "deletedrecs")" }
-if ( badrecs > 0 || bad_tag > 0){badtext=badtagtext""baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext""badindicatorstext""badsubfieldstext""deletedrecstext""badmandatorytext }
+if ( badrecs > 0 || bad_tag > 0){badtext=badtagtext""baddirectorytext""bad001text""bad008text""bad010text""bad245text""badlengthtext""badindicatorstext""badsubfieldstext""deletedrecstext""badmandatorytext""badescapetext }
 
 if (rectype == "bib") { bibcount++ }
 if (rectype == "holdings") { holdingscount++ }
@@ -213,7 +219,8 @@ if (bibcount > 0) { bibmsg = bibcount" records output to "FILEROOT"_bib_fixed.mr
 if (holdingscount > 0) { holdingsmsg = holdingscount" records output to "FILEROOT"_holdings_fixed.mrc\\n" }
 if (authoritycount > 0) { authoritymsg = authoritycount" records output to "FILEROOT"_authority_fixed.mrc\\n" }
 
-printf "Good records: %d Bad records: %d Issues: %s                             \\n\\n", goodrecs, badrecs, badtext
+printf "Good records: %d Bad records: %d Issues: %s                             \\n", goodrecs, badrecs, badtext
+if (badescapetotal > 0) { printf "ESCAPE SEQUENCES DETECTED. Roundtripping through Marcedit with utf8 conversion recommended\\n\\n" }
 printf "Bib records: %d Holdings records: %d Authority records : %s                     \\n\\n", bibcount, holdingscount, authoritycount 
 print bibmsg""holdingsmsg""authoritymsg""
 
@@ -262,7 +269,7 @@ process_file() {
 	bad_subfield_regex1=$'\x1f'[0az]$'\x1e'
 	bad_subfield_regex2=$'\x1f'[^0-9a-z]
 
-	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX1=${bad_subfield_regex1} -v BAD_SUBFIELD_REGEX2=${bad_subfield_regex2} -v DEEPCLEAN=${deepclean} -b -f tmp_checkmarc "${marcfile}.tmp"
+	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v ESC=$'\x1b' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX1=${bad_subfield_regex1} -v BAD_SUBFIELD_REGEX2=${bad_subfield_regex2} -v DEEPCLEAN=${deepclean} -b -f tmp_checkmarc "${marcfile}.tmp"
 	sleep 1
 
 	ls bad_*"${fileroot}" 2> /dev/null
