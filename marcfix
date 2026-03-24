@@ -218,6 +218,8 @@ if (bibcount > 0) { bibmsg = bibcount" records output to "FILEROOT"_bib_fixed.mr
 if (holdingscount > 0) { holdingsmsg = holdingscount" records output to "FILEROOT"_holdings_fixed.mrc\\n" }
 if (authoritycount > 0) { authoritymsg = authoritycount" records output to "FILEROOT"_authority_fixed.mrc\\n" }
 
+if (badescapetotal > 0) { printf "\\n\\nEscape sequences detected. More extensive repair recommended\\n\\n" }
+
 printf "Good records: %d Bad records: %d Issues: %s                             \\n\\n", goodrecs, badrecs, badtext
 printf "Bib records: %d Holdings records: %d Authority records : %s                     \\n\\n", bibcount, holdingscount, authoritycount 
 print bibmsg""holdingsmsg""authoritymsg""
