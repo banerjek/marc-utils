@@ -10,7 +10,7 @@ while getopts "bl:" opt; do
 			outfile="mfhds_frombibids.mrc"
       ;;
 		l) 
-			loc_subfield=$OPTARG
+			location=$OPTARG
 			;;
     \?)
       echo "Error: Invalid option -$OPTARG" >&2
@@ -26,15 +26,14 @@ infiles=("$@")
 infile=${infiles[0]}
 
 if [[ ${bibsonly} == "yes" ]];then
-	location="${2}"
+echo ${location}"cat"
 	if [[ -z $location ]];then
 		echo "You must supply a location argument"
 		echo
-		echo "Usage: mfhds-fromtsv [idfile] [location]"
+		echo "Usage: mfhds-fromtsv -b <location> [idfile]"
 		echo
 		echo "Options:"
 		echo "-b Create from list of bib ids only"
-		echo "-l [subfield] Specify location subfield (default is b)"
 		echo
 		exit
 	fi
