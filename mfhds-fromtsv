@@ -284,6 +284,7 @@ function build_mfhd() {
 					alma_source = 1
 					template_852="=852   0"
 					break
+				case "001":
 				case "bibid":
 				case "bibno":
 				case "mmsid":
@@ -310,7 +311,9 @@ function build_mfhd() {
 					location=i
 					printf ("Location found in "$i"\\n")
 					break
+				case "856":
 				case "portfoliourl":
+				case "url":
 					electroniclocation=i
 					location=i
 					portfoliofile=1
@@ -326,6 +329,7 @@ function build_mfhd() {
 				case "callitem":
 				case "callmarc":
 				case "callno":
+				case "callnum":
 				case "callnumber":
 				case "permanentcallnumber":
 					callNumPos=i
@@ -347,6 +351,7 @@ function build_mfhd() {
 					callSuffix=i
 					printf ("Call number suffix found in "$i"\\n")
 					break
+				case "050":
 				case "bibcall":
 				case "callbiblio":
 				case "callbibliographic":
