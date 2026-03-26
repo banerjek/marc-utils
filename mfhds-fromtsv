@@ -3,13 +3,16 @@
 bibsonly="no"
 loc_subfield="b"
 
-while getopts "bl:" opt; do
+while getopts "bl:s:" opt; do
   case $opt in
     b)
       bibsonly="yes"
 			outfile="mfhds_frombibids.mrc"
       ;;
 		l) 
+			location=$OPTARG
+			;;
+		s) 
 			location=$OPTARG
 			;;
     \?)
@@ -26,14 +29,13 @@ infiles=("$@")
 infile=${infiles[0]}
 
 if [[ ${bibsonly} == "yes" ]];then
-echo ${location}"cat"
 	if [[ -z $location ]];then
 		echo "You must supply a location argument"
 		echo
-		echo "Usage: mfhds-fromtsv -b <location> [idfile]"
+		echo "Usage: mfhds-fromtsv -b [idfile]"
 		echo
 		echo "Options:"
-		echo "-b Create from list of bib ids only"
+	 	echo "-b Create from list of bib ids only"
 		echo
 		exit
 	fi
@@ -433,6 +435,7 @@ function build_mfhd() {
 						printf ("Ownership note was found in "$i"\\n")
 					}
 					break
+				case "note":
 				case "publicnote":
 				case "summaryholdingspublicnote":
 					if (itemfile == 0) {
