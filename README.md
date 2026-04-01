@@ -2,6 +2,7 @@
 The marc-utils are a set of minimal tools to allow fast analysis of MARC and extractions from files using command line utilities. Functionality is limited to maximize speed and transparency to facilitate modification for needs at hand. They will be most useful if added to your path.
 
 # Table of Contents
+* [**labeled2marc**](#labeled2marc) -- Converts labeled file to MARC
 * [**marc**](#marc) -- Converts text in text2marc format sent to stdin to MARC
 * [**marcadd**](#marcadd) -- Add a field to a MARC record from command line or source file
 * [**marccopy**](#marccocopy) -- Copies one MARC field to another
@@ -41,6 +42,12 @@ The author has no way of knowing your needs or environment, so they may be compl
 bash and a version of awk that understands the "-b" switch (i.e. anything from the past couple decades that's in your base linux distro should be good). However, you may need to install gawk if you're on a Mac.
 
 # The utilities
+
+## labled2marc 
+**Usage:** *labeled2marc [filename]*   
+**Example:** *labeled2marc myfile.txt*
+
+Converts labeled file to MARC. Must modify label detection.
 
 ## marc
 **Usage:** *marc*   

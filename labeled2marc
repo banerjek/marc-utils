@@ -1,0 +1,169 @@
+#!/bin/bash
+if [[ -z $1 ]];then
+
+cat << EOF
+
+Usage: labeled2tsv [filename]
+Example: labled2tsv myfile.mrc
+
+EOF
+exit
+else
+	infile="${1}"
+	outfile="${infile%.*}"
+fi
+
+read -r -d '' awkscript << "ENDOFAWK"
+
+BEGIN {
+  FS=""
+}
+
+function trim(s) {
+  gsub(/^[ \t]+|[ \t]+$/, "", s)
+  return s
+}
+
+function emit_record() {
+
+  print "=LDR  02300naa a2200457 i 4500"
+  print "=001  " refcmpt
+  print "=003  FR-BDSP"
+  print "=008  " year "0101s" year "    fr ar p o|||||0 fre d"
+
+  if (ref != "")
+    print "=035    a(BDSP)" ref
+
+  print "=336    atextbtxt2rdacontent"
+  print "=337    aunmediatedbn2rdamedia"
+  print "=338    avolumebnc2rdacarrier"
+
+  if (lang != "")
+    print "=041  0 afre"
+
+  # ---------- AUTHORS ----------
+  if (auth_count > 0) {
+    print "=100  1 a" author[1] ",eauthor."
+    for (i = 2; i <= auth_count; i++)
+      print "=700  1 a" author[i] ",eauthor."
+  }
+
+  # ---------- TITLE (245, single line) ----------
+  if (title != "") {
+    line = "=245  10a" title
+    if (subtitle != "")
+      line = line "b" subtitle
+    if (auth_count > 0)
+      line = line "c" author[1] "."
+    print line
+  }
+
+  # ---------- PUBLICATION DATE ----------
+  if (year != "")
+    print "=264   1c" year "."
+
+  # ---------- PHYSICAL DESCRIPTION ----------
+  if (pages != "")
+    print "=300    a" pages
+
+  # ---------- ABSTRACT ----------
+  if (abstract != "")
+    print "=520    a" abstract
+
+  # ---------- BIBLIOGRAPHICAL NOTES ----------
+  if (biblio != "")
+    print "=504    a" biblio
+
+  # ---------- SUBJECTS ----------
+  for (i = 1; i <= subj_count; i++)
+    print "=650  04a" subject[i]
+
+  # ---------- HOST ITEM (773, single line) ----------
+  if (journal != "") {
+    line = "=773  0 t" journal
+    if (number != "" && year != "")
+      line = line "gno. " number " (" year ")"
+    if (issn != "")
+      line = line "x" issn
+    print line
+  }
+
+  # ---------- URL ----------
+  if (url != "")
+    print "=856  40u" url
+
+  # ---------- LOCAL INDEXING ----------
+  if (centres != "")
+    print "=599    aIndexation centres: " centres "."
+
+  print ""
+}
+
+# ================== FIELD PARSING ==================
+
+/^#DOC_TITRE /     { title = trim(substr($0, 12)) }
+/^#DOC_TITRE2 /    { subtitle = trim(substr($0, 13)) }
+
+/^#DOC_AUTEUR /    { author[++auth_count] = trim(substr($0, 13)) }
+
+/^#DOC_AB / {
+  abstract = trim(substr($0, 9))
+  gsub(/[\\r\\n]+/, " ", abstract)
+}
+
+/^#DOC_SOURCE /    { pages = trim(substr($0, 13)) }
+
+/^#Ref\. Biblio /  { biblio_raw = trim(substr($0, 14)) }
+
+/^#DOC_DEE /       { subject[++subj_count] = trim(substr($0, 10)) }
+
+/^#DOC_PER_TITRE / { journal = trim(substr($0, 17)) }
+/^#DOC_PER_NUMERO /{ number = trim(substr($0, 18)) }
+
+/^#DOC_ISSN /      { issn = trim(substr($0, 11)) }
+/^#DOC_URL /       { url = trim(substr($0, 10)) }
+/^#DOC_LANGUE /    { lang = trim(substr($0, 14)) }
+/^#AP_ANNEE /      { year = trim(substr($0, 10)) }
+/^#DOC_REF /       { ref = trim(substr($0, 10)) }
+/^#DOC_REFCMPT /   { refcmpt = trim(substr($0, 14)) }
+
+/^#DOC_CENTRE_INDEX / {
+  c = trim(substr($0, 22))
+  if (centres == "") centres = c
+  else centres = centres ", " c
+}
+
+# ================== END OF RECORD ==================
+
+/^Fin_Notice/ {
+
+  # --- normalize bibliographic note ---
+  if (biblio_raw != "") {
+    if (biblio_raw ~ /[0-9]/)
+      biblio = "Includes " biblio_raw " bibliographical references."
+    else
+      biblio = "Includes bibliographical references."
+  }
+
+  emit_record()
+
+  # reset state
+  delete author
+  delete subject
+  auth_count = subj_count = 0
+
+  title = subtitle = abstract = pages = biblio = biblio_raw = ""
+  journal = issn = number = ""
+  year = ref = refcmpt = ""
+  url = lang = centres = ""
+}
+
+ENDOFAWK
+
+echo -e "${awkscript}" > tmp_labeled2marc
+awk -f tmp_labeled2marc "${infile}" > "${outfile}"
+rm -f  tmp_labeled2marc 
+
+echo "Records have been output to ${outfile}"
+text2marc "${outfile}"
+rm "${outfile}"
