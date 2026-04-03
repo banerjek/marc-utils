@@ -33,6 +33,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**tagfc**](#tagfc) -- Counts MARC fields and subfields from stdin 
 * [**text**](#text) -- Converts MARC on stdin to text
 * [**text2marc**](#text2marc) -- Convert text files to MARC
+* [**tsv2marc**](#tsv2marc) -- Convert tab delimited files to MARC
 
 # Disclaimers
 

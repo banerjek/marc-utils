@@ -1,0 +1,133 @@
+#!/usr/bin/bash
+export LC_ALL=C.UTF-8
+
+infile="${1}"
+outfile="${infile%.*}"
+
+awk -F'\t' -v SUBDELIM=";" '
+BEGIN { OFS="" }
+
+# -------------------------------------------------
+# HEADER NORMALIZATION
+# -------------------------------------------------
+function normalize(s) {
+  s = tolower(s)
+  gsub(/[áàâä]/, "a", s)
+  gsub(/[éèêë]/, "e", s)
+  gsub(/[íìîï]/, "i", s)
+  gsub(/[óòôö]/, "o", s)
+  gsub(/[úùûü]/, "u", s)
+  gsub(/ç/, "c", s)
+  gsub(/ñ/, "n", s)
+  gsub(/[^a-z0-9]/, "", s)
+  return s
+}
+
+# -------------------------------------------------
+# INDICATOR NORMALIZATION
+# -------------------------------------------------
+function norm_ind(ind,   i) {
+  ind = sprintf("%-2s", ind)
+  for (i = 1; i <= 2; i++)
+    if (substr(ind, i, 1) == "_")
+      ind = substr(ind, 1, i-1) " " substr(ind, i+1)
+  return ind
+}
+
+# -------------------------------------------------
+# MARC OUTPUT HELPERS
+# -------------------------------------------------
+function marc(tag, ind, val) {
+  if (val == "") return
+  ind = norm_ind(ind)
+  print "=", tag, "  ", ind, val
+}
+
+function ctrl(tag, val) {
+  if (val == "") return
+  print "=", tag, "  ", val
+}
+
+function repeat_marc(tag, ind, val,   n,i,a) {
+  if (val == "") return
+  ind = norm_ind(ind)
+  n = split(val, a, / *, */)
+  for (i = 1; i <= n; i++)
+    if (a[i] != "")
+      print "=", tag, "  ", ind, "a" a[i]
+}
+
+function repeat_marc_subdelim(tag, ind, val, delim,   n,i,a,regex) {
+  if (val == "") return
+  ind = norm_ind(ind)
+  regex = "[[:space:]]*" delim "[[:space:]]*"
+  n = split(val, a, regex)
+  for (i = 1; i <= n; i++)
+    if (a[i] != "")
+      print "=", tag, "  ", ind, "a" a[i]
+}
+
+# -------------------------------------------------
+# FIXED FIELD HELPERS
+# -------------------------------------------------
+function extract_year(s) {
+  if (match(s, /[0-9]{4}/))
+    return substr(s, RSTART, 4)
+  return "####"
+}
+
+function today_ymd() {
+  return strftime("%y%m%d")
+}
+
+function lang_code(v) {
+  v = normalize(v)
+  if (v ~ /^fr/) return "fre"
+  if (v ~ /^en/) return "eng"
+  return "|||"
+}
+
+function leader_from(has_serial) {
+  return has_serial \
+    ? "00000nab a2200000   4500" \
+    : "00000nam a2200000   4500"
+}
+
+function field_008(date_val, place_val, lang_val,   y) {
+  y = extract_year(date_val)
+  return today_ymd() "s" y "    fr ||||  ||||    0 0 " lang_code(lang_val) " d"
+}
+
+# -------------------------------------------------
+# HEADER MAP
+# -------------------------------------------------
+NR == 1 {
+  for (i = 1; i <= NF; i++)
+    h[ normalize($i) ] = i
+  next
+}
+
+function v(k) { return (k in h) ? $(h[k]) : "" }
+
+# -------------------------------------------------
+# RECORD
+# -------------------------------------------------
+{
+  has_serial = (v("titreperiodique") != "")
+
+  ctrl("LDR", leader_from(has_serial))
+  ctrl("001", v("ftcid"))
+  ctrl("006", "m        d")
+  ctrl("008", field_008(v("dateparution"), "", v("langue")))
+
+  marc("245", "10", "a" v("titre"))
+  marc("100", "1 ", "a" v("auteurprincipal"))
+
+  repeat_marc("650", " 7", v("descripteur"))
+  repeat_marc_subdelim("650", " 7", v("doccentreindex"), ",")
+
+  print ""
+}
+' "${infile}" > "${outfile}"
+text2marc "${outfile}"
+rm -f "${outfile}"
