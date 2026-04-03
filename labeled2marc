@@ -3,8 +3,8 @@ if [[ -z $1 ]];then
 
 cat << EOF
 
-Usage: labeled2tsv [filename]
-Example: labled2tsv myfile.mrc
+Usage: labeled2marc [filename]
+Example: labled2marc myfile.mrc
 
 EOF
 exit
