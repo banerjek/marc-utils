@@ -3,6 +3,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 
 # Table of Contents
 * [**labeled2marc**](#labeled2marc) -- Converts labeled file to MARC
+* [**latin12marc**](#latin12marc) -- Converts Latin 1 (ISO-8859-1) files to UTF8
 * [**marc**](#marc) -- Converts text in text2marc format sent to stdin to MARC
 * [**marcadd**](#marcadd) -- Add a field to a MARC record from command line or source file
 * [**marccopy**](#marccocopy) -- Copies one MARC field to another
@@ -49,6 +50,12 @@ bash and a version of awk that understands the "-b" switch (i.e. anything from t
 **Example:** *labeled2marc myfile.txt*
 
 Converts labeled file to MARC. Must modify label detection.
+
+## latin12marc 
+**Usage:** *latin12marc [filename]*   
+**Example:** *latin12marc* myfile.mrc
+
+Converts Latin 1 (ISO-8859-1) files to UTF8
 
 ## marc
 **Usage:** *marc*   

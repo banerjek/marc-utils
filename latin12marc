@@ -10,7 +10,7 @@ fi
 rm -f "${finalfile}" 
 rm -f tmp_marc2utf8*
 
-if [[ -z ${infile} ]];then echo "You must supply a file name or expression (wildcards OK). Usage: marc2utf8 [filename]";fi
+if [[ -z ${infile} ]];then echo "You must supply a file name or expression (wildcards OK). Usage: latin12marc [filename]";fi
 
 if [[ ! $(which yaz-marcdump |grep yaz) ]];then
 	echo 
