@@ -1,9 +1,31 @@
+#!/usr/bin/bash
+
+NOT=0
+
+while getopts "n" opt; do
+  case $opt in
+    n)
+			NOT=1
+      ;;
+    \?)
+      echo "Error: Invalid option -$OPTARG" >&2
+      echo "Usage: $0 [-n]" >&2
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND - 1))
+
 if [[ -z $1 || -z $2 || -z $3 ]];then
 	echo "Usage: marcsearch [filename] [marcfield] '[searchexpression]' [count]"
 	echo "Regular expresions are supported for searchexpression. Count is optional and"
 	echo "should just be \"count\" if you want a record count only"
 	echo "Marcfield can either be three digits or three digits and a subfield, e.g. 245a"
-	echo "Negate the search by adding an exclamation mark as the last argument"
+	echo 
+	echo "Options:
+	echo "-n Negate search
+	echo
 	exit
 else
 	infile="${1}"
@@ -15,14 +37,6 @@ fi
 
 fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
 outfile="${fileroot}_found.mrc"
-
-##### check for negation and remove last agument
-if [[ "${!#}" = "!" ]]; then 
-	set -- "${@:1:$(($#-1))}"
-	NOT=1
-else
-	NOT=0
-fi
 
 if [[ ${#marctag} -eq 4 ]];then
 	marctag=${marctag:0:3}
