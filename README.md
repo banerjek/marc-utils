@@ -19,6 +19,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marcfix**](#marcfix) -- Divide MARC records by type and fix some common issues
 * [**marcgrep**](#marcgrep) -- Search raw file or stdin for regex and render output as text
 * [**marchead**](#marchead) -- Extract first part of MARC files 
+* [**marcleaderfix**](#marcleaderfix) -- Replace a portion of the leader with a constant
 * [**marcmissing**](#marcmissing) -- Extract MARC records based absence of a specified tag
 * [**marcless**](#marcless) -- Page through MARC records through unix less command
 * [**marcremap**](#marcremap) -- Remap one MARC field to another 
@@ -157,6 +158,10 @@ Simple regex match through binary MARC file with output to text.
 ## marchead
 **Usage:** *marchead [numlines] [filename]*   
 **Example:** *marchead -1000 marc_file.mrc*   
+
+## marcleaderfix
+**Usage:** *marcleaderfix [filename] [start_postion] [end_position] [value]*   
+**Example:** *marcleaderfix marc_file.mrc 6 6 z*   
 
 Output first [numlines] records, *nix head style
 

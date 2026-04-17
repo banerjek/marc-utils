@@ -1,0 +1,48 @@
+#!/bin/bash
+
+if [[ "$#" -ne 4 ]]; then
+  echo "Usage: marcleaderfix [file] [start] [end] [value]" ]
+fi
+
+infile="$1"
+outfile="${infile%.*}_fixed.mrc"
+start="$2"
+end="$3"
+value="$4"
+
+case "$start" in
+  (*[!0-9]*|'')
+    echo "Error: start and end positions must be integers" 
+    exit 
+    ;;
+esac
+
+case "$end" in
+  (*[!0-9]*|'')
+    echo "Error: start and end positions must be integers" 
+    exit 
+    ;;
+esac
+
+if [[ "$end" -lt "$start" ]]; then
+  echo "Error: end position must be >= start position" 
+  exit 
+fi
+
+length=$(( end - start + 1 ))
+
+if [ "${#value}" -ne "$length" ]; then
+  echo "Error: replacement value length (${#value}) does not match required length ($length)" >&2
+  exit
+fi
+
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v START="$start" -v LEN="$length" -v VALUE="$value" -v OUTFILE="${outfile}" -b '
+{
+  pre  = substr($0, 1, START)
+  post = substr($0, START + LEN + 1)
+  $0 = pre VALUE post
+  print $0 > OUTFILE
+	if (NR % 10000 == 0){ printf "Records processed: "NR"\r" }
+}
+END { printf NR" records have been processed and sent to "OUTFILE"\n\n" }
+' "${infile}" 
