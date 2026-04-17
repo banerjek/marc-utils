@@ -1,7 +1,8 @@
 #!/bin/bash
 
 if [[ "$#" -ne 4 ]]; then
-  echo "Usage: marcleaderfix [file] [start] [end] [value]" ]
+  echo "Usage: marcleaderfix [filename] [start_postion] [end_postion] [value]" 
+	exit
 fi
 
 infile="$1"
