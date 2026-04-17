@@ -6,6 +6,6 @@ if [[ ! -f "${infile}" ]];then
 	infile=$tmp_mrc
 fi
 
-marchead -20000 "${infile}" |text |less
+marchead -100000 "${infile}" |text |less
 
 rm -f $tmp_mrc 
