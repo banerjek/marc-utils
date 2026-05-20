@@ -17,7 +17,7 @@ if [[ ! -f ${infile} ]];then
 else
 
 	fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
-	outfile="${fileroot}_missingtag.mrc"
+	outfile="${fileroot}_missing${tagfield}.mrc"
 fi
 
 read -r -d '' awkscript << "ENDOFAWK"
