@@ -46,7 +46,7 @@ else
 	marcfile="${1}"
 	tagfile="${2}"
 
-	if [[ holdings_processing == "no" ]];then
+	if [[ ${holdings_processing}=="no" ]];then
 		if [[ -f ${2} ]];then
 			tagfile="${2}"
 			idtag=${3}
