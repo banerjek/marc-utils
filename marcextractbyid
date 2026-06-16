@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 
 negativematch="no"
+rm -f notfound
 
 while getopts "n" opt; do
   case $opt in
@@ -127,7 +128,8 @@ if (directory_check == 0) {
 
 gsub(" *$", "", id_content)
 
-if (seen[id_content] == 1 ) { 
+if (id_content in seen) { 
+	seen_marc[id_content] = 1
 	foundrecs++
 	if ( NEGATIVEMATCH == "no" ) { print $0 > OUTFILE }
 	if (SINGLEID == 1) { exit }
@@ -144,7 +146,12 @@ recordcounter++
 if (NR % 10000 == 0) if (NR % 10000 == 0){ printf "Records searched: %d Matching: %d Not matching: %d \r", recordcounter, foundrecs, notfoundrecs }
 
 }
-END { printf "Records searched: %d Matching: %d Not matching: %d \r", recordcounter, foundrecs, notfoundrecs }
+END { 
+	printf "Records searched: %d Matching: %d Not matching: %d \r", recordcounter, foundrecs, notfoundrecs
+	for (k in seen) {
+		if (!(k in seen_marc)) { printf k"\\n" > "notfound" }
+	}
+}
 ENDOFAWK
 
 echo -e "${awkscript}" > tmp_checkmarc
@@ -158,6 +165,7 @@ echo
 if [[ ${singleid} == 0 ]];then
 	 [[ ${negativematch} == "yes" ]] && echo "Records not matching ID file were output to ${outfile}                     "
 	 [[ ${negativematch} == "no" ]] && echo "Records matching ID file were output to ${outfile}                     "
+	 [[ -f ids ]] && echo "Entries from ids file not matching any record were output to 'notfound'"
 	echo
 fi
 if [[ ${singleid} == 1 && -f ${matched} ]];then
