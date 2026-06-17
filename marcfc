@@ -1,7 +1,34 @@
+#!/usr/bin/bash
+
+invalidonly="no"
+
+while getopts "i" opt; do
+  case $opt in
+    i)
+      invalidonly="yes"
+      ;;
+    \?)
+      echo "Error: Invalid option -$OPTARG" >&2
+      echo "Usage: $0 [-n]" >&2
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND - 1))
+
 filelist=("$@")
 infile="${filelist[0]}"
 
-if [[ -z ${infile} ]];then echo "You must supply a file name or expression (wildcards OK). Counts MARC tags in binary MARC files. Usage: marcfc [filename]";exit;fi
+if [[ -z ${infile} ]];then 
+	echo
+	echo "You must supply a file name or expression (wildcards OK). Counts MARC tags in binary MARC files."
+	echo "Usage: marcfc [filename]"
+	echo 
+	echo "Options:"
+	echo "-i Invalid tags. Show only tags containing nonnumeric characters or subfields that are not numerals or lowercase letters"
+	exit
+fi
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
@@ -56,7 +83,15 @@ END {
 	print "Total records: "NR"\\n" > OUTFILE
 
 	for (tag=1; tag<=n; tag++) {
-		print sorted_bytag[tag] ":", tagcount[sorted_bytag[tag]] > OUTFILE
+		key = sorted_bytag[tag]
+
+		if (INVALID == "yes") {
+			if ((key ~ /[^0-9]/ && length(key) == 3) || (substr(key,4,1) !~ /[0-9a-z]/ && length(key) == 4)) {
+				print key ":", tagcount[key] > OUTFILE
+			} 
+		} else {
+			print key ":", tagcount[key] > OUTFILE
+		}
 	}
 }
 
@@ -68,9 +103,10 @@ chmod 700 tmp_checkmarc
 for file in "${filelist[@]}";do
 	fileroot=$(echo "${file}" | sed 's/\.....\?$//')
 	outfile="${fileroot}_fieldcounts.txt"
-	awk -v RS=$'\x1d' -v ORS=$'\n' -v FS=$'\x1e' -v OFS="\t" -v SFS=$'\x1f' -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${file}"
+	awk -v RS=$'\x1d' -v ORS=$'\n' -v FS=$'\x1e' -v OFS="\t" -v SFS=$'\x1f' -v INVALID=${invalidonly} -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${file}"
 	echo "Field counts exported to ${outfile}"
+	[[ ${invalidonly}=="yes" ]] && echo "Only invalid tags were exported"
 	echo
 done
 echo
-rm -f tmp_checkmarc
+#rm -f tmp_checkmarc
