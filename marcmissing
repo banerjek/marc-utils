@@ -1,3 +1,21 @@
+#!/usr/bin/bash
+
+recordnumbers="no"
+
+while getopts "n" opt; do
+  case $opt in
+    n)
+			recordnumbers="yes"
+      ;;
+    \?)
+      echo "Error: Invalid option -$OPTARG" >&2
+      echo "Usage: $0 [-n]" >&2
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND - 1))
 
 infile="${1}"
 
@@ -13,11 +31,13 @@ if [[ ! -f ${infile} ]];then
 	echo 
 	echo "If tagfield isn't present, 001 is assumed"
 	echo
+	echo "Options:"
+	echo "-n Return record position rather than record"
 	exit
 else
 
 	fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
-	outfile="${fileroot}_missing${tagfield}.mrc"
+	[[ recordnumbers == "no" ]] && outfile="${fileroot}_missing${tagfield}.mrc" || outfile="${fileroot}_missing${tagfield}.txt"
 fi
 
 read -r -d '' awkscript << "ENDOFAWK"
@@ -29,6 +49,8 @@ BEGIN { records_found = 0
                 printf("Your version of awk does not support  -- you need a version that supports the -b switch\\n")
                 exit
         } 
+	print NUMBERS
+	print NUMBERS
 }
 
 function find_subfield() {
@@ -55,7 +77,11 @@ function find_tag() {
 	}
 
 	if (SEEN == 0) {
-		print $0 > OUTFILE
+		if (NUMBERS == "no") {
+			print $0 > OUTFILE
+		} else {
+			printf NR"\\n" > OUTFILE
+		}
 		records_found++
 	}
 }
@@ -91,7 +117,7 @@ ENDOFAWK
 echo -e "${awkscript}" > tmp_checkmarc
 chmod 700 tmp_checkmarc
 
-awk -v RS=$'\x1d' -v ORS=$'\x1d' -v SFS=$'\x1f' -v FS=$'\x1e' -v TAGFIELD="${tagfield}" -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v SFS=$'\x1f' -v FS=$'\x1e' -v TAGFIELD="${tagfield}" -v NUMBERS=${recordnumbers} -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${infile}"
 
 echo
 
