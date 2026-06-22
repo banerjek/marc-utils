@@ -23,8 +23,8 @@ if [[ -z $1 || -z $2 || -z $3 ]];then
 	echo "should just be \"count\" if you want a record count only"
 	echo "Marcfield can either be three digits or three digits and a subfield, e.g. 245a"
 	echo 
-	echo "Options:
-	echo "-n Negate search
+	echo "Options:"
+	echo "-n Negate search"
 	echo
 	exit
 else
