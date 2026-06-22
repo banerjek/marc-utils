@@ -37,7 +37,7 @@ if [[ ! -f ${infile} ]];then
 else
 
 	fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
-	[[ ${recordnumbers}=="no" ]] && outfile="${fileroot}_missing${tagfield}.mrc" || outfile="${fileroot}_missing${tagfield}.txt"
+	[[ ${recordnumbers} == "no" ]] && outfile="${fileroot}_missing${tagfield}.mrc" || outfile="${fileroot}_missing${tagfield}.txt"
 fi
 
 read -r -d '' awkscript << "ENDOFAWK"
