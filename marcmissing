@@ -49,8 +49,6 @@ BEGIN { records_found = 0
                 printf("Your version of awk does not support  -- you need a version that supports the -b switch\\n")
                 exit
         } 
-	print NUMBERS
-	print NUMBERS
 }
 
 function find_subfield() {
