@@ -1,24 +1,34 @@
-if [[ -z $1  ]];then
-	echo "Usage: marcsplit [filename] [-f] [num_records]"
-	echo "If num_records isn't provided, default is 10000"
-	echo "If -f is specified, the following values specifies the number of files created"
-	exit
+#!/usr/bin/bash
+
+numfiles=""
+num_per_file=10000
+
+while getopts ":f:" opt; do
+    case "$opt" in
+        f)
+            numfiles="$OPTARG"
+            ;;
+        *)
+            echo "Usage: marcsplit [-f num_files] filename [num_records]"
+            exit 1
+            ;;
+    esac
+done
+
+shift $((OPTIND - 1))
+
+infile="${1}"
+[[ -z "${infile} ]] && {
+    echo "Usage: marcsplit [-f num_files] filename [num_records]"
+    exit 1
+}
+
+if [[ -n $numfiles ]]; then
+    numrecs=$(awk -v RS=$'\x1d' 'END{print NR}' "$infile")
+    num_per_file=$(( numrecs / numfiles + 1 ))
 else
-	infile="${1}"
-
-	if [[ $2 == "-f" ]];then 
-		numfiles=$3
-		if [[ $numfiles == "" ]];then numfiles=5;fi
-
-		numrecs=$(awk -v RS=$'\x1d' 'END{print NR}' "${infile}")
-		num_per_file=$(($numrecs / $numfiles + 1))
-
-	else
-		num_per_file=$2
-		if [[ $num_per_file == "" ]];then num_per_file=10000;fi
-	fi
+    [[ -n $2 ]] && num_per_file=$2
 fi
-
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
@@ -36,13 +46,13 @@ if (NR % 10000 == 0){ printf "Records procesessed: "NR"\r"}
 
 ENDOFAWK
 
-echo -e "${awkscript}" > tmp_checkmarc
-chmod 700 tmp_checkmarc
+echo -e "${awkscript}" > tmp_awk_marcsplit
+chmod 700 tmp_awk_marcsplit
 
-awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v NUMRECS=$num_per_file -b -f tmp_checkmarc "${infile}"
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v NUMRECS=$num_per_file -b -f tmp_awk_marcsplit "${infile}"
 echo
 numfiles=$(ls m_split* |wc -l)
 echo "All records are processed into the following $numfiles files"
 ls m_split*
 echo
-rm tmp_checkmarc
+rm tmp_awk_marcsplit
