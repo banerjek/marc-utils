@@ -184,6 +184,22 @@ function build_mfhd() {
 		}
 	}
 
+	if (accessNote > 0 && $accessNote ~ /[a-zA-Z0-9]/) {
+		split($accessNote, statements, ";")
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=506    "SFS"a"statements[statement] }
+	}
+	if (ownershipNote > 0 && $ownershipNote ~ /[a-zA-Z0-9]/) {
+		split($ownershipNote, statements, ";")
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=561  0 "SFS"a"statements[statement] }
+	}
+	if (copyNote > 0 && $copyNote ~ /[a-zA-Z0-9]/) {
+		split($copyNote, statements, ";")
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=562  0 "SFS"a"statements[statement] }
+	}
+	if (bindingNote > 0 && $bindingNote ~ /[a-zA-Z0-9]/) {
+		split($bindingNote, statements, ";")
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=563    "SFS"a"statements[statement] }
+	}
 	if (publicNote > 0 && $publicNote ~ /[a-zA-Z0-9]/) {
 		split($publicNote, statements, ";")
 		for (statement in statements) { text_mfhd = text_mfhd""OFS"=538    "SFS"a"statements[statement] }
@@ -302,6 +318,10 @@ function build_mfhd() {
 						bibId=i
 						printf ("Bib ID found in "$i"\\n")
 					}
+					break
+				case "accessnote":
+					accessNote=i
+					printf ("Access note found in "$i"\\n")
 					break
 				case "itempermanentlocation":
 				case "itempermanentshelvinglocation":
