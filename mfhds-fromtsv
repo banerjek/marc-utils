@@ -417,6 +417,7 @@ function build_mfhd() {
 					}
 					break
 				case "bindingnote":
+				case "bindinfo":
 					if (itemfile == 0) {
 						bindingNote=i
 						printf ("Binding note was found in "$i"\\n")
