@@ -1,0 +1,58 @@
+#!/bin/bash
+
+if [[ ! -f ${1} ]] || [[ ! -f ${2} ]]; then
+
+cat << 'EOF'
+Usage: marcleadermap [delimitedfile] [marcfile] 
+
+Delimited file is two column text with UUID in first column and leader in second column.
+
+MARC records are expected to contain a UUID-based identifier immediately after "i"
+
+EOF
+
+exit
+	
+fi
+
+delimfile="$1"
+marcfile="$2"
+modified="${marcfile%.*}_modified.mrc"
+unmodified="${marcfile%.*}_unmodified.mrc"
+
+cat ${delimfile} |tr '\n' $'\x1d' > tmp_delimfile
+
+awk -v RS=$'\x1d' -v ORS=$'\x1d' -v MODIFIED=${modified} -v UNMODIFIED=${unmodified} '
+BEGIN { modified=unmodified=0 }
+{
+if (NR == FNR) {
+		leader6_12[$1]  = substr($2, 6, 7) # only load the positions not associated with length or offset
+		leader18_24[$1] = substr($2,18, 7)
+	} else {
+	if (match($0, /i[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/)) {
+		uuid = substr($0, RSTART + 1, RLENGTH - 1)
+	
+		if (uuid in leader6_12) {
+			$0 = substr($0, 1, 5) \
+				leader6_12[uuid] \
+				substr($0, 13, 5) \
+				leader18_24[uuid] \
+				substr($0, 25)
+			modified++
+			print $0 > MODIFIED
+		} else {
+			unmodified++
+			print $0 > UNMODIFIED
+		}
+	}
+	
+	if (NR % 10000 == 0){ printf "Records modified: %d Records unmodified: %d \r", modified, unmodified }
+	
+	}
+}' tmp_delimfile ${marcfile}
+
+echo
+echo
+echo "Records have been output to ${modified} and ${unmodified}"
+rm tmp_delimfile
+
