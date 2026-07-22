@@ -20,6 +20,7 @@ The marc-utils are a set of minimal tools to allow fast analysis of MARC and ext
 * [**marcgrep**](#marcgrep) -- Search raw file or stdin for regex and render output as text
 * [**marchead**](#marchead) -- Extract first part of MARC files 
 * [**marcleaderfix**](#marcleaderfix) -- Replace a portion of the leader with a constant
+* [**marcleadermap**](#marcleadermap) -- Replace leaders based on UUID match and file of leader data 
 * [**marcmissing**](#marcmissing) -- Extract MARC records based absence of a specified tag
 * [**marcless**](#marcless) -- Page through MARC records through unix less command
 * [**marcremap**](#marcremap) -- Remap one MARC field to another 
@@ -164,6 +165,14 @@ Simple regex match through binary MARC file with output to text.
 **Example:** *marcleaderfix marc_file.mrc 6 6 z*   
 
 Output first [numlines] records, *nix head style
+
+## marcleaderfix
+**Usage:** *marcleadermap [delimitedfile] [marcfile]*   
+**Example:** *marcleadermap uuid_leader.tsv marcfile.mrc*   
+
+Replace leaders based on UUID match and file of leader data.
+Delimited file is two column text with UUID in first column and leader in second column.
+MARC records are expected to contain a UUID-based identifier immediately after "i"
 
 ## marcmissing
 **Usage:** *marcmissing [filename] [tag]*   
