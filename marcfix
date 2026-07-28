@@ -59,7 +59,7 @@ function check_fields() {
 
 			tag = substr(directory, i, 3)
 			if (tag == "004") {
-				if (rectype !~ "holdings" ) { $0 = substr($0, 1, 6)"y"substr($0, 8); }
+				if (rectype !~ "holdings" ) { $0 = substr($0, 1, 6)"u"substr($0, 8); }
 				rectype="holdings"
 			}
 			if (tag == "008") {found008 = 1}

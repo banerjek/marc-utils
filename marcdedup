@@ -104,7 +104,7 @@ END {
 	printf "Records searched: "NR" with %d unique records and %d duplicates and %d records missing ids\\n\\n", uniquerecs, duprecs, missing++
 
 	printf "Unique records output to unique_recs.mrc\\n"
-	if (missing > 0) { printf "MARC records missing identifiers output to missing_identifiers.mrc\\n"}
+	if (missing > 0) { printf "MARC records missing identifiers output to missing_record_ids.mrc\\n"}
 	if (duprecs > 0) { printf "Identifiers for duplicate records output to duplicates.txt\\n"}
 }
 
