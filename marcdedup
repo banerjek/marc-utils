@@ -96,12 +96,12 @@ if (directory_check == 0 && record_id == "") {
 		}
 	}
 
-	if (NR % 10000 == 0){ printf "Records searched: "NR" with %d unique records and %d duplicates and %d records missing ids\\r", uniquerecs, duprecs, missing++ }
+	if (NR % 10000 == 0){ printf "Records searched: "NR" with %d unique records and %d duplicates and %d records missing ids\\r", uniquerecs, duprecs, missing }
 }
 }
 
 END {
-	printf "Records searched: "NR" with %d unique records and %d duplicates and %d records missing ids\\n\\n", uniquerecs, duprecs, missing++
+	printf "Records searched: "NR" with %d unique records and %d duplicates and %d records missing ids\\n\\n", uniquerecs, duprecs, missing
 
 	printf "Unique records output to unique_recs.mrc\\n"
 	if (missing > 0) { printf "MARC records missing identifiers output to missing_record_ids.mrc\\n"}
