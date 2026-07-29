@@ -7,6 +7,7 @@ while getopts "n" opt; do
   case $opt in
     n)
       negativematch="yes"
+			matchtext=" (negative)"
       ;;
     \?)
       echo "Error: Invalid option -$OPTARG" >&2
@@ -129,13 +130,22 @@ if (directory_check == 0) {
 gsub(" *$", "", id_content)
 
 if (id_content in seen) { 
-	seen_marc[id_content] = 1
-	foundrecs++
-	if ( NEGATIVEMATCH == "no" ) { print $0 > OUTFILE }
+	if ( NEGATIVEMATCH == "no" ) { 
+		seen_marc[id_content] = 1
+		print $0 > OUTFILE 
+		foundrecs++
+	} else {
+		notfoundrecs++
+	}
 	if (SINGLEID == 1) { exit }
 } else {
-	notfoundrecs++
-	if ( NEGATIVEMATCH == "yes" ) { print $0 > OUTFILE }
+	if ( NEGATIVEMATCH == "yes" ) { 
+		seen_marc[id_content] = 1
+		print $0 > OUTFILE 
+		foundrecs++
+	} else {
+		notfoundrecs++
+	}
 }
 id_content = ""
 
@@ -143,11 +153,11 @@ id_content = ""
 
 recordcounter++
 
-if (NR % 10000 == 0) if (NR % 10000 == 0){ printf "Records searched: %d Matching: %d Not matching: %d \r", recordcounter, foundrecs, notfoundrecs }
+if (NR % 10000 == 0) if (NR % 10000 == 0){ printf "Records searched: %d Matching${matchtext}: %d Not matching: %d \r", recordcounter, foundrecs, notfoundrecs }
 
 }
 END { 
-	printf "Records searched: %d Matching: %d Not matching: %d \r", recordcounter, foundrecs, notfoundrecs
+	printf "Records searched: %d Matching${matchtext}: %d Not matching: %d \r", recordcounter, foundrecs, notfoundrecs
 	for (k in seen) {
 		if (!(k in seen_marc)) { printf k"\\n" > "notfound" }
 	}
