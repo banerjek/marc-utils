@@ -129,24 +129,18 @@ if (directory_check == 0) {
 
 gsub(" *$", "", id_content)
 
-if (id_content in seen) { 
-	if ( NEGATIVEMATCH == "no" ) { 
-		seen_marc[id_content] = 1
-		print $0 > OUTFILE 
-		foundrecs++
-	} else {
-		notfoundrecs++
-	}
-	if (SINGLEID == 1) { exit }
+matched = (id_content in seen)
+
+if (( matched && NEGATIVEMATCH == "no"  ) ||
+    (!matched && NEGATIVEMATCH == "yes")) {
+    seen_marc[id_content] = 1
+    print > OUTFILE
+    foundrecs++
 } else {
-	if ( NEGATIVEMATCH == "yes" ) { 
-		seen_marc[id_content] = 1
-		print $0 > OUTFILE 
-		foundrecs++
-	} else {
-		notfoundrecs++
-	}
+    notfoundrecs++
 }
+
+if (SINGLEID == 1) { exit }
 id_content = ""
 
 }
