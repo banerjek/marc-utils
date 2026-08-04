@@ -1,4 +1,20 @@
 #!/usr/bin/bash
+nomsg="no"
+
+while getopts "n" opt; do
+  case $opt in
+    n)
+      nomsg="yes"
+      ;;
+    \?)
+      echo "Error: Invalid option -$OPTARG" >&2
+      echo "Usage: $0 [-n]" >&2
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND - 1))
 
 filelist=("$@")
 
@@ -190,30 +206,32 @@ END {
 ORS=OFS="\\n"
 close(OUTFILE)
 
-bibmsg=holdingsmsg=authoritymsg=""
-
-if (bibcount > 0) { bibmsg = bibcount" records output to "FILEROOT"_bib_fixed.mrc\\n" }
-if (holdingscount > 0) { holdingsmsg = holdingscount" records output to "FILEROOT"_holdings_fixed.mrc\\n" }
-if (authoritycount > 0) { authoritymsg = authoritycount" records output to "FILEROOT"_authority_fixed.mrc\\n" }
-
-printf "Good records: %d Bad records: %d Issues: %s                             \\n", goodrecs, badrecs, badtext
-if (badescapetotal > 0) { printf "ESCAPE SEQUENCES DETECTED. Roundtripping through Marcedit with utf8 conversion recommended\\n\\n" }
-printf "Bib records: %d Holdings records: %d Authority records : %s                     \\n\\n", bibcount, holdingscount, authoritycount 
-print bibmsg""holdingsmsg""authoritymsg""
-
-count = 0
-for (t in tag_count) {
-	count++
+if (NOMSG == "no") {
+	bibmsg=holdingsmsg=authoritymsg=""
+	
+	if (bibcount > 0) { bibmsg = bibcount" records output to "FILEROOT"_bib_fixed.mrc\\n" }
+	if (holdingscount > 0) { holdingsmsg = holdingscount" records output to "FILEROOT"_holdings_fixed.mrc\\n" }
+	if (authoritycount > 0) { authoritymsg = authoritycount" records output to "FILEROOT"_authority_fixed.mrc\\n" }
+	
+	printf "Good records: %d Bad records: %d Issues: %s                             \\n", goodrecs, badrecs, badtext
+	if (badescapetotal > 0) { printf "ESCAPE SEQUENCES DETECTED. Roundtripping through Marcedit with utf8 conversion recommended\\n\\n" }
+	printf "Bib records: %d Holdings records: %d Authority records : %s                     \\n\\n", bibcount, holdingscount, authoritycount 
+	print bibmsg""holdingsmsg""authoritymsg""
+	
+	count = 0
+	for (t in tag_count) {
+		count++
+	}
+	if (count > 0){
+		printf "The following nonnumeric tags were detected followed by the number of records that contained them\\n"		
+	  for (t in tag_count) {
+	 	  printf "%s : %d\\n", t, tag_count[t]
+	   }
+	}
+	
+	if (badrecs > 0) { print badrecs" records were output to the files listed below and prefixed with bad_" }
+	if (totaloversized > 0) {print totaloversized" oversized were truncated"}
 }
-if (count > 0){
-	printf "The following nonnumeric tags were detected followed by the number of records that contained them\\n"		
-  for (t in tag_count) {
- 	  printf "%s : %d\\n", t, tag_count[t]
-   }
-}
-
-if (badrecs > 0) { print badrecs" records were output to the files listed below and prefixed with bad_" }
-if (totaloversized > 0) {print totaloversized" oversized were truncated"}
 }
 
 ENDOFAWK
@@ -233,20 +251,22 @@ process_file() {
 	echo -e "${awkscript}" > tmp_checkmarc
 	chmod 700 tmp_checkmarc
 
-	echo
-	echo "Processing ${marcfile}"	
-	echo
-	
-	
-	echo "Detecting and removing nulls and converting carriage returns, newlines, and tabs to spaces"
-	pv "${marcfile}" | tr -d '\000' | tr '\b\n\r\t' ' ' | perl -pe 's/\x1f([A-Z])/\x1f\L$1/g' > "${marcfile}.tmp"
-	echo 
+	if [[ ${nomsg} == "no" ]];then
+		echo
+		echo "Processing ${marcfile}"	
+		echo
+		echo "Detecting and removing nulls and converting carriage returns, newlines, and tabs to spaces"
+		pv "${marcfile}" | tr -d '\000' | tr '\b\n\r\t' ' ' | perl -pe 's/\x1f([A-Z])/\x1f\L$1/g' > "${marcfile}.tmp"
+		echo 
+	else
+		cat "${marcfile}" | tr -d '\000' | tr '\b\n\r\t' ' ' | perl -pe 's/\x1f([A-Z])/\x1f\L$1/g' > "${marcfile}.tmp"
+	fi
 
 	# null identifiers
 	bad_subfield_regex1=$'\x1f'[0az]$'\x1e'
 	bad_subfield_regex2=$'\x1f'[^0-9a-z]
 
-	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v ESC=$'\x1b' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX1=${bad_subfield_regex1} -v BAD_SUBFIELD_REGEX2=${bad_subfield_regex2} -b -f tmp_checkmarc "${marcfile}.tmp"
+	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v ESC=$'\x1b' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX1=${bad_subfield_regex1} -v BAD_SUBFIELD_REGEX2=${bad_subfield_regex2} -v NOMSG=${nomsg} -b -f tmp_checkmarc "${marcfile}.tmp"
 	sleep 1
 
 	ls bad_*"${fileroot}" 2> /dev/null
@@ -260,61 +280,61 @@ if [[ $processType == "file" ]];then
 		
 		temproot="tmp_bib_008"
 		if [[ -f ${temproot}.mrc ]];then
-			marc2text ${temproot}.mrc 
+			marc2text -n ${temproot}.mrc 
 			sed -i 's/^\(=LDR.*$\)/\1\n=008  780615s19uu    xx a                    d/;/^=0......\x1f[0az] *$/d' ${temproot}.txt
-			text2marc ${temproot}.txt
+			text2marc -n ${temproot}.txt
 			cat ${temproot}.mrc  >> "${fileroot}_bib_fixed.mrc"
 			rm -f ${temproot}.*
-			echo "Bib records lacking 008 were fixed and appended to ${fileroot}_bib_fixed.mrc"
+			[[ ${nomsg} == "no" ]] && echo "Bib records lacking 008 were fixed and appended to ${fileroot}_bib_fixed.mrc"
 		fi
 		
 		temproot="tmp_bib_badindicators"
 		if [[ -f ${temproot}.mrc ]];then
-			marc2text ${temproot}.mrc 
+			marc2text -n ${temproot}.mrc 
 			awk '{if($0~/^=([1-9]|0[1-9])/){if(substr($0,7,1)=="\037")$0=substr($0,1,6)"  "substr($0,7);else if(substr($0,8,1)=="\037")$0=substr($0,1,7)" "substr($0,8)};print $0}' ${temproot}.txt > ${temproot}1.txt
 			mv ${temproot}1.txt ${temproot}.txt
-			text2marc ${temproot}.txt
+			text2marc -n ${temproot}.txt
 			cat ${temproot}.mrc  >> "${fileroot}_bib_fixed.mrc"
 			rm -f ${temproot}.*
-			echo "Bib records with bad indicators were fixed and appended to ${fileroot}_bib_fixed.mrc"
+			[[ ${nomsg} == "no" ]] && echo "Bib records with bad indicators were fixed and appended to ${fileroot}_bib_fixed.mrc"
 		fi
 		
 		temproot="tmp_bib_badsubfields"
 		if [[ -f ${temproot}.mrc ]];then
-			marc2text ${temproot}.mrc 
+			marc2text -n ${temproot}.mrc 
 			sed -iE 's/\x1F[^a-z0-9][^\x1F]*//g;/^=[0167]......\x1f[0az] *$/d' ${temproot}.txt
-			text2marc ${temproot}.txt
+			text2marc -n ${temproot}.txt
 			cat ${temproot}.mrc  >> "${fileroot}_bib_fixed.mrc"
 			rm -f ${temproot}.*
-			echo "Bib records with null identifiers were fixed and appended to ${fileroot}_bib_fixed.mrc"
+			[[ ${nomsg} == "no" ]] && echo "Bib records with null identifiers were fixed and appended to ${fileroot}_bib_fixed.mrc"
 		fi
 
 		temproot="tmp_authority_008"
 		if [[ -f ${temproot}.mrc ]];then
-			marc2text ${temproot}.mrc 
+			marc2text -n ${temproot}.mrc 
 			sed -i 's/^\(=LDR.*$\)/\1\n=008  780615|| |||||aa||          |n aaa      /' ${temproot}.txt
-			text2marc ${temproot}.txt
+			text2marc -n ${temproot}.txt
 			cat ${temproot}.mrc  >> "${fileroot}_authority_fixed.mrc"
 			rm -f ${temproot}.*
-			echo "Authority records lacking 008 were fixed and appended to ${fileroot}_authority_fixed.mrc"
+			[[ ${nomsg} == "no" ]] && echo "Authority records lacking 008 were fixed and appended to ${fileroot}_authority_fixed.mrc"
 		fi
 		
 		temproot="tmp_holdings_008"
 		if [[ -f ${temproot}.mrc ]];then
-			marc2text ${temproot}.mrc 
+			marc2text -n ${temproot}.mrc 
 			sed -i 's/^\(=LDR.*$\)/\1\n=008  7806150p    8   4001uu   0000000/' ${temproot}.txt
-			text2marc ${temproot}.txt
+			text2marc -n ${temproot}.txt
 			cat ${temproot}.mrc  >> "${fileroot}_holdings_fixed.mrc"
 			rm -f ${temproot}.*
-			echo "Holdings records lacking 008 were fixed and appended to ${fileroot}_holdings_fixed.mrc"
+			[[ ${nomsg} == "no" ]] && echo "Holdings records lacking 008 were fixed and appended to ${fileroot}_holdings_fixed.mrc"
 		fi
 
 		if [[ -f tmp_oversized.mrc ]];then
-			marc2text tmp_oversized.mrc
-			text2marc tmp_oversized.txt
+			marc2text -n tmp_oversized.mrc
+			text2marc -n tmp_oversized.txt
 			cat tmp_oversized.mrc  >> "${fileroot}_bib_fixed.mrc"
 			rm -f tmp_oversized.*
-			echo "Oversized records were appended to ${fileroot}_bib_fixed.mrc"
+			[[ ${nomsg} == "no" ]] && echo "Oversized records were appended to ${fileroot}_bib_fixed.mrc"
 		fi
 	done
 	rm -f tmp_checkmarc

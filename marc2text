@@ -1,3 +1,21 @@
+#!/usr/bin/bash
+nomsg="no"
+
+while getopts "n" opt; do
+  case $opt in
+    n)
+      nomsg="yes"
+      ;;
+    \?)
+      echo "Error: Invalid option -$OPTARG" >&2
+      echo "Usage: $0 [-n]" >&2
+      exit 1
+      ;;
+  esac
+done
+
+shift $((OPTIND - 1))
+
 filelist=("$@")
 infile="${filelist[0]}"
 
@@ -55,13 +73,15 @@ BEGIN {
 	}
 
 	if (length(leader) == 24) {print record > OUTFILE}
-	if (NR % 10000 == 0){ printf "Records processed: "NR"\r" }
+	if (NR % 10000 == 0 && NOMSG == "no"){ printf "Records processed: "NR"\r" }
 
 }
 END { 
 	ORS="\\n"
-	print "";print NR " records were output to "OUTFILE
-	if (foundlarge > 0) { print foundlarge" oversized records were found and truncated" }
+	if (NOMSG == "no"){ 
+		print "";print NR " records were output to "OUTFILE
+		if (foundlarge > 0) { print foundlarge" oversized records were found and truncated" }
+	}
 }
 
 ENDOFAWK
@@ -72,7 +92,7 @@ chmod 700 tmp_checkmarc
 for file in "${filelist[@]}";do
 	fileroot=$(echo "${file}" | sed 's/\.....\?$//')
 	outfile="${fileroot}.txt"
-	awk -v RS=$'\x1d' -v ORS=$'\n\n' -v FS=$'\x1e' -v OFS='\n' -v SUBFIELD=$'\x1f' -v OUTFILE="${outfile}" -b -f tmp_checkmarc "${file}"
+	awk -v RS=$'\x1d' -v ORS=$'\n\n' -v FS=$'\x1e' -v OFS='\n' -v SUBFIELD=$'\x1f' -v OUTFILE="${outfile}" -v NOMSG=${nomsg} -b -f tmp_checkmarc "${file}"
 done
 
 sleep 1
