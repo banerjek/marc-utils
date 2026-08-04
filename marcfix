@@ -269,7 +269,7 @@ process_file() {
 	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v ESC=$'\x1b' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX1=${bad_subfield_regex1} -v BAD_SUBFIELD_REGEX2=${bad_subfield_regex2} -v NOMSG=${nomsg} -b -f tmp_checkmarc "${marcfile}.tmp"
 	sleep 1
 
-	ls bad_*"${fileroot}" 2> /dev/null
+	[[ ${nomsg} == "no" ]] && ls bad_*"${fileroot}" 2> /dev/null
 	rm -f "${marcfile}.tmp"
 	echo
 }
