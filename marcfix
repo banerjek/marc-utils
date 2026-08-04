@@ -199,7 +199,7 @@ if (rectype == "bib") { bibcount++ }
 if (rectype == "holdings") { holdingscount++ }
 if (rectype == "authority") { authoritycount++ }
 
-if (NR % 10000 == 0){ printf "Bib: %d Holdings: %d Authority: %d Bad: %d Issues: %s\r", bibcount, holdingscount, authoritycount, badrecs, badtext }
+if (NR % 10000 == 0 && NOMSG == "no"){ printf "Bib: %d Holdings: %d Authority: %d Bad: %d Issues: %s\r", bibcount, holdingscount, authoritycount, badrecs, badtext }
 
 }
 END { 
