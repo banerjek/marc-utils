@@ -258,7 +258,7 @@ ENDOFAWK
 
 process_file() {
 	fileroot=$(echo "${marcfile}" | sed 's/\.....\?$//')
-	logfile="${logpath}/${fileroot}.log"
+	logfile="${logpath}/marcfix_${fileroot}.log"
 
 	rm -f "bad_*${fileroot}.mrc"
 	rm -f "${fileroot}_fixed.mrc"
