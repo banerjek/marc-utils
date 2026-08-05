@@ -1,18 +1,25 @@
-#!/usr/bin/bash
 nomsg="no"
+reader="pv"
+logpath="./"
 
-while getopts "n" opt; do
+while getopts "np:" opt; do
   case $opt in
     n)
       nomsg="yes"
+			reader="cat"
+      ;;
+    p)
+      logpath="$OPTARG"
       ;;
     \?)
       echo "Error: Invalid option -$OPTARG" >&2
-      echo "Usage: $0 [-n]" >&2
+      echo "Usage: $0 [-np]" >&2
       exit 1
       ;;
   esac
 done
+
+logpath="${logpath%/}"
 
 shift $((OPTIND - 1))
 
@@ -24,12 +31,16 @@ rm -f bad_missing*
 
 infile="${filelist[0]}"
 
-if [[ -z ${infile} ]];then echo "You must supply a directory or file name";fi
+log_msg() {
+	[[ ${nomsg} == "no" ]] && echo "${logmsg}" || echo "${logmsg}" >> "${logfile}"
+}
+
+[[ -z ${infile} ]] && logmsg="You must supply a directory or file name" && log_msg
 
 if [[ -f "${infile}" ]];then processType="file";fi
 if [[ -d ${infile} ]];then processType="directory";fi
 
-if [[ -z $processType ]];then echo "No files or directory matching the input can be found";fi
+[[ -z $processType ]] && logmsg="No files or directory matching the input can be found" && log_msg
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
@@ -156,6 +167,11 @@ function check_leader() {
 	}
 
 }
+function out(s) {
+	if (NOMSG == "yes") { print s >> LOGFILE }
+	else                { print s }
+}
+
 {
 goodrec=good_directory=good_length=good_tag=1
 found004=found008=found245=override245=oversized=badescape=badsubfields=badindicators=badmandatoryfield=0
@@ -203,35 +219,38 @@ if (NR % 10000 == 0 && NOMSG == "no"){ printf "Bib: %d Holdings: %d Authority: %
 
 }
 END { 
-ORS=OFS="\\n"
-close(OUTFILE)
+	ORS=OFS="\\n"
+	close(OUTFILE)
 
-if (NOMSG == "no") {
-	bibmsg=holdingsmsg=authoritymsg=""
-	
-	if (bibcount > 0) { bibmsg = bibcount" records output to "FILEROOT"_bib_fixed.mrc\\n" }
-	if (holdingscount > 0) { holdingsmsg = holdingscount" records output to "FILEROOT"_holdings_fixed.mrc\\n" }
-	if (authoritycount > 0) { authoritymsg = authoritycount" records output to "FILEROOT"_authority_fixed.mrc\\n" }
-	
-	printf "Good records: %d Bad records: %d Issues: %s                             \\n", goodrecs, badrecs, badtext
-	if (badescapetotal > 0) { printf "ESCAPE SEQUENCES DETECTED. Roundtripping through Marcedit with utf8 conversion recommended\\n\\n" }
-	printf "Bib records: %d Holdings records: %d Authority records : %s                     \\n\\n", bibcount, holdingscount, authoritycount 
-	print bibmsg""holdingsmsg""authoritymsg""
-	
-	count = 0
-	for (t in tag_count) {
-		count++
-	}
-	if (count > 0){
-		printf "The following nonnumeric tags were detected followed by the number of records that contained them\\n"		
-	  for (t in tag_count) {
-	 	  printf "%s : %d\\n", t, tag_count[t]
-	   }
-	}
-	
-	if (badrecs > 0) { print badrecs" records were output to the files listed below and prefixed with bad_" }
-	if (totaloversized > 0) {print totaloversized" oversized were truncated"}
-}
+  bibmsg=holdingsmsg=authoritymsg=""
+  if (bibcount > 0)       { bibmsg       = bibcount" records output to "FILEROOT"_bib_fixed.mrc\\n" }
+  if (holdingscount > 0)  { holdingsmsg  = holdingscount" records output to "FILEROOT"_holdings_fixed.mrc\\n" }
+  if (authoritycount > 0) { authoritymsg = authoritycount" records output to "FILEROOT"_authority_fixed.mrc\\n" }
+
+  out(sprintf("Good records: %d Bad records: %d Issues: %s                             \\n", goodrecs, badrecs, badtext))
+
+  if (badescapetotal > 0) {
+    out("ESCAPE SEQUENCES DETECTED. Roundtripping through Marcedit with utf8 conversion recommended\\n\\n")
+  }
+
+  out(sprintf("Bib records: %d Holdings records: %d Authority records : %s                     \\n\\n", bibcount, holdingscount, authoritycount))
+
+  out(bibmsg""holdingsmsg""authoritymsg"")
+
+  count = 0
+  for (t in tag_count) { count++ }
+
+  if (count > 0) {
+    out("The following nonnumeric tags were detected followed by the number of records that contained them\\n")
+    for (t in tag_count) {
+      out(sprintf("%s : %d\\n", t, tag_count[t]))
+    }
+  }
+
+  if (badrecs > 0)        { out(badrecs" records were output to the files listed below and prefixed with bad_") }
+  if (totaloversized > 0) { out(totaloversized" oversized were truncated") }
+
+  if (NOMSG == "yes") { close(LOGFILE) }
 }
 
 ENDOFAWK
@@ -239,6 +258,7 @@ ENDOFAWK
 
 process_file() {
 	fileroot=$(echo "${marcfile}" | sed 's/\.....\?$//')
+	logfile="${logpath}/${fileroot}.log"
 
 	rm -f "bad_*${fileroot}.mrc"
 	rm -f "${fileroot}_fixed.mrc"
@@ -251,27 +271,18 @@ process_file() {
 	echo -e "${awkscript}" > tmp_checkmarc
 	chmod 700 tmp_checkmarc
 
-	if [[ ${nomsg} == "no" ]];then
-		echo
-		echo "Processing ${marcfile}"	
-		echo
-		echo "Detecting and removing nulls and converting carriage returns, newlines, and tabs to spaces"
-		pv "${marcfile}" | tr -d '\000' | tr '\b\n\r\t' ' ' | perl -pe 's/\x1f([A-Z])/\x1f\L$1/g' > "${marcfile}.tmp"
-		echo 
-	else
-		cat "${marcfile}" | tr -d '\000' | tr '\b\n\r\t' ' ' | perl -pe 's/\x1f([A-Z])/\x1f\L$1/g' > "${marcfile}.tmp"
-	fi
+	[[ ${nomsg} == "no" ]] && echo "Processing ${marcfile}"	&& echo "Detecting and removing nulls and converting carriage returns, newlines, and tabs to spaces"
+	$reader "${marcfile}" | tr -d '\000' | tr '\b\n\r\t' ' ' | perl -pe 's/\x1f([A-Z])/\x1f\L$1/g' > "${marcfile}.tmp"
 
 	# null identifiers
 	bad_subfield_regex1=$'\x1f'[0az]$'\x1e'
 	bad_subfield_regex2=$'\x1f'[^0-9a-z]
 
-	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v ESC=$'\x1b' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX1=${bad_subfield_regex1} -v BAD_SUBFIELD_REGEX2=${bad_subfield_regex2} -v NOMSG=${nomsg} -b -f tmp_checkmarc "${marcfile}.tmp"
+	awk -v RS=$'\x1d' -v ORS=$'\x1d' -v FS=$'\x1e' -v SFS=$'\x1f' -v ESC=$'\x1b' -v FILEROOT="${fileroot}" -v BAD_SUBFIELD_REGEX1=${bad_subfield_regex1} -v BAD_SUBFIELD_REGEX2=${bad_subfield_regex2} -v LOGFILE=${logfile} -v NOMSG=${nomsg} -b -f tmp_checkmarc "${marcfile}.tmp"
 	sleep 1
 
-	[[ ${nomsg} == "no" ]] && ls bad_*"${fileroot}" 2> /dev/null
+	logmsg=$(ls bad_*"${fileroot}" 2> /dev/null) && log_msg
 	rm -f "${marcfile}.tmp"
-	echo
 }
 
 if [[ $processType == "file" ]];then 
@@ -285,7 +296,7 @@ if [[ $processType == "file" ]];then
 			text2marc -n ${temproot}.txt
 			cat ${temproot}.mrc  >> "${fileroot}_bib_fixed.mrc"
 			rm -f ${temproot}.*
-			[[ ${nomsg} == "no" ]] && echo "Bib records lacking 008 were fixed and appended to ${fileroot}_bib_fixed.mrc"
+			logmsg="Bib records lacking 008 were fixed and appended to ${fileroot}_bib_fixed.mrc" && log_msg
 		fi
 		
 		temproot="tmp_bib_badindicators"
