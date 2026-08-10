@@ -1,6 +1,18 @@
-# sirsi was inadvertantly modified to accommodate NALIS -- must be modified
+#!/usr/bin/bash
 
 knownsystems=("absysnet" "aleph" "destiny" "eos" "hylib" "janium" "koha" "lc2" "opals" "sierra" "sirsi" "softlink" "tlc" "tinycat" "virtua" "wms")
+
+while getopts "o:" opt; do
+	case $opt in
+		o)
+			outfile="$OPTARG"
+		/?)
+			echo "Error: Invalid option -$OPTARG" >&2
+			echo "Usage: $0 [-n]" >&2
+			exit 1
+			;;
+	esac
+done
 
 if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] "
@@ -18,7 +30,7 @@ else
 	labels=()
 
 	fileroot=$(echo "${infile}" | sed 's/\.....\?$//')
-	outfile="${fileroot}.tsv"
+	[[ -z ${outfile} ]] && outfile="${fileroot}.tsv"
 	rm -f ${outfile}
 fi
 
@@ -45,11 +57,18 @@ if [[ ${system} == "absysnet" ]];then
 	taglabelmap="a:copy d:loantype e:subject f:barcode k:call# s:mattype u:location"
 fi
 
+#if [[ ${system} == "aleph" ]];then
+#	identifier="001"
+#	item_field="LKRa"
+#	location_subfield="l"
+#	taglabelmap="a:link_type b:sysno l:library r:marc_tag s:order_sequence v:volume y:year i:enumeration p:part m:note1 n:note2" 
+#fi
+
 if [[ ${system} == "aleph" ]];then
 	identifier="001"
-	item_field="LKRa"
-	location_subfield="l"
-	taglabelmap="a:link_type b:sysno l:library r:marc_tag s:order_sequence v:volume y:year i:enumeration p:part m:note1 n:note2" 
+	item_field="9016"
+	location_subfield="3"
+	taglabelmap="l:sublibrary L:admin_library m:material_type 1:collection_code A:library_location_name 2:collection_code_location B:collection_description 3:specific_location 9:call_number 6:barcode 5:item_status f:loan_status_code F:loan_status_description n:creation_date 8:last_update"
 fi
 
 if [[ ${system} == "destiny" ]];then
