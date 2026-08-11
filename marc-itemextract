@@ -5,7 +5,7 @@ knownsystems=("absysnet" "aleph" "destiny" "eos" "hylib" "janium" "koha" "lc2" "
 while getopts "o:" opt; do
 	case $opt in
 		o)
-			outfile="$OPTARG"
+			outfile="$OPTARG";;
 		/?)
 			echo "Error: Invalid option -$OPTARG" >&2
 			echo "Usage: $0 [-n]" >&2
