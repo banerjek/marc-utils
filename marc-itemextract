@@ -8,7 +8,7 @@ while getopts "o:" opt; do
 			outfile="$OPTARG";;
 		/?)
 			echo "Error: Invalid option -$OPTARG" >&2
-			echo "Usage: $0 [-n]" >&2
+			echo "Usage: $0 [-o]" >&2
 			exit 1
 			;;
 	esac
@@ -16,6 +16,9 @@ done
 
 if [[ -z $2 ]];then
 	echo "Usage: marc-itemextract [filename] [systemtype] "
+	echo 
+	echo "Options:"
+	echo "  -o outputfilename"
 	echo 
 	echo "001 is automatically stored and output."  
 	echo "Items are expected to be one item per MARC tag"
