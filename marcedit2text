@@ -1,0 +1,56 @@
+#!/usr/bin/bash
+
+sourcefile="${1}"
+fileroot=$(echo "${sourcefile}" | sed 's/\.....\?$//')
+outputfile="${fileroot}.mrk"
+prefix="filefix$(date +%s)"  
+
+if [[ -z ${sourcefile} ]];then echo -e "marc2text converts binary MARC files to text\n\nYou must specify a text file to process";exit;fi
+
+if [[ ! -f "${sourcefile}" ]];then echo "No text file with that name could be found";exit;fi
+echo
+
+echo "Counting records in ${sourcefile}. Please be patient"
+numrecs=$(awk -v RS=$'\x1d' 'END{print NR}' "${sourcefile}")
+
+echo "$numrecs records were detected."
+
+marcfile_process() {
+	local fn="${1}"
+	local infile="${fn}.mrc"
+	local outfile="${fn}.mrk"
+	cmarcedit -s "${infile}" -d "${outfile}" -break -pd 
+}
+
+if [[ $numrecs -gt 5000 ]];then
+	num_per_file=$(($numrecs / 5 + 1))
+	time_to_complete=$(echo "$numrecs/20000" |bc)
+	
+	echo "Splitting text file into 5 files in batches of $num_per_file to speed processing. "
+	echo "Estimated time to completion is $time_to_complete seconds"
+
+	awk -v NUM=$num_per_file -v PREFIX=${prefix} -v RS=$'\x1d' -v ORS=$'\x1d' 'BEGIN{count=0}{if (NR % NUM == 1) {
+	      close(out)
+	      count++
+	      out = PREFIX"tmp_mrc_"count".mrc"
+	}{print $0 > out }}' "${sourcefile}"
+
+	for seq in {1..5}
+	do
+	echo $fileroot
+		marcfile_process "${prefix}tmp_mrc_${seq}" &
+	done
+	wait
+	
+	cat ${prefix}tmp_mrc_*.mrk > "${outputfile}"
+	rm -f ${prefix}tmp_mrc_*.mrk
+else
+	marcfile_process "${fileroot}"
+	outputfile="${fileroot}.mrk"
+fi
+echo
+echo "Text file output can be found in ${outputfile}"
+
+
+
+rm -f ${prefix}tmp_mrc*
