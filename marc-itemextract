@@ -113,7 +113,7 @@ if [[ ${system} == "koha" ]];then
 	item_field="952p"
 	item_call_subfield="o"
 	location_subfield="b"
-	taglabelmap="p:barcode 8:call#prefix o:call# t:copy y:mattype g:price z:public_note d:inventory_date b:location 7:loan_type"
+	taglabelmap="p:barcode 8:call#prefix o:call# t:copy h:volume y:mattype g:price z:public_note d:inventory_date b:location 7:loan_type"
 fi
 
 if [[ ${system} == "lc2" ]];then
