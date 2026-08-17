@@ -109,7 +109,7 @@ if [[ ${system} == "janium" ]];then
 fi
 
 if [[ ${system} == "koha" ]];then
-	identifier="001"
+	identifier="999c"
 	item_field="952p"
 	item_call_subfield="o"
 	location_subfield="b"
@@ -117,7 +117,7 @@ if [[ ${system} == "koha" ]];then
 fi
 
 if [[ ${system} == "lc2" ]];then
-	identifier="999c"
+	identifier="001"
 	item_field="949z"
 	item_call_subfield="a"
 	location_subfield="h"
