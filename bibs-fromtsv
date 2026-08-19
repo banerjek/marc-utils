@@ -1,0 +1,536 @@
+#!/usr/bin/env bash
+#
+# bibs-fromtsv -- build MARC 21 bibliographic records from tab delimited data
+#
+# Companion to mfhds-fromtsv. Where that script knows about holdings data,
+# this one knows nothing at all: every column is driven by a table of
+# normalized heading -> tag / indicators / subfield.  The only required
+# column is the identifier, which is written to the 001.  A fixed default
+# 008 is supplied for every record.
+#
+# Requires gawk. The MARC directory records byte offsets, so gawk is run
+# with -b; the script checks that the switch took effect before writing.
+#
+# Usage: bibs-fromtsv [-i heading] [-d char] file.tsv
+#
+#   -i NAME   treat column NAME as the identifier (maps it to 001)
+#   -d CHAR   split field values on CHAR, one MARC field per value
+#   -h        this message
+#
+# Output is the input file name with a .mrc extension.
+#
+# To map your own column headings, add lines to build_table() below:
+#
+#       entry(heading, tag, indicators, subfield, group)
+#
+#   heading      matched after lowercasing and stripping non alphanumerics,
+#                so "Publication Date", "publication_date" and "PUBLICATIONDATE"
+#                are the same heading
+#   indicators   two characters; use # or \ or _ for a blank. Ignored for
+#                control fields
+#   subfield     single character subfield code. Ignored for control fields
+#   group        optional. Columns sharing a group land in one MARC field,
+#                subfields ordered by code, e.g. 245 $a $b $c
+#
+# Notes:
+#   - columns whose heading is not in the table are listed once and ignored
+#   - rows with an empty identifier are counted and skipped
+#   - empty cells produce no subfield, so a group with nothing in it
+#     produces no field at all
+#   - two columns with the same heading produce two fields, unless the
+#     heading is grouped, in which case they become repeated subfields
+#   - fields are written in tag order, 001 first
+#   - fields longer than 9998 bytes are truncated on a UTF-8 boundary and
+#     records over 99999 bytes are skipped, both reported at the end
+#
+
+idheading=""
+valuedelim=""
+
+usage() {
+	awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$0"
+}
+
+while getopts "i:d:h" opt; do
+	case $opt in
+		i) idheading=$OPTARG ;;
+		d) valuedelim=$OPTARG ;;
+		h) usage; exit 0 ;;
+		\?)
+			echo "Usage: $0 [-i heading] [-d char] file.tsv" >&2
+			exit 1
+			;;
+	esac
+done
+
+shift $((OPTIND - 1))
+
+infile=$1
+
+if [[ -z ${infile} ]]; then
+	echo "You must supply a file name for a tab delimited file" >&2
+	echo "Usage: $0 [-i heading] [-d char] file.tsv" >&2
+	exit 1
+fi
+
+if [[ ! -r ${infile} ]]; then
+	echo "${infile} cannot be read" >&2
+	exit 1
+fi
+
+outfile="${infile%.*}.mrc"
+if [[ ${outfile} == "${infile}" ]]; then outfile="${infile}.mrc"; fi
+
+if ! command -v gawk > /dev/null 2>&1; then
+	echo "gawk is required: the MARC directory counts bytes, which needs gawk -b" >&2
+	exit 1
+fi
+
+tmpawk=$(mktemp "${TMPDIR:-/tmp}/bibs-fromtsv.XXXXXX")
+trap 'rm -f "${tmpawk}"' EXIT
+
+cat > "${tmpawk}" << 'ENDOFAWK'
+#!/usr/bin/gawk -bf
+
+######################################################################
+# helpers
+######################################################################
+
+# normalize a heading: lowercase, drop everything that is not a-z0-9
+function norm(s) {
+	s = tolower(s)
+	gsub(/[^a-z0-9]/, "", s)
+	return s
+}
+
+function trim(s) {
+	sub(/^[ \t]+/, "", s)
+	sub(/[ \t]+$/, "", s)
+	return s
+}
+
+# strip the MARC structural characters out of data so they cannot
+# corrupt the record, then trim
+function clean(s) {
+	gsub(SEPCLASS, "", s)
+	gsub(/[\n\r]/, " ", s)
+	return trim(s)
+}
+
+# two indicator characters, with #, \ and _ read as blank
+function fix_ind(s,    i, c, out) {
+	out = ""
+	for (i = 1; i <= 2; i++) {
+		c = substr(s, i, 1)
+		if (c == "" || c == "#" || c == "\\" || c == "_") c = " "
+		out = out c
+	}
+	return out
+}
+
+# truncate to maxlen bytes without splitting a UTF-8 sequence
+function trunc_field(s, maxlen) {
+	if (length(s) <= maxlen) return s
+	truncated++
+	s = substr(s, 1, maxlen)
+	while (length(s) > 0 && (substr(s, length(s), 1) in CONT)) s = substr(s, 1, length(s) - 1)
+	return s
+}
+
+function is_control(tag) {
+	return (tag == "001" || tag == "003")
+}
+
+######################################################################
+# the mapping table
+#
+#   entry(heading, tag, indicators, subfield, group)
+#
+# One entry per heading value -- add your own here.
+######################################################################
+
+function entry(heading, tag, ind, sf, group) {
+	TAB[norm(heading)] = tag "|" ind "|" sf "|" group
+}
+
+function build_table() {
+	# ---- 001 identifier (the one required column) -------------------
+	entry("001",                     "001", "",   "", "")
+	entry("id",                      "001", "",   "", "")
+	entry("identifier",              "001", "",   "", "")
+	entry("recordid",                "001", "",   "", "")
+	entry("recordnumber",            "001", "",   "", "")
+	entry("controlnumber",           "001", "",   "", "")
+	entry("bibid",                   "001", "",   "", "")
+	entry("bibnumber",               "001", "",   "", "")
+	entry("bibliographicid",         "001", "",   "", "")
+	entry("mmsid",                   "001", "",   "", "")
+	entry("mmsrecordid",             "001", "",   "", "")
+	entry("hrid",                    "001", "",   "", "")
+	entry("instanceid",              "001", "",   "", "")
+
+	# ---- 003 ---------------------------------------------------------
+	entry("003",                     "003", "",   "", "")
+	entry("controlnumberidentifier", "003", "",   "", "")
+
+	# ---- numbers and codes ----------------------------------------
+	entry("010",                     "010", "##", "a", "")
+	entry("lccn",                    "010", "##", "a", "")
+	entry("020",                     "020", "##", "a", "")
+	entry("isbn",                    "020", "##", "a", "")
+	entry("022",                     "022", "##", "a", "")
+	entry("issn",                    "022", "##", "a", "")
+	entry("024",                     "024", "7#", "a", "")
+	entry("doi",                     "024", "7#", "a", "")
+	entry("035",                     "035", "##", "a", "")
+	entry("systemcontrolnumber",     "035", "##", "a", "")
+	entry("oclcnumber",              "035", "##", "a", "")
+	entry("040",                     "040", "##", "a", "")
+	entry("catalogingsource",        "040", "##", "a", "")
+	entry("041",                     "041", "0#", "a", "")
+	entry("languagecode",            "041", "0#", "a", "")
+
+	# ---- classification -------------------------------------------
+	entry("050",                     "050", "#4", "a", "")
+	entry("lccallnumber",            "050", "#4", "a", "")
+	entry("fullcallnumber",            "050", "#4", "a", "")
+	entry("082",                     "082", "04", "a", "")
+	entry("ddc",                     "082", "04", "a", "")
+	entry("deweynumber",             "082", "04", "a", "")
+	entry("090",                     "090", "##", "a", "")
+	entry("localcallnumber",         "090", "##", "a", "")
+
+	# ---- main entry ------------------------------------------------
+	entry("100",                     "100", "1#", "a", "")
+	entry("author",                  "100", "1#", "a", "")
+	entry("personalauthor",          "100", "1#", "a", "")
+	entry("creator",                 "100", "1#", "a", "")
+	entry("110",                     "110", "2#", "a", "")
+	entry("corporateauthor",         "110", "2#", "a", "")
+	entry("111",                     "111", "2#", "a", "")
+	entry("meetingname",             "111", "2#", "a", "")
+	entry("130",                     "130", "0#", "a", "")
+	entry("uniformtitle",            "130", "0#", "a", "")
+
+	# ---- title (grouped into one 245) ------------------------------
+	entry("245",                     "245", "10", "a", "t245")
+	entry("title",                   "245", "10", "a", "t245")
+	entry("titleproper",             "245", "10", "a", "t245")
+	entry("subtitle",                "245", "10", "b", "t245")
+	entry("remainderoftitle",        "245", "10", "b", "t245")
+	entry("statementofresponsibility","245", "10", "c", "t245")
+	entry("246",                     "246", "3#", "a", "")
+	entry("varianttitle",            "246", "3#", "a", "")
+	entry("alternatetitle",          "246", "3#", "a", "")
+
+	# ---- edition, publication (grouped into one 264) ---------------
+	entry("250",                     "250", "##", "a", "")
+	entry("edition",                 "250", "##", "a", "")
+	entry("264",                     "264", "#1", "a", "p264")
+	entry("placeofpublication",      "264", "#1", "a", "p264")
+	entry("place",                   "264", "#1", "a", "p264")
+	entry("publisher",               "264", "#1", "b", "p264")
+	entry("publicationdate",         "264", "#1", "c", "p264")
+	entry("pubdate",                 "264", "#1", "c", "p264")
+	entry("publicationyear",         "264", "#1", "c", "p264")
+	entry("dateofpublication",       "264", "#1", "c", "p264")
+	entry("copyrightdate",           "264", "#4", "c", "c264")
+
+	# ---- physical description (grouped into one 300) ---------------
+	entry("300",                     "300", "##", "a", "p300")
+	entry("extent",                  "300", "##", "a", "p300")
+	entry("physicaldescription",     "300", "##", "a", "p300")
+	entry("pages",                   "300", "##", "a", "p300")
+	entry("otherphysicaldetails",    "300", "##", "b", "p300")
+	entry("illustrations",           "300", "##", "b", "p300")
+	entry("dimensions",              "300", "##", "c", "p300")
+
+	# ---- RDA content / media / carrier -----------------------------
+	entry("336",                     "336", "##", "a", "")
+	entry("contenttype",             "336", "##", "a", "")
+	entry("337",                     "337", "##", "a", "")
+	entry("mediatype",               "337", "##", "a", "")
+	entry("338",                     "338", "##", "a", "")
+	entry("carriertype",             "338", "##", "a", "")
+
+	# ---- series ----------------------------------------------------
+	entry("490",                     "490", "1#", "a", "")
+	entry("series",                  "490", "1#", "a", "")
+	entry("seriesstatement",         "490", "1#", "a", "")
+	entry("830",                     "830", "#0", "a", "")
+	entry("seriesaddedentry",        "830", "#0", "a", "")
+
+	# ---- notes -----------------------------------------------------
+	entry("500",                     "500", "##", "a", "")
+	entry("note",                    "500", "##", "a", "")
+	entry("generalnote",             "500", "##", "a", "")
+	entry("publicnote",             "500", "##", "a", "")
+	entry("504",                     "504", "##", "a", "")
+	entry("bibliographynote",        "504", "##", "a", "")
+	entry("505",                     "505", "0#", "a", "")
+	entry("contents",                "505", "0#", "a", "")
+	entry("contentsnote",            "505", "0#", "a", "")
+	entry("520",                     "520", "##", "a", "")
+	entry("summary",                 "520", "##", "a", "")
+	entry("abstract",                "520", "##", "a", "")
+	entry("description",             "520", "##", "a", "")
+	entry("534",                     "534", "##", "a", "")
+	entry("originalversionnote",     "534", "##", "a", "")
+	entry("538",                     "538", "##", "a", "")
+	entry("systemdetailsnote",       "538", "##", "a", "")
+	entry("546",                     "546", "##", "a", "")
+	entry("languagenote",            "546", "##", "a", "")
+	entry("561",                     "561", "0#", "a", "")
+	entry("provenance",              "561", "0#", "a", "")
+	entry("ownershipnote",           "561", "0#", "a", "")
+	entry("590",                     "590", "##", "a", "")
+	entry("localnote",               "590", "##", "a", "")
+	entry("staffnote",               "590", "##", "a", "")
+	entry("nonpublicnote",           "590", "##", "a", "")
+
+	# ---- subjects --------------------------------------------------
+	entry("600",                     "600", "10", "a", "")
+	entry("subjectpersonalname",     "600", "10", "a", "")
+	entry("610",                     "610", "20", "a", "")
+	entry("subjectcorporatename",    "610", "20", "a", "")
+	entry("650",                     "650", "#0", "a", "")
+	entry("subject",                 "650", "#0", "a", "")
+	entry("subjectheading",          "650", "#0", "a", "")
+	entry("topicalsubject",          "650", "#0", "a", "")
+	entry("keywords",                "653", "##", "a", "")
+	entry("651",                     "651", "#0", "a", "")
+	entry("geographicsubject",       "651", "#0", "a", "")
+	entry("655",                     "655", "#7", "a", "")
+	entry("genre",                   "655", "#7", "a", "")
+	entry("form",                    "655", "#7", "a", "")
+
+	# ---- added entries ---------------------------------------------
+	entry("700",                     "700", "1#", "a", "")
+	entry("addedauthor",             "700", "1#", "a", "")
+	entry("contributor",             "700", "1#", "a", "")
+	entry("editor",                  "700", "1#", "a", "")
+	entry("710",                     "710", "2#", "a", "")
+	entry("addedcorporatename",      "710", "2#", "a", "")
+
+	# ---- electronic location (grouped into one 856) ----------------
+	entry("856",                     "856", "40", "u", "u856")
+	entry("url",                     "856", "40", "u", "u856")
+	entry("uri",                     "856", "40", "u", "u856")
+	entry("uniformresourceidentifier",                     "856", "40", "u", "u856")
+	entry("link",                    "856", "40", "u", "u856")
+	entry("portfoliourl",            "856", "40", "u", "u856")
+	entry("linktext",                "856", "40", "y", "u856")
+}
+
+######################################################################
+# collect one field for the record being built
+######################################################################
+function emit(tag, seq, content,    sortkey) {
+	nfields++
+	sortkey = tag sprintf("%05d%03d", seq, nfields)
+	fcontent[sortkey] = trunc_field(content, 9998)
+}
+
+BEGIN {
+	# gawk -b makes length() count bytes, which is what the directory needs
+	if (length("\303\240") != 2) {
+		printf("gawk is not counting bytes -- the -b switch did not take effect\n") > "/dev/stderr"
+		failed = 1
+		exit 1
+	}
+
+	SEPCLASS = "[" sprintf("%c%c%c", 29, 30, 31) "]"
+	for (n = 128; n <= 191; n++) CONT[sprintf("%c", n)] = 1
+
+	# leader/05-11 and leader/17-23
+	leader1 = "nam a22"
+	leader2 = " i 4500"
+
+	# 008: date entered, no dates given, no place, undetermined language
+	DEFAULT008 = strftime("%y%m%d") "nuuuuuuuuxx "
+	while (length(DEFAULT008) < 35) DEFAULT008 = DEFAULT008 "|"
+	DEFAULT008 = DEFAULT008 "und||"
+
+	build_table()
+	if (IDHEADING != "") entry(IDHEADING, "001", "", "", "")
+
+	records = 0
+	skipped = 0
+	truncated = 0
+	oversize = 0
+}
+
+######################################################################
+# header row -- work out what each column is
+######################################################################
+FNR == 1 {
+	if (substr($0, 1, 3) == sprintf("%c%c%c", 239, 187, 191)) $0 = substr($0, 4)
+	sub(/\r$/, "", $0)
+
+	idgroup = ""
+	unmapped = ""
+
+	for (i = 1; i <= NF; i++) {
+		heading = norm($i)
+		if (heading == "") continue
+
+		if (!(heading in TAB)) {
+			unmapped = unmapped (unmapped == "" ? "" : ", ") $i
+			continue
+		}
+
+		split(TAB[heading], p, "|")
+		tag = p[1]
+		grp = p[4]
+		if (grp == "") grp = "col" i
+
+		colsub[i] = p[3]
+		colgroup[i] = grp
+
+		if (!(grp in gtag)) {
+			gtag[grp] = tag
+			gind[grp] = fix_ind(p[2])
+			gmin[grp] = i
+			grouplist[++ngroups] = grp
+		}
+		gcols[grp] = gcols[grp] " " i
+
+		if (tag == "001") idgroup = grp
+
+		printf("%-32s -> %s %s%s\n", $i, tag,
+			(is_control(tag) ? "" : "[" gind[grp] "]$" p[3]),
+			(p[4] == "" ? "" : "  (group " p[4] ")"))
+	}
+
+	if (idgroup == "") {
+		printf("\nNo identifier column could be found -- one column must map to 001\n")
+		printf("Name it with -i, or add an entry for it to build_table()\n\n")
+		failed = 1
+		exit 1
+	}
+
+	if (unmapped != "") printf("\nNot mapped, ignored: %s\n", unmapped)
+	printf("\n")
+	next
+}
+
+######################################################################
+# data rows
+######################################################################
+{
+	sub(/\r$/, "", $0)
+
+	delete fcontent
+	nfields = 0
+	recid = ""
+
+	for (gi = 1; gi <= ngroups; gi++) {
+		grp = grouplist[gi]
+		tag = gtag[grp]
+		ncols = split(gcols[grp], cols, " ")
+
+		# ---------- control fields: value goes in bare ----------
+		if (is_control(tag)) {
+			value = ""
+			for (c = 1; c <= ncols; c++) {
+				value = clean($(cols[c]))
+				if (value != "") break
+			}
+			if (value == "") continue
+			if (tag == "001") recid = value
+			emit(tag, gmin[grp], value)
+			continue
+		}
+
+		# ---------- single column, optional repeat splitting ----------
+		if (ncols == 1 && VALUEDELIM != "") {
+			i = cols[1]
+			nvals = split($i, vals, VALUEDELIM)
+			for (v = 1; v <= nvals; v++) {
+				value = clean(vals[v])
+				if (value == "") continue
+				emit(tag, gmin[grp], gind[grp] SFS colsub[i] value)
+			}
+			continue
+		}
+
+		# ---------- one field, subfields ordered by code ----------
+		delete ent
+		for (c = 1; c <= ncols; c++) {
+			i = cols[c]
+			value = clean($i)
+			if (value == "") continue
+			ent[colsub[i] sprintf("%05d", i)] = colsub[i] value
+		}
+		nent = asorti(ent, entorder)
+		if (nent == 0) continue
+
+		content = gind[grp]
+		for (e = 1; e <= nent; e++) content = content SFS ent[entorder[e]]
+		emit(tag, gmin[grp], content)
+	}
+
+	if (recid == "") {
+		skipped++
+		next
+	}
+
+	emit("008", 0, DEFAULT008)
+
+	# ---------- assemble directory and data, tags in order ----------
+	nsorted = asorti(fcontent, forder)
+
+	directory = ""
+	record_content = ""
+	base_address = 0
+
+	for (f = 1; f <= nsorted; f++) {
+		key = forder[f]
+		tag = substr(key, 1, 3)
+		field_content = fcontent[key] OFS
+		field_length = sprintf("%04d", length(field_content))
+		directory = directory tag field_length sprintf("%05d", base_address)
+		base_address = base_address + field_length
+		record_content = record_content field_content
+	}
+
+	directory = directory OFS
+	base_data_address = sprintf("%05d", 24 + length(directory))
+	record_length = 24 + length(directory) + length(record_content) + 1
+	leader = sprintf("%05d", record_length) leader1 base_data_address leader2
+
+	if (record_length > 99999) {
+		printf("Record %s is %d bytes, too long for MARC 21 binary -- skipped\n", recid, record_length)
+		oversize++
+		next
+	}
+
+	print leader directory record_content >> OUTFILE
+
+	records++
+	if (records % 10000 == 0) printf("Records created: %d\r", records)
+}
+
+END {
+	if (failed == 1) exit
+	printf("Records created: %d", records)
+	if (skipped > 0) printf("  rows with no identifier skipped: %d", skipped)
+	if (truncated > 0) printf("  fields truncated at 9998 bytes: %d", truncated)
+	if (oversize > 0) printf("  oversize records skipped: %d", oversize)
+	printf("\nOutput file: %s\n", OUTFILE)
+	printf("\n")
+}
+ENDOFAWK
+
+rm -f "${outfile}"
+
+gawk -b \
+	-v RS='\n' \
+	-v ORS=$'\x1d' \
+	-v OFS=$'\x1e' \
+	-v FS='\t' \
+	-v SFS=$'\x1f' \
+	-v OUTFILE="${outfile}" \
+	-v IDHEADING="${idheading}" \
+	-v VALUEDELIM="${valuedelim}" \
+	-f "${tmpawk}" "${infile}"
