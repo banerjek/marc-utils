@@ -86,10 +86,11 @@ fi
 
 if [[ ${system} == "eos" ]];then
 	identifier="001"
-	item_field="949z"
+	item_field="852p"
+	bib_call_fallback="082"
 	item_call_subfield="a"
-	location_subfield="h"
-	taglabelmap="z:序號barcode a:call# o:itype b:location"
+	location_subfield="c"
+	taglabelmap="p:barcode k:call#prefix a:call# 3:mattype c:location t:copy z:note x:public_note"
 fi
 
 if [[ ${system} == "hylib" ]];then
