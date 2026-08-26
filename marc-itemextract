@@ -90,7 +90,7 @@ if [[ ${system} == "eos" ]];then
 	bib_call_fallback="082"
 	item_call_subfield="a"
 	location_subfield="c"
-	taglabelmap="p:barcode k:call#prefix a:call# 3:mattype c:location t:copy z:note x:public_note"
+	taglabelmap="p:barcode k:call#prefix a:call# 3:mattype c:location m:volume t:copy z:note x:public_note"
 fi
 
 if [[ ${system} == "hylib" ]];then
