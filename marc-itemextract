@@ -153,7 +153,7 @@ if [[ ${system}  == "sirsi"  ]];then
 	item_call_subfield="a"
 	location_subfield="m"
 
-	taglabelmap="i:barcode  D:location G:temp_location X:itype t:mattype 3:volume x:imsg z:opacmsg o:staff_note p:public_note q:checkin_note G:temp_location s:status r:checkout_note e:accession 0:volume n:totalCharges u:acqDate x:itemCat1 z:itemCat2"
+	taglabelmap="i:barcode a:call# D:location G:temp_location X:itype t:mattype 3:volume x:imsg z:opacmsg o:staff_note p:public_note q:checkin_note G:temp_location s:status r:checkout_note e:accession 0:volume n:totalCharges u:acqDate x:itemCat1 z:itemCat2"
 
 fi
 
