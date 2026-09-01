@@ -147,7 +147,8 @@ fi
 if [[ ${system}  == "sirsi"  ]];then
 	bib_call_field="090"
 	bib_call_fallback="050"
-	identifier="997a"
+	#identifier="997a"
+	identifier="001"
 	item_field="999i"
 	item_call_subfield="a"
 	location_subfield="m"
