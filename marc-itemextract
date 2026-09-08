@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-knownsystems=("absysnet" "aleph" "destiny" "eos" "hylib" "janium" "koha" "lc2" "opals" "sierra" "sirsi" "softlink" "tlc" "tinycat" "virtua" "wms")
+knownsystems=("absysnet" "aleph" "destiny" "eos" "hylib" "evergreen" "janium" "koha" "lc2" "opals" "sierra" "sirsi" "softlink" "tlc" "tinycat" "virtua" "wms")
 
 while getopts "o:" opt; do
 	case $opt in
@@ -91,6 +91,14 @@ if [[ ${system} == "eos" ]];then
 	item_call_subfield="a"
 	location_subfield="c"
 	taglabelmap="p:barcode k:call#prefix a:call# 3:mattype c:location m:volume t:copy z:note x:public_note"
+fi
+
+if [[ ${system} == "evergreen" ]];then
+ identifier="001"
+ item_field="852p"
+ item_call_subfield="j"
+ location_subfield="c"
+ taglabelmap="p:barcode b:library s:status c:location g:mattype j:callnumber k:callnumberprefix m:callnumbersuffix t:callnumber x:note y:price"
 fi
 
 if [[ ${system} == "hylib" ]];then
