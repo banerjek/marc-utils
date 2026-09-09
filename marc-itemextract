@@ -98,7 +98,7 @@ if [[ ${system} == "evergreen" ]];then
  item_field="852p"
  item_call_subfield="j"
  location_subfield="c"
- taglabelmap="p:barcode b:library s:status c:location g:mattype j:callnumber k:callnumberprefix m:callnumbersuffix t:callnumber x:note y:price"
+ taglabelmap="p:barcode b:library s:status c:location g:mattype j:callnumber k:callnumberprefix m:callnumbersuffix t:copynumber x:note y:price"
 fi
 
 if [[ ${system} == "hylib" ]];then
