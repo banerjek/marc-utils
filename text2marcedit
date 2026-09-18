@@ -48,6 +48,7 @@ if [[ $numrecs -gt 5000 ]];then
 	
 	cat ${prefix}tmp_mrc_*.mrc > "${outputfile}"
 	rm -f ${prefix}tmp_mrc_*.mrc
+	rm -f ${prefix}tmp_mrc_*.mrk
 else
 	marcfile_process "${fileroot}"
 	outputfile="${fileroot}.mrc"
