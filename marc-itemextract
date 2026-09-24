@@ -313,17 +313,22 @@ function extract_subfields() {
 	if (IDENTIFIER == "004") {
 		holdid = tag001 
 		gsub(/[^a-zA-Z0-9]/, "", bibno)
-   	} else {
-      		if (length(callnum) > 1) {
-         		holdid =  bibno""location""callprefix""callnum""callsuffix
-      		} else {
-         		holdid =  bibno""location""bib_call
-      		}
-   	}
+		}
+   	#} else {
+    #  		if (length(callnum) > 1) {
+    #     		holdid =  bibno""location""callprefix""callnum""callsuffix
+    #  		} else {
+    #     		holdid =  bibno""location""bib_call
+    #  		}
+   	#}
 
 	gsub(/[^a-zA-Z0-9]/, "", holdid)
 
-	lineout = tag001"\t"bibno"\t"holdid"\t"bib_call"\t"holdings_type"\t"bib_mattype
+	if (HOLDID_FIELD == "") {
+		lineout = tag001"\t"bibno"\t"bib_call"\t"holdings_type"\t"bib_mattype
+	} else {
+		lineout = tag001"\t"bibno"\t"holdid"\t"bib_call"\t"holdings_type"\t"bib_mattype
+	}
 
 	for (j=1;j<=num_tags;j++) {
 		lineout = lineout"\t"item_subfield[j]
@@ -373,7 +378,6 @@ function extract_identifiers() {
 						bibno = substr(subfields[subfield],2)
 					}	
 				}
-			#gsub(/^ *+| +$/, "", bibno)
 			gsub(/[^\.a-zA-Z0-9]/, "", bibno)
 			}
 		}
@@ -450,7 +454,11 @@ holdings_type=substr(leader, 8, 1)
 
 if (directory_check == 0) {
 	if (NR == 1 && FILENAME == "tmp_marcitemextract-1.mrc") { 
-		lineout = "tag_001\tbib_no\tholdid\tbib_call\trectype\tbib_mattype"
+		if (HOLDID_FIELD == "") {
+			lineout = "tag_001\tbib_no\tbib_call\trectype\tbib_mattype"
+		} else { 
+			lineout = "tag_001\tbib_no\tholdid\tbib_call\trectype\tbib_mattype"
+		}
 		for (i=1;i<=num_tags;i++) {
 			lineout = lineout"\t"labels[i]
 		}
@@ -505,7 +513,7 @@ splitlist=(tmp_marcitemextract-1.mrc tmp_marcitemextract-2.mrc tmp_marcitemextra
 
 for splitfile in ${splitlist[@]};do
 	tempout=${splitfile%????}.seq
-	awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${identifier}" -v ITEMFIELD="${item_field}" -v CALL="${item_call_subfield}" -v CALL_PREFIX="${item_call_prefix}" -v CALL_SUFFIX="${item_call_suffix}" -v BIB_CALL_FIELD="${bib_call_field}" -v BIB_CALL_FALLBACK="${bib_call_fallback}" -v BIB_MATTYPE_FIELD="${bib_mattype_field}" -v LOCATION="${location_subfield}" -v TAGLABELMAP="${taglabelmap}" -v SPECIALLIST="${speciallist}" -v SYSTEM="${system}" -v OUTFILE="${tempout}" -b -f tmp_itemextract "${splitfile}" &
+	awk -v RS=$'\x1d' -v ORS="\n" -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS="\t" -v IDENTIFIER="${identifier}" -v ITEMFIELD="${item_field}" -v CALL="${item_call_subfield}" -v CALL_PREFIX="${item_call_prefix}" -v CALL_SUFFIX="${item_call_suffix}" -v BIB_CALL_FIELD="${bib_call_field}" -v BIB_CALL_FALLBACK="${bib_call_fallback}" -v BIB_MATTYPE_FIELD="${bib_mattype_field}" -v HOLDID_FIELD="${holdid_field}" -v LOCATION="${location_subfield}" -v TAGLABELMAP="${taglabelmap}" -v SPECIALLIST="${speciallist}" -v SYSTEM="${system}" -v OUTFILE="${tempout}" -b -f tmp_itemextract "${splitfile}" &
 done
 wait
 
