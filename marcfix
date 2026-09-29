@@ -272,9 +272,7 @@ process_file() {
 	chmod 700 tmp_checkmarc
 
 	[[ ${nomsg} == "no" ]] && echo "Processing ${marcfile}"	&& echo "Detecting and removing nulls and converting carriage returns, newlines, and tabs to spaces"
-	# $reader "${marcfile}" | tr -d '\000' | tr '\b\n\r\t' ' ' | perl -pe 's/\x1f([A-Z])/\x1f\L$1/g' > "${marcfile}.tmp"
-	# perl causes trouble with some files
-	$reader "${marcfile}" | tr -d '\000' | tr '\b\n\r\t' ' > "${marcfile}.tmp"
+	$reader "${marcfile}" | tr -d '\000' | tr '\b\n\r\t' ' ' | perl -C0 -0x1d -pe 's/\x1f([A-Z])/\x1f\L$1/g' > "${marcfile}.tmp"
 
 	# null identifiers
 	bad_subfield_regex1=$'\x1f'[0az]$'\x1e'
