@@ -393,6 +393,7 @@ function build_mfhd() {
 				case "holdingid":
 				case "holdingsid":
 				case "holrecordid":
+				case "recordnumberholdings":
 				case "recordcheckin":
 					holdIdpos=i
 					holdId=i
