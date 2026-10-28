@@ -5,21 +5,81 @@ infile="${1}"
 outfile="${infile%.*}"
 
 # -------------------------------------------------
-# INPUT ENCODING: convert whatever we were given to clean UTF-8
-# (handles UTF-16 "Unicode Text" exports from Excel, GBK/GB18030, a UTF-8
-# BOM and Windows line endings). The original file is left untouched.
+# INPUT ENCODING: convert whatever we were given to clean UTF-8.
+# Usage: tsv2marc FILE [ENCODING]   (2nd argument forces the input encoding,
+# e.g. gb18030, big5, windows-1252; otherwise it is detected)
+# The original file is left untouched.
 # -------------------------------------------------
+FORCE_ENC="${2:-}"
+
+# detect_encoding FILE  -> prints an iconv-compatible encoding name.
+# Order: forced override (FORCE_ENC) -> BOM -> UTF-16 without BOM (NUL bytes)
+# -> valid UTF-8 -> uchardet (if installed) -> heuristic (CJK vs Western).
+detect_encoding() {
+  local f="$1" bom g enc total dropped pairs le be cjk=0
+  if [[ -n "${FORCE_ENC:-}" ]]; then echo "${FORCE_ENC}"; return; fi
+
+  bom=$(head -c3 "$f" | od -An -tx1 | tr -d ' \n')
+  case "$bom" in
+    fffe*|feff*) echo utf-16; return ;;      # "utf-16" reads the BOM itself
+    efbbbf)      echo utf-8;  return ;;
+  esac
+
+  # UTF-16 without a BOM: lots of NUL bytes, all at odd (LE) or even (BE) offsets
+  read -r le be < <(head -c 4096 "$f" | od -An -v -tx1 -w2 |
+    awk '$2=="00"{l++} $1=="00"{b++} END{print l+0, b+0}')
+  if (( le > 4 && le > be * 4 )); then echo utf-16le; return; fi
+  if (( be > 4 && be > le * 4 )); then echo utf-16be; return; fi
+
+  if iconv -f utf-8 -t utf-8 "$f" >/dev/null 2>&1; then echo utf-8; return; fi
+
+  # Mostly UTF-8 with a few stray bad bytes: still UTF-8 (the bad bytes get
+  # dropped on conversion) rather than misreading the whole file as legacy.
+  total=$(head -c 1000000 "$f" | LC_ALL=C grep -aoP '[\x80-\xff]' | wc -l)
+  dropped=$(( $(head -c 1000000 "$f" | wc -c) - $(head -c 1000000 "$f" | iconv -c -f utf-8 -t utf-8 2>/dev/null | wc -c) ))
+  if (( total > 0 && dropped * 20 < total )); then echo utf-8; return; fi
+
+  if command -v uchardet >/dev/null 2>&1; then
+    enc=$(uchardet "$f" 2>/dev/null)
+    case "${enc,,}" in ""|unknown|ascii*) ;; *)
+      if iconv -f "$enc" -t utf-8 "$f" >/dev/null 2>&1; then echo "$enc"; return; fi ;;
+    esac
+  fi
+
+  # Heuristic: in GBK/Big5/Shift-JIS text high bytes come in adjacent pairs;
+  # in Latin-1/cp1252 text, accented letters are mostly isolated.
+  pairs=$(head -c 1000000 "$f" | LC_ALL=C grep -aoP '[\x80-\xff]{2}' | wc -l)
+  (( total > 0 && pairs * 2 * 10 >= total * 6 )) && cjk=1
+
+  if (( cjk )); then
+    if command -v chardetect >/dev/null 2>&1; then
+      enc=$(chardetect "$f" 2>/dev/null | sed 's/^[^:]*: //; s/ with confidence.*//')
+      case "${enc,,}" in
+        gb2312|gbk) enc=gb18030 ;;
+        windows-*|iso8859*|iso-8859*|ascii|utf-8|none|"") enc="" ;;   # not plausible for CJK
+      esac
+      if [[ -n "$enc" ]] && iconv -f "$enc" -t utf-8 "$f" >/dev/null 2>&1; then
+        echo "$enc"; return
+      fi
+    fi
+    for enc in gb18030 big5 shift_jis euc-kr; do
+      if iconv -f "$enc" -t utf-8 "$f" >/dev/null 2>&1; then echo "$enc"; return; fi
+    done
+  fi
+  echo windows-1252
+}
+
+tmpraw="$(mktemp)"
 tmpin="$(mktemp)"
-trap 'rm -f "${tmpin}"' EXIT
-case "$(head -c2 "${infile}" | od -An -tx1 | tr -d ' \n')" in
-  fffe) iconv -f UTF-16LE -t UTF-8 "${infile}" ;;
-  feff) iconv -f UTF-16BE -t UTF-8 "${infile}" ;;
-  *)    if iconv -f UTF-8 -t UTF-8 "${infile}" >/dev/null 2>&1; then
-          cat "${infile}"
-        else
-          iconv -f GB18030 -t UTF-8 "${infile}"
-        fi ;;
-esac | sed -e '1s/^\xEF\xBB\xBF//' -e 's/\r$//' > "${tmpin}"
+trap 'rm -f "${tmpraw}" "${tmpin}"' EXIT
+
+enc="$(detect_encoding "${infile}")"
+[[ "${enc,,}" != "utf-8" ]] && echo "Input encoding detected: ${enc}" >&2
+if ! iconv -f "${enc}" -t UTF-8 "${infile}" > "${tmpraw}" 2>/dev/null; then
+  echo "Warning: invalid ${enc} bytes were dropped during conversion" >&2
+  iconv -c -f "${enc}" -t UTF-8 "${infile}" > "${tmpraw}" 2>/dev/null
+fi
+sed -e '1s/^\xEF\xBB\xBF//' -e 's/\r$//' "${tmpraw}" > "${tmpin}"
 
 awk -F'\t' -v SUBDELIM=";" '
 BEGIN { OFS=""; SEP="\034"; SF="\035"
@@ -225,6 +285,7 @@ function vall(k,   parts, n, i, key, val, out, seen) {
   marc("300", "  ", "^_a" v("pages"))
   marc("520", "  ", "^_a" v("abstract|aboutthebook"))
 
+  repeat_marc("650", " 4", v("subject"))
   repeat_marc_subdelim("650", " 4", v("subject"), ";")
 
   print ""
