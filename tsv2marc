@@ -4,8 +4,35 @@ export LC_ALL=C.UTF-8
 infile="${1}"
 outfile="${infile%.*}"
 
+# -------------------------------------------------
+# INPUT ENCODING: convert whatever we were given to clean UTF-8
+# (handles UTF-16 "Unicode Text" exports from Excel, GBK/GB18030, a UTF-8
+# BOM and Windows line endings). The original file is left untouched.
+# -------------------------------------------------
+tmpin="$(mktemp)"
+trap 'rm -f "${tmpin}"' EXIT
+case "$(head -c2 "${infile}" | od -An -tx1 | tr -d ' \n')" in
+  fffe) iconv -f UTF-16LE -t UTF-8 "${infile}" ;;
+  feff) iconv -f UTF-16BE -t UTF-8 "${infile}" ;;
+  *)    if iconv -f UTF-8 -t UTF-8 "${infile}" >/dev/null 2>&1; then
+          cat "${infile}"
+        else
+          iconv -f GB18030 -t UTF-8 "${infile}"
+        fi ;;
+esac | sed -e '1s/^\xEF\xBB\xBF//' -e 's/\r$//' > "${tmpin}"
+
 awk -F'\t' -v SUBDELIM=";" '
-BEGIN { OFS="" }
+BEGIN { OFS=""; SEP="\034"; SF="\035"
+  # SF is an internal marker used by sf(); it is replaced by OUTSF on output.
+  # OUTSF must match the delimiter used in your own mappings ("^_a" etc.).
+  # Use "\037" instead if text2marc expects the real 0x1f character.
+  OUTSF="^_"
+  # ISBD punctuation table. punct[tag,code] = text appended to the PREVIOUS
+  # subfield when subfield <code> follows it; endp[tag] = closing punctuation
+  # for the last subfield. Add rows for other tags as needed.
+  punct["264","b"] = " :"; punct["264","c"] = ","
+  endp["264"] = "."
+}
 
 # -------------------------------------------------
 # HEADER NORMALIZATION
@@ -37,10 +64,52 @@ function norm_ind(ind,   i) {
 # -------------------------------------------------
 # MARC OUTPUT HELPERS
 # -------------------------------------------------
-function marc(tag, ind, val) {
-  if (val == "") return
+# If val comes from vall(), it contains SEP-separated values: the text before
+# the first SEP is the prefix (e.g. "a"), and one field is printed per value.
+function emit(tag, ind, s) {
+  gsub(SF, OUTSF, s)
+  print "=", tag, "  ", ind, s
+}
+
+function marc(tag, ind, val,   p, n, a, i, prefix) {
+  # skip empty values, and a bare prefix such as "^_a" with nothing after it
+  if (val == "" || val ~ /^\^_[a-z0-9]$/) return
   ind = norm_ind(ind)
-  print "=", tag, "  ", ind, val
+  p = index(val, SEP)
+  if (p == 0) {
+    emit(tag, ind, val)
+    return
+  }
+  prefix = substr(val, 1, p-1)
+  n = split(substr(val, p+1), a, SEP)
+  for (i = 1; i <= n; i++)
+    emit(tag, ind, prefix a[i])
+}
+
+# sf("a", value) returns the subfield (delimiter + code + value), or "" when
+# the value is empty, so blank subfields are dropped and a field whose
+# subfields are all blank is not printed at all. Combine several in one call:
+#   marc("541", "__", sf("a", v("f1")) sf("b", v("f2")) sf("c", v("f3")))
+function sf(code, val) {
+  return (val == "") ? "" : SF code val
+}
+
+# marc_isbd() works like marc() for a value built with sf(), but adds ISBD
+# punctuation from the table in BEGIN. Punctuation is only added between
+# subfields that are actually present, and never doubled if the value already
+# ends with that character.
+function marc_isbd(tag, ind, val,   n, a, i, t, nxt, p, out) {
+  if (val == "") return
+  n = split(val, a, SF)              # a[1] is empty (text before first SF)
+  for (i = 2; i <= n; i++) {
+    t = a[i]
+    if (i < n) p = punct[tag, substr(a[i+1], 1, 1)]
+    else       p = endp[tag]
+    if (p != "" && substr(t, length(t)) != substr(p, length(p)))
+      t = t p
+    out = out SF t
+  }
+  marc(tag, ind, out)
 }
 
 function ctrl(tag, val) {
@@ -84,6 +153,7 @@ function lang_code(v) {
   v = normalize(v)
   if (v ~ /^fr/) return "fre"
   if (v ~ /^en/) return "eng"
+  if (v ~ /^ch/) return "chi"
   return "|||"
 }
 
@@ -107,7 +177,34 @@ NR == 1 {
   next
 }
 
-function v(k) { return (k in h) ? $(h[k]) : "" }
+# v("a|b|c") returns the value of the first listed column that exists in
+# the header AND is non-empty. Each alternative is normalized, so
+# v("Titre périodique|Serial title") works as well as v("titreperiodique").
+function v(k,   parts, n, i, key) {
+  n = split(k, parts, "[|]")
+  for (i = 1; i <= n; i++) {
+    key = normalize(parts[i])
+    if ((key in h) && $(h[key]) != "")
+      return $(h[key])
+  }
+  return ""
+}
+
+# vall("a|b|c") returns ALL non-empty, distinct values from the listed columns.
+# Use it with marc() to emit one repeated field per value:
+#   marc("650", " 4", "a" vall("subj1|subj2"))
+function vall(k,   parts, n, i, key, val, out, seen) {
+  n = split(k, parts, "[|]")
+  for (i = 1; i <= n; i++) {
+    key = normalize(parts[i])
+    if (!(key in h)) continue
+    val = $(h[key])
+    if (val == "" || (val in seen)) continue
+    seen[val] = 1
+    out = out SEP val
+  }
+  return (out == "") ? SEP : out
+}
 
 # -------------------------------------------------
 # RECORD
@@ -118,16 +215,20 @@ function v(k) { return (k in h) ? $(h[k]) : "" }
   ctrl("LDR", leader_from(has_serial))
   ctrl("001", v("ftcid"))
   ctrl("006", "m        d")
-  ctrl("008", field_008(v("dateparution"), "", v("langue")))
+  ctrl("008", field_008(v("date"), "", v("lang|language")))
+  marc("020", " ", "^_a" v("isbn"))
+  marc("050", " ", "^_a" v("callnumber|call"))
 
-  marc("245", "10", "a" v("titre"))
-  marc("100", "1 ", "a" v("auteurprincipal"))
+  marc("100", "1 ", "^_a" v("author"))
+  marc("245", "10", "^_a" v("title|maintitle|nameofthebook"))
+  marc_isbd("264", " 1", sf("a", v("cityofpublication")) sf("b", v("publisher")) sf("c", v("date|yearofpublication")))
+  marc("300", "  ", "^_a" v("pages"))
+  marc("520", "  ", "^_a" v("abstract|aboutthebook"))
 
-  repeat_marc("650", " 7", v("descripteur"))
-  repeat_marc_subdelim("650", " 7", v("doccentreindex"), ",")
+  repeat_marc_subdelim("650", " 4", v("subject"), ";")
 
   print ""
 }
-' "${infile}" > "${outfile}"
+' "${tmpin}" > "${outfile}"
 text2marc "${outfile}"
 rm -f "${outfile}"
