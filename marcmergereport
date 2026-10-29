@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+if [ "$#" -lt 2 ]; then
+    echo "Usage: $0 file1 file2 [file3 ...]" >&2
+    exit 1
+fi
+
+missing=0
+for f in "$@"; do
+    if [] ! -f "$f" ]]; then
+        echo "Error: file not found: $f" >&2
+        missing=1
+    fi
+done
+
+[[ "$missing" -ne 0 ]] && exit 1
+
+
+awk '
+BEGIN { FS = OFS = "\t" }
+
+# New file starts: bump the file counter (works even if a file is passed twice)
+FNR == 1 { nf++; fname[nf] = FILENAME }
+
+{
+    id = $1
+    q  = $2 + 0
+    k  = id SUBSEP nf
+
+    # remember first-seen order of mergeIds for stable output
+    if (!(id in seen)) { seen[id] = 1; order[++n] = id }
+
+    # count distinct files in which this mergeId appears
+    if (!(k in cnt)) nfiles[id]++
+
+    # keep every 001 for this (mergeId, file), in the order encountered
+    cnt[k]++
+    val[k, cnt[k]] = $3
+
+    # overall best per mergeId; strict > means first encountered wins ties
+    if (!(id in bq) || q > bq[id]) {
+        bq[id] = q; btitle[id] = $4; bfile[id] = nf; bpos[id] = cnt[k]
+    }
+}
+
+END {
+    # header row
+    printf "mergeId" OFS "title"
+    for (f = 1; f <= nf; f++) printf OFS fname[f]
+    printf "\n"
+
+    for (i = 1; i <= n; i++) {
+        id = order[i]
+        if (nfiles[id] < 2) continue
+
+        printf "%s" OFS "%s", id, btitle[id]
+        for (f = 1; f <= nf; f++) {
+            k = id SUBSEP f
+            v = ""
+            # best 001 goes first, starred
+            if (f == bfile[id]) v = "*" val[k, bpos[id]] "*"
+            # then all the others, in original order
+            for (j = 1; j <= cnt[k]; j++) {
+                if (f == bfile[id] && j == bpos[id]) continue
+                v = (v == "") ? val[k, j] : v ";" val[k, j]
+            }
+            printf OFS "%s", v
+        }
+        printf "\n"
+    }
+}
+' "$@" 
