@@ -188,6 +188,7 @@ function extract_tags() {
 	
 				gsub(/&/, "", tag245)
 				tag245a = extract_subfield("a")
+				titleProper = substr(tag245a, 1, 40)
 				tag245b = extract_subfield("b")
 				tag245h = extract_subfield("h")
 				tag245p = extract_subfield("p")
@@ -389,7 +390,7 @@ holdings_type=substr(leader, 8, 1)
 delete arr245
 
 mergeId=tag001=tag009=tag907a=tag999i=""
-tag008=tag245=tag245a=tag245b=tag245p=tag250=tag260=tag264=tag264b=tag264c=date260=date264=highencoding=""
+tag008=tag245=tag245a=tag245b=tag245p=tag250=tag260=tag264=tag264b=tag264c=date260=date264=highencoding=titleProper""
 
 tag250="1_"
 tagme=pubdate=tag300=tag086="_"
@@ -419,7 +420,7 @@ if (directory_check == 0) {
 	if (tag009 != "") { mergeId = tag009 }
 	if (qScore < 1) { qScore = 1 }
 
-	printf mergeId"\\t"qScore"\\t"tag999i"\\t"tag001"\\t"tag907a"\\n" > MAPFILE
+	printf mergeId"\\t"qScore"\\t"tag999i"\\t"tag001"\\t"tag907a"\\t"titleProper"\\n" > MAPFILE
 
 	extract_local_fields()
 
@@ -472,7 +473,7 @@ for f in ${filelist[@]};do
 	done	
 	wait
 
-	echo -e "mergeId\tqScore\t999i\t001\t907a" > "${mapfile}"
+	echo -e "mergeId\tqScore\t999i\t001\t907a\ttitle" > "${mapfile}"
 	echo -e "mergeId\ttag\tcontent" > "${localtagfile}"
 
 	echo "Finalizing map file"
