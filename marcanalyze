@@ -207,6 +207,7 @@ function extract_tags() {
 				gsub(/&/, "", tag245)
 				tag245a = extract_subfield("a")
 				titleProper = substr(tag245a, 1, 60)
+				sub(/[*[[:punct:][:space:]]]*$/, "", titleProper)
 				tag245b = extract_subfield("b")
 				tag245h = extract_subfield("h")
 				tag245p = extract_subfield("p")
