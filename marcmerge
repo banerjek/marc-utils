@@ -1,41 +1,58 @@
-sourcefile="${1}"
-mergefile="${2}"
+filelist=("$@")
+infile="${filelist[0]}"
 
-if [[ -z "${mergefile}" ]];then
-	echo
-	echo "You must supply a source file and a merge file"
-	echo
-	echo "Usage: marcmerge [sourcefile] [mergefile]"
-	echo 
-	exit
-fi
+if [[ -z ${infile} ]];then echo "You must supply a file name Usage: marcmerge [filename]";exit;fi
 
-echo
-echo "Starting processing. Please wait"
-echo
+rm -f marc_009a* best_records.tsv
+
 
 read -r -d '' awkscript << "ENDOFAWK"
 #!/usr/bin/awk -f 
 
 BEGIN { 
-	merged_records=not_merged_records=0
 	subfield_regex=SFS"."
-	validdate="^[^0-9]*([0-9][0-9][0-9][0-9])[^0-9]"
-	MERGEREPORT = "merged_records.tsv"
-	MERGEFILE = "merged_records.mrc"
-	NOTMERGEREPORT = "not_merged_records.tsv"
-	NOTMERGEFILE = "not_merged_records.mrc"
-	
-	printf "%s", "mergeId\\ttag999\\ttag001\\ttag907a\\ttitle\\tpubdata\\tedition\\tpagination\\trecordType\\n" > MERGEREPORT
-	printf "%s", "mergeId\\ttag001\\ttag907a\\ttitle\\tpubdata\\tedition\\tpagination\\n" > NOTMERGEREPORT
-	printf "%s\\n\\n", "Creating ids for source file. Please be patient."
+	subfield_not_a=SFS"[^a]"
 
+	validdate="^[^0-9]*([0-9][0-9][0-9][0-9])[^0-9]"
+	MAPFILE = "workId_map_"SEQ".tsv"
+	OUTFILE = "tmp_out_"SEQ".mrc"
+	LOCALTAGFILE = "tmp_tag_"SEQ".tsv"
 
       if (length("а") != 2) {
                 badawk = 1
-                printf("Your version of awk does not support marcmerge  -- you need a version that supports the -b switch\\n")
+                printf("Your version of awk does not support marc-addworkids  -- you need a version that supports the -b switch\\n")
                 exit
       }
+}
+
+function add_workId() {
+	mergeId_length = length(mergeId)
+
+	leader=substr($0,1,24)
+	leader1=substr(leader, 6, 7)
+	leader2=substr(leader, 18)
+
+	old_base_address=substr(leader,13, 5) + 0
+	new_base_address=sprintf("%05d", old_base_address + 12)
+
+	old_record_length=substr(leader,1, 5) + 0
+	new_record_length = sprintf("%05d", old_record_length + mergeId_length + 12 + 1) ### plus directory entry
+
+	old_record_content=substr($0, old_base_address + 1)
+	new_record_content=old_record_content""mergeId""FS
+
+	new_record_offset=sprintf("%05d", length(record_content))
+	mergeId_length = sprintf("%04d", mergeId_length + 1)
+
+	old_directory=substr($0,25, old_base_address - 25)
+	old_directory_length=length(old_directory)
+
+	new_directory_length=length(old_directory) + 12
+	new_directory = old_directory"009"mergeId_length""new_record_offset""FS
+
+	new_leader = new_record_length""leader1""new_base_address""leader2
+
+	print new_leader""new_directory""new_record_content > OUTFILE
 }
 
 function extract_subfield(subfield) {
@@ -45,6 +62,9 @@ function extract_subfield(subfield) {
 	} else {
 		return ""
 	}
+}
+
+function qcLeader() {
 }
 
 function longest_number(getstring) {
@@ -61,6 +81,13 @@ function longest_number(getstring) {
 		startpos = startpos + RSTART + RLENGTH - 1
 	}
 	return longest_num
+}
+
+function extract_local_field() {
+	localfield = substr(record_content, starting_pos + 1, field_length - 1)
+	gsub(/%/, "%%", localfield)
+	sub(/\$/, "\\\$", localfield)	
+	printf mergeId"\\t"marc_tag"\\t"localfield"\\n" > LOCALTAGFILE
 }
 
 function getfixedfield() {
@@ -83,6 +110,7 @@ function extract_tags() {
 				tag001 = fixedfield
 				break
 			case "007":
+				qScore += 5
 				getfixedfield()
 				tag007 = fixedfield
 				if (substr(tag007, 1, 2) == "cr"){ format="e"}
@@ -101,13 +129,34 @@ function extract_tags() {
 	
 				if (gooddate == 0){ 
 					date008 = substr(tag008, 8, 4)
-					if (date008 ~ /[12][0-9][0-9][0-9]/) {
+					pubStatus = substr(tag008, 7, 1)
+
+					if (date008 ~ /[12][0-9][0-9][0-9]/ && pubStatus != "r") {
 						gooddate = 1
 						pubdate = date008"_"
 					}
 				}
 				break
+			case "009":
+				getfixedfield()
+				tag009 = fixedfield
+				break
+			case "010":
+			case "020":
+			case "022":
+				if (maxid <=3 ){qScore += 5; maxid++ }
+				break
+			case "042":
+				qScore += 5
+				break
+			case "050":
+			case "060":
+			case "070":
+			case "082":
+				if (maxcall <=3 ){qScore += 5; maxcall++ }
+				break;
 			case "086":
+				if (maxcall <=3 ){qScore += 5; maxcall++ }
 				getvarfield()
 				tag086 = varfield
 				tag086 = extract_subfield("a")
@@ -118,16 +167,24 @@ function extract_tags() {
 			case "110":
 			case "111":
 			case "130":
+			case "240":
+				qScore += 5
 				getvarfield()
 				tagme = extract_subfield("a")
 				gsub(/[[:punct:][:space:]]/, "", tagme)
-				tagme = tolower(substr(tagme, 1, 5)"_")
+				if (leader7 == "s") {
+					tagme = tolower(substr(tagme, 1, 60)"_")
+				} else {
+					tagme = tolower(substr(tagme, 1, 5)"_")
+				}
+				qScore += 7
+
+				if (match(varfield, subfield_not_a)) { qScore += 3 }	
+				
 				break
 			case "245":
 				getvarfield()
 				tag245 = varfield
-				title = tag245
-				gsub(subfield_regex, " ", title)
 	
 				gsub(/&/, "", tag245)
 				tag245a = extract_subfield("a")
@@ -135,21 +192,28 @@ function extract_tags() {
 				tag245h = extract_subfield("h")
 				tag245p = extract_subfield("p")
 				tag245n = extract_subfield("n")
-				sub(/^(a |an |the )/, "", tag245a)
+				sub(/^([Aa] |[Aa]n |[Tt]he )/, "", tag245a)
 	
 				if (index(245h, "electronic")){ format="e"}
 			
-				tag245 = tag245a""tag245b""tag245p
+				tag245 = tag245a""tag245b
+				tag245p = substr(tag245p, 1, 10)""substr(tag245n, 1, 10)
+				if (match(tag245, /^[A-Z]+$/)) { 
+					qScore -= 10
+					if (highencoding == 1){ qScore -= 5 }
+				}
+
+				if (match(varfield, subfield_not_a, arr245)) { qScore += 5 }	
+			
+				tag245 = substr(tag245, 1, 70)""tag245p
 				gsub(/[[:punct:][:space:]]/, "", tag245)
-				tag245 = substr(tag245, 1, 70)"_"
 				tag245 = tolower(tag245"_")
 				break
 			case "250":
 				getvarfield()
-				edition = varfield
-				gsub(subfield_regex, " ", edition)
 	
 				tag250 = extract_subfield("a")
+				tag250 = tolower(tag250)
 				check250 = longest_number(tag250)
 	
 				if (! check250 ~ /[1-9]/) {
@@ -166,16 +230,19 @@ function extract_tags() {
 				} else {
 					tag250 = check250
 				}
+				gsub(/[[:punct:][:space:]]/, "", tag250)
+				qScore += 5
 				tag250 = tag250"_"
 				break
 			case "260":
 				getvarfield()
 				tag260 = varfield
-				pubdata = tag260
-				gsub(subfield_regex, " ", pubdata)
 				tag260b = extract_subfield("b")
 	
 				gsub(/[[:punct:][:space:]]/, "", tag260b)
+
+				if (length(tag260b) > 3 && match(tag260b, /[a-z]/)) { qScore += 5 }
+
 				tag260b = tolower(substr(tag260b, 1, 5))
 	
 				if (gooddate == 0) {
@@ -193,15 +260,15 @@ function extract_tags() {
 			case "264":
 				getvarfield()
 				tag264 = varfield
-				pubdata = tag264
-				gsub(subfield_regex, " ", pubdata)
 	
 				tag264b = extract_subfield("b")
 	
 				publisher = tag264b
 	
-				tag264b = tolower(substr(tag264b, 1, 5))
 				gsub(/[[:punct:][:space:]]/, "", tag264b)
+				if (length(tag264b) > 3 && match(tag264b, /[a-z]/)) { qScore += 5 }
+
+				tag264b = tolower(substr(tag264b, 1, 5))
 	
 				if (gooddate != 1 ) {
 					tag264c = extract_subfield("c")
@@ -223,6 +290,27 @@ function extract_tags() {
 				tag300 = extract_subfield("a")
 				tag300 = longest_number(tag300)"_"
 				break
+			case "362":
+				if (maxseq <=2 ){qScore += 5; maxseq++ }
+				break
+			case "505":
+			case "520":
+				if (maxnotes <=2 ){qScore += 5; maxnotes++ }
+				break;
+			case "700":
+			case "710":
+			case "711":
+				if (maxname <=3 ){qScore += 5; maxname++ }
+				break;
+			case "490":
+			case "780":
+			case "785":
+			case "800":
+			case "810":
+			case "811":
+			case "830":
+				if (maxseries <=3 ){qScore += 5; maxseries++ }
+				break;
 			case "880":
 				getvarfield()
 				tag880 = varfield
@@ -258,6 +346,7 @@ function extract_tags() {
 			case "999":
 				getvarfield()
 				tag999i = extract_subfield("i")
+				if (tag999i !~ /^[a-f0-9]*-[a-f0-9]*-[a-f0-9]*-[a-f0-9]*-[a-f0-9]*$/) { tag999i = "" }
 				break
 			default:
 				break
@@ -265,10 +354,31 @@ function extract_tags() {
 	}
 }
 
+function extract_local_fields() {
+	for (d_iter=1; d_iter<=directory_length; d_iter=d_iter+12) {
+		marc_tag = substr(directory, d_iter, 3)
+		field_length = substr(directory, d_iter + 3, 4) + 0
+		starting_pos = substr(directory, d_iter + 7, 5) + 0
+
+		switch(marc_tag) {
+			case "590":
+			case "690":
+				extract_local_field()
+				break
+			default:
+				break
+		}
+	}
+}
 {
 
 leader=substr($0,1,24)
+leader6=substr($0,7,1)
+leader7=substr($0,8,1)
+
 baseaddress=substr(leader,13, 5) + 0
+encodinglevel=substr(leader, 18, 1)
+catform=substr(leader, 19, 1)
 directory=substr($0,25, baseaddress - 25)
 directory_length=length(directory) 
 directory_check=(directory_length % 12)
@@ -276,60 +386,135 @@ record_content=substr($0, baseaddress + 1)
 bib_mattype=substr(leader, 7, 1)
 holdings_type=substr(leader, 8, 1)
 
-tag001=tag008=tag245=tag245a=tag245b=tag245p=tag250=tag260=tag264=tag264b=tag264c=date260=date264=tag907a=tag999i=""
+delete arr245
+
+mergeId=tag001=tag009=tag907a=tag999i=""
+tag008=tag245=tag245a=tag245b=tag245p=tag250=tag260=tag264=tag264b=tag264c=date260=date264=highencoding=""
+
 tag250="1_"
 tagme=pubdate=tag300=tag086="_"
-mergeId=title=pubdata=edition=pagination=tag001=""
+maxcall=maxid=maxname=maxnote=maxsubj=max338=maxseries=maxnotes=maxseq=0
+qScore = 1
 format="p"
 
 if (directory_check == 0) {
-	record_type = substr(leader, 7, 1)
+	switch(encodinglevel) {
+		case " ":
+		case "I":
+			qScore = qScore += 10
+			highencoding = 1
+			break
+		default:
+			break
+	}
+	
 	extract_tags()
+
+	#### general qScore boosters
+	if (index(record_content, SFS"0")){ qScore += 10 }
+	if (gooddate == 1){ qScore += 5 }
+
 	mergeId = tag245""tagme""tag264b""pubdate""tag250""tag300""tag086""format
 
-	if (NR == FNR) {
-		outstring = mergeId"\\t"tag999i"\\t"tag001"\\t"tag907a"\\t"title"\\t"pubdata"\\t"edition"\\t"pagination
-		source_record[mergeId] = outstring
-		source_999i[mergeId] = tag999i
-		if (NR % 1000 == 0){ printf "Source IDs created: "NR"\\r" }
-	} else {
-		if (source_record[mergeId]) {
-			outstring = mergeId"\\t"source_999i[mergeId]"\\t"tag001"\\t"tag907a"\\t"title"\\t"pubdata"\\t"edition"\\t"pagination
-			merged_records++
+	if (tag009 != "") { mergeId = tag009 }
+	if (qScore < 1) { qScore = 1 }
 
-			if (mergeId != lastMergeId) {
-				lastMergeId = mergeId
-				printf "%s\\tSOURCE\\n", source_record[mergeId] > "merged_records.tsv"
-				printf "%s\\tMERGE\\n", outstring > MERGEREPORT
-				print $0 > MERGEFILE
-			} else {
-				printf "%s\\n", outstring > MERGEREPORT
-				print $0 > MERGEFILE
-			}
-		} else { 
-			outstring = mergeId"\\t"tag001"\\t"tag907a"\\t"title"\\t"pubdata"\\t"edition"\\t"pagination
-			not_merged_records++
-			printf "%s\\n", outstring > NOTMERGEREPORT
-			print $0 > NOTMERGEFILE
-		}
-		if (NR % 1000 == 0) {
-			printf "Merged records: %s Not merged records: %s\\r", merged_records, not_merged_records
-		}
+	printf mergeId"\\t"qScore"\\t"tag999i"\\t"tag001"\\t"tag907a"\\n" > MAPFILE
+
+	extract_local_fields()
+
+	if (tag009 == "") { 
+		add_workId()
+	} else {
+		print $0 > OUTFILE
+	}	
+
+	if (SEQ == 4) {
+		if (NR % 1000 == 0){ printf "Records processed: %d \r", NR * 5 }	
 	}
 }
 
-
 }
-END { printf "\\n\\nProcessing complete. Reports can be found in merged_records.tsv and not_merged_records.tsv.\\nMaps of merge activity can be found in merged_map.tsv and not_merged_map.tsv \\nFiles can be found in merged_records.mrc and not_merged_records.mrc\\n\\n" }
+
 ENDOFAWK
 
-echo -e "${awkscript}" > tmp_checkmarc
-chmod 700 tmp_checkmarc
+echo -e "${awkscript}" > tmp_addworkids
+chmod 700 tmp_addworkids
 
-awk -v RS=$'\x1d' -v ORS=$'\x1d' -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS=$'\x1e' -b -f tmp_checkmarc "${sourcefile}" "${mergefile}"
+for f in ${filelist[@]};do
+	echo "Splitting ${f} to speed processing. Determining number of records."
+
+	fileroot=$(echo "${f}" | sed 's/\.....\?$//')
+	fixedfile="${fileroot}_with009_unranked.mrc"
+	extractedfile="${fileroot}_with009_unranked_matched.mrc"
+	unmatchedfile="${fileroot}_with009_unranked_not-matched.mrc"
+	rankedfile="${fileroot}_with009_ranked.mrc"
+	mapfile="${fileroot}_map.tsv"
+	localtagfile="${fileroot}_localfields.tsv"
+
+	rm -f "${fixedfile}" "${rankedfile}" "${mapfile}" "${localtagfile}" "${fileroot}_best_records.tsv"
+
+	pv "${f}" |awk -v RS=$'\x1d' 'END{printf "%d", NR/5 + 1 > "tmpnum";printf "%d", NR > "tmptotal"}' 
+	numrecs=$(cat tmpnum)
+	rm tmpnum
+
+	printf "Separating into 5 temporary files containing approximately %s records\n\n", ${numrecs}
+
+	cat "${f}" | tr '\n' ' ' |awk -v RS=$'\x1d' -v ORS=$'\x1d' -v filecounter=1 -v NUMRECS=${numrecs} '{if (NR % NUMRECS == 0){filecounter++};outfile=sprintf("tmp_in_%d.mrc", filecounter);print $0 > outfile;if (NR % 10000 == 0){ printf "Records: "NR"\r"}}' 
+	echo "Records: $(cat tmptotal)"
+	rm -f tmptotal
+
+	echo "Building work IDs, id maps, local fields, and MARC files"
+
+	for i in {1..5};do 
+		infile="tmp_in_"${i}".mrc"
+		awk -v RS=$'\x1d' -v ORS=$'\x1d' -v SFS=$'\x1f' -v FS=$'\x1e' -v OFS=$'\x1e' -v SEQ=${i} -b -f tmp_addworkids "${infile}" &
+	done	
+	wait
+
+	echo -e "mergeId\tqScore\t999i\t001\t907a" > "${mapfile}"
+	echo -e "mergeId\ttag\tcontent" > "${localtagfile}"
+
+	echo "Finalizing map file"
+	pv workId_map_*.tsv >> "${mapfile}"
+	echo "Finalizing tag file"
+	pv tmp_tag_*.tsv >> "${localtagfile}"
+	echo "Finalizing unranked MARC file with merge IDs"
+	pv tmp_out_*.mrc >> "${fixedfile}"
+
+	rm -f tmp_in_*.mrc tmp_out_*.mrc tmp_tag_*.tsv workId_map_*
+	echo "Unranked MARC and map files have been output to ${fixedfile} and ${mapfile}"
+	echo "Local tags have been output to ${localtagfile}"
+done
 echo
+echo "Identifying best records"
 
-(head -1 merged_records.tsv && tail -n +2 merged_records.tsv | sort -k1,1) > tmp
-mv tmp merged_records.tsv
+#### mergeId is in first column, qScore in second
+pv ${mapfile} | awk -v FILEROOT="${fileroot}" 'BEGIN{FS=OFS="\t"}{
+    if ($2 > max_qScore[$1]) {
+        max_qScore[$1] = $2
+        record_num[$1] = NR
+	folioId[$1] = $3
+    }
+}
+END {
+    for (key in max_qScore) {
+        print key, max_qScore[key], record_num[key], folioId[key] > FILEROOT"_best_records.tsv"
+    }
+}'
+echo "Extracting best records"
+cut -f4 ${fileroot}_best_records.tsv |pv > ids
+marcextractbyid "${fixedfile}"
 
-rm -f tmp_checkmarc
+mv "${extractedfile}" "${rankedfile}"
+rm -f "${unmatchedfile}"
+
+echo "Creating list of merged ids"
+echo -e "marc_009\toccurrences" > "${fileroot}_merged_ids"
+pv "${mapfile}" | cut -f1 |sort |uniq -dc |sort -k1nr |awk -v OFS="\t" '{print $2, $1}' >> "${fileroot}_merged_ids"
+
+echo "Unranked records have been output to ${fixedfile}"
+echo "Ranked records have been output to ${rankedfile}"
+echo "List of merged ids with number of occurrences has be output to ${fileroot}_merged_ids"
+echo
+rm -f workId_mapUnsorted.tsv tmp_addworkids ids
