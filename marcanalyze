@@ -99,7 +99,7 @@ function getfixedfield() {
 }
 
 function getvarfield() {
-	varfield = substr(record_content, starting_pos + 3, field_length - 4)
+	varfield = substr(record_content, starting_pos + 3, field_length - 3)
 }
 
 function extract_tags() {
