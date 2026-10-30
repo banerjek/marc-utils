@@ -1,11 +1,11 @@
 #!/usr/bin/bash
 
 filelist=("$@")
-mapped=("${filelist[@]/%.tsv/_map.tsv}")
+mapped=("${filelist[@]/%.mrc/_map.tsv}")
 
 infile="${filelist[0]}"
 
-if [[ -z ${infile} ]];then echo "You must supply a file name Usage: marcmerge [filename]";exit;fi
+if [[ -z ${infile} ]];then echo "You must supply a file name Usage: marcanalyze [filename]";exit;fi
 
 rm -f marc_009a* *best_records.tsv
 
@@ -91,7 +91,7 @@ function extract_local_field() {
 	localfield = substr(record_content, starting_pos + 1, field_length - 1)
 	gsub(/%/, "%%", localfield)
 	sub(/\$/, "\\\$", localfield)	
-	printf mergeId"\\t"marc_tag"\\t"localfield"\\n" > LOCALTAGFILE
+	printf "%s\\t%s\\t%s\\n", mergeId, marc_tag, localfield > LOCALTAGFILE
 }
 
 function getfixedfield() {
@@ -154,11 +154,20 @@ function extract_tags() {
 				qScore += 5
 				break
 			case "050":
+				if (maxcall <=3 ){qScore += 5; maxcall++ }
+				getvarfield()
+				tag050 = substr(varfield, 4)
+				gsub(/\037./, " ", tag050)
+				break
 			case "060":
+				if (maxcall <=3 ){qScore += 5; maxcall++ }
+				break
 			case "070":
+				if (maxcall <=3 ){qScore += 5; maxcall++ }
+				break
 			case "082":
 				if (maxcall <=3 ){qScore += 5; maxcall++ }
-				break;
+				break
 			case "086":
 				if (maxcall <=3 ){qScore += 5; maxcall++ }
 				getvarfield()
@@ -166,6 +175,11 @@ function extract_tags() {
 				tag086 = extract_subfield("a")
 				gsub(/[[:punct:][:space:]]/, "", tag086)
 				tag086 = tag086"_"
+				break
+			case "090":
+				getvarfield()
+				tag090 = substr(varfield, 4)
+				gsub(/\037./, " ", tag090)
 				break
 			case "100":
 			case "110":
@@ -176,7 +190,11 @@ function extract_tags() {
 				getvarfield()
 				tagme = extract_subfield("a")
 				gsub(/[[:punct:][:space:]]/, "", tagme)
-				tagme = tolower(substr(tagme, 1, 5)"_")
+				if (leader7 == "s") {
+					tagme = tolower(substr(tagme, 1, 60)"_")
+				} else {
+					tagme = tolower(substr(tagme, 1, 5)"_")
+				}
 				qScore += 7
 
 				if (match(varfield, subfield_not_a)) { qScore += 3 }	
@@ -188,7 +206,7 @@ function extract_tags() {
 	
 				gsub(/&/, "", tag245)
 				tag245a = extract_subfield("a")
-				titleProper = substr(tag245a, 1, 40)
+				titleProper = substr(tag245a, 1, 60)
 				tag245b = extract_subfield("b")
 				tag245h = extract_subfield("h")
 				tag245p = extract_subfield("p")
@@ -206,8 +224,8 @@ function extract_tags() {
 
 				if (match(varfield, subfield_not_a, arr245)) { qScore += 5 }	
 			
-				tag245 = substr(tag245, 1, 70)""tag245p
 				gsub(/[[:punct:][:space:]]/, "", tag245)
+				tag245 = substr(tag245, 1, 100)""tag245p
 				tag245 = tolower(tag245"_")
 				break
 			case "250":
@@ -390,7 +408,7 @@ holdings_type=substr(leader, 8, 1)
 delete arr245
 
 mergeId=tag001=tag009=tag907a=tag999i=""
-tag008=tag245=tag245a=tag245b=tag245p=tag250=tag260=tag264=tag264b=tag264c=date260=date264=highencoding=titleProper""
+tag008=tag050=tag090=tag245=tag245a=tag245b=tag245p=tag250=tag260=tag264=tag264b=tag264c=date260=date264=highencoding=titleProper=""
 
 tag250="1_"
 tagme=pubdate=tag300=tag086="_"
@@ -420,7 +438,7 @@ if (directory_check == 0) {
 	if (tag009 != "") { mergeId = tag009 }
 	if (qScore < 1) { qScore = 1 }
 
-	printf mergeId"\\t"qScore"\\t"tag999i"\\t"tag001"\\t"tag907a"\\t"titleProper"\\n" > MAPFILE
+	printf "%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n", mergeId, qScore, tag001, titleProper,  tag090, tag050 > MAPFILE
 
 	extract_local_fields()
 
@@ -473,7 +491,7 @@ for f in ${filelist[@]};do
 	done	
 	wait
 
-	echo -e "mergeId\tqScore\t999i\t001\t907a\ttitle" > "${mapfile}"
+	echo -e "mergeId\tqScore\t001\ttitle\t090\t050" > "${mapfile}"
 	echo -e "mergeId\ttag\tcontent" > "${localtagfile}"
 
 	echo "Finalizing map file"
@@ -521,4 +539,4 @@ echo
 rm -f workId_mapUnsorted.tsv tmp_addworkids ids
 
 echo "Creating report"
-./marcmergereport ${mapped[@]}
+marcmergereport ${mapped[@]}

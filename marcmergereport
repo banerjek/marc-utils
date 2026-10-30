@@ -1,26 +1,45 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
+# Usage: ./run_merge.sh file1.tsv [file2.tsv ...] > out.tsv
+# Input: tab-delimited with a header row. Columns must be in this order:
+#   mergeId  qScore  001  title  [any further columns, e.g. 999i 907a]
 
-if [ "$#" -lt 2 ]; then
-    echo "Usage: $0 file1 file2 [file3 ...]" >&2
+outfile=duplicate_records_report.tsv
+
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 file1 [file2 ...]" >&2
     exit 1
 fi
 
 missing=0
 for f in "$@"; do
-    if [] ! -f "$f" ]]; then
-        echo "Error: file not found: $f" >&2
+    if [ ! -f "$f" ] || [ ! -r "$f" ]; then
+        echo "Error: file not found or not readable: $f" >&2
         missing=1
     fi
 done
 
-[[ "$missing" -ne 0 ]] && exit 1
+if [ "$missing" -ne 0 ]; then
+    exit 1
+fi
 
+# ... any pre-processing goes here ...
 
 awk '
 BEGIN { FS = OFS = "\t" }
 
-# New file starts: bump the file counter (works even if a file is passed twice)
-FNR == 1 { nf++; fname[nf] = FILENAME }
+# Header row: check the first four column names, remember the extra ones
+FNR == 1 {
+    nf++; fname[nf] = FILENAME
+    if ($1 != "mergeId" || $2 != "qScore" || $3 != "001" || $4 != "title") {
+        print "Error: header must start with mergeId, qScore, 001, title in " FILENAME > "/dev/stderr"
+        bad = 1; exit 1
+    }
+    if (nf == 1) {
+        hn = NF
+        for (i = 4; i <= hn; i++) hdr = hdr (i > 4 ? OFS : "") $i
+    }
+    next
+}
 
 {
     id = $1
@@ -39,21 +58,29 @@ FNR == 1 { nf++; fname[nf] = FILENAME }
 
     # overall best per mergeId; strict > means first encountered wins ties
     if (!(id in bq) || q > bq[id]) {
-        bq[id] = q; btitle[id] = $4; bfile[id] = nf; bpos[id] = cnt[k]
+        rest = ""
+        for (i = 4; i <= hn; i++) rest = rest (i > 4 ? OFS : "") $i
+        bq[id] = q; brest[id] = rest; bfile[id] = nf; bpos[id] = cnt[k]
     }
 }
 
 END {
+    if (bad) exit 1
+
     # header row
-    printf "mergeId" OFS "title"
+    printf "mergeId" OFS "%s", hdr
     for (f = 1; f <= nf; f++) printf OFS fname[f]
     printf "\n"
 
     for (i = 1; i <= n; i++) {
         id = order[i]
-        if (nfiles[id] < 2) continue
 
-        printf "%s" OFS "%s", id, btitle[id]
+        # several files: must appear in 2+ files
+        # single file: must appear on 2+ rows
+        if (nf > 1) { if (nfiles[id] < 2) continue }
+        else if (cnt[id SUBSEP 1] < 2) continue
+
+        printf "%s" OFS "%s", id, brest[id]
         for (f = 1; f <= nf; f++) {
             k = id SUBSEP f
             v = ""
@@ -69,4 +96,7 @@ END {
         printf "\n"
     }
 }
-' "$@" 
+' "$@" |cut -f2- > ${outfile}
+
+echo "Merge report has been sent to ${outfile}"
+
