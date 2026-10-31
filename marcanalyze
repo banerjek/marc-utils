@@ -191,9 +191,9 @@ function extract_tags() {
 				tagme = extract_subfield("a")
 				gsub(/[[:punct:][:space:]]/, "", tagme)
 				if (leader7 == "s") {
-					tagme = tolower(substr(tagme, 1, 60)"_")
+					tagme = substr(tagme, 1, 60)"_"
 				} else {
-					tagme = tolower(substr(tagme, 1, 5)"_")
+					tagme = substr(tagme, 1, 5)"_"
 				}
 				qScore += 7
 
@@ -227,13 +227,12 @@ function extract_tags() {
 			
 				gsub(/[[:punct:][:space:]]/, "", tag245)
 				tag245 = substr(tag245, 1, 100)""tag245p
-				tag245 = tolower(tag245"_")
+				tag245 = tag245"_"
 				break
 			case "250":
 				getvarfield()
 	
 				tag250 = extract_subfield("a")
-				tag250 = tolower(tag250)
 				check250 = longest_number(tag250)
 	
 				if (! check250 ~ /[1-9]/) {
@@ -263,7 +262,7 @@ function extract_tags() {
 
 				if (length(tag260b) > 3 && match(tag260b, /[a-z]/)) { qScore += 5 }
 
-				tag260b = tolower(substr(tag260b, 1, 5))
+				tag260b = substr(tag260b, 1, 5)
 	
 				if (gooddate == 0) {
 					tag260c = extract_subfield("c")
@@ -288,7 +287,7 @@ function extract_tags() {
 				gsub(/[[:punct:][:space:]]/, "", tag264b)
 				if (length(tag264b) > 3 && match(tag264b, /[a-z]/)) { qScore += 5 }
 
-				tag264b = tolower(substr(tag264b, 1, 5))
+				tag264b = substr(tag264b, 1, 5)
 	
 				if (gooddate != 1 ) {
 					tag264c = extract_subfield("c")
@@ -438,6 +437,7 @@ if (directory_check == 0) {
 
 	if (tag009 != "") { mergeId = tag009 }
 	if (qScore < 1) { qScore = 1 }
+	mergeId = tolower(mergeId)
 
 	printf "%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n", mergeId, qScore, tag001, titleProper,  tag090, tag050 > MAPFILE
 
