@@ -419,7 +419,7 @@ if (directory_check == 0) {
 	if (qScore < 1) { qScore = 1 }
 	mergeId = tolower(mergeId)
 
-	printf mergeId"\\t"qScore"\\t"tag999i"\\t"tag001"\\t"tag907a"\\n" > MAPFILE
+	printf "%s\\t%s\\t%s\\t%s\\t%s\\n", mergeId, qScore, tag999i, tag001,  tag907a > MAPFILE
 
 	extract_local_fields()
 
