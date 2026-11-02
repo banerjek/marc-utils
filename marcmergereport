@@ -4,6 +4,7 @@
 #   mergeId  qScore  001  title  [any further columns, e.g. 999i 907a]
 
 outfile=duplicate_records_report.tsv
+mapfile=duplicate_records_map.tsv
 
 if [ "$#" -lt 1 ]; then
     echo "Usage: $0 file1 [file2 ...]" >&2
@@ -24,7 +25,7 @@ fi
 
 # ... any pre-processing goes here ...
 
-awk '
+awk -v mapfile="${mapfile}" '
 BEGIN { FS = OFS = "\t" }
 
 # Header row: check the first four column names, remember the extra ones
@@ -72,6 +73,9 @@ END {
     for (f = 1; f <= nf; f++) printf OFS fname[f]
     printf "\n"
 
+    # map file header (machine-readable companion to the report)
+    print "not_best_001", "not_best_file", "best_001", "best_file" > mapfile
+
     for (i = 1; i <= n; i++) {
         id = order[i]
 
@@ -83,12 +87,15 @@ END {
         printf "%s" OFS "%s", id, brest[id]
         for (f = 1; f <= nf; f++) {
             k = id SUBSEP f
+            kb = id SUBSEP bfile[id]
             v = ""
             # best 001 goes first, starred
             if (f == bfile[id]) v = "*" val[k, bpos[id]] "*"
             # then all the others, in original order
             for (j = 1; j <= cnt[k]; j++) {
                 if (f == bfile[id] && j == bpos[id]) continue
+                # one map line per not-best 001
+                print val[k, j], fname[f], val[kb, bpos[id]], fname[bfile[id]] > mapfile
                 v = (v == "") ? val[k, j] : v ";" val[k, j]
             }
             printf OFS "%s", v
@@ -99,4 +106,5 @@ END {
 ' "$@" |cut -f2- > ${outfile}
 
 echo "Merge report has been sent to ${outfile}"
+echo "Merge map has been sent to ${mapfile}"
 
