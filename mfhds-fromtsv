@@ -202,7 +202,11 @@ function build_mfhd() {
 	}
 	if (publicNote > 0 && $publicNote ~ /[a-zA-Z0-9]/) {
 		split($publicNote, statements, ";")
-		for (statement in statements) { text_mfhd = text_mfhd""OFS"=538    "SFS"a"statements[statement] }
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=583  1 "SFS"a"statements[statement] }
+	}
+	if (nonpublicNote > 0 && $nonpublicNote ~ /[a-zA-Z0-9]/) {
+		split($nonpublicNote, statements, ";")
+		for (statement in statements) { text_mfhd = text_mfhd""OFS"=583  0 "SFS"a"statements[statement] }
 	}
 	if (ownershipNote > 0 && $ownershipNote ~ /[a-zA-Z0-9]/) {
 		split($ownershipNote, statements, ";")
@@ -463,6 +467,12 @@ function build_mfhd() {
 					if (itemfile == 0) {
 						publicNote=i
 						printf ("Public note was found in "$i"\\n")
+					}
+					break
+				case "summaryholdingsnonpublicnote":
+					if (itemfile == 0) {
+						nonpublicNote=i
+						printf ("Non public note was found in "$i"\\n")
 					}
 					break
 				case "holdingstype":
