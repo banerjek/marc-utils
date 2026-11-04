@@ -23,14 +23,26 @@ if [ "$missing" -ne 0 ]; then
     exit 1
 fi
 
+echo "Checking $# input file(s): OK" >&2
+
 # ... any pre-processing goes here ...
 
 awk -v mapfile="${mapfile}" '
-BEGIN { FS = OFS = "\t" }
+function msg(s)  { printf "%s\n", s > "/dev/stderr" }
+# in-place counter: label, current number (rewrites the same line via \r)
+function tick(label, n) { printf "\r  %s %d", label, n > "/dev/stderr" }
+# finish an in-place counter line with a final newline
+function done(label, n) { printf "\r  %s %d\n", label, n > "/dev/stderr" }
+
+BEGIN { FS = OFS = "\t"; step = 1000 }
 
 # Header row: check the first four column names, remember the extra ones
 FNR == 1 {
+    # close off the counter of the previous file, if any
+    if (nf > 0) done("rows read:", frows)
+    frows = 0
     nf++; fname[nf] = FILENAME
+    msg("Reading " FILENAME)
     if ($1 != "mergeId" || $2 != "qScore" || $3 != "001" || $4 != "title") {
         print "Error: header must start with mergeId, qScore, 001, title in " FILENAME > "/dev/stderr"
         bad = 1; exit 1
@@ -43,6 +55,9 @@ FNR == 1 {
 }
 
 {
+    total++; frows++
+    if (frows % step == 0) tick("rows read:", frows)
+
     id = $1
     q  = $2 + 0
     k  = id SUBSEP nf
@@ -67,6 +82,9 @@ FNR == 1 {
 
 END {
     if (bad) exit 1
+    if (nf > 0) done("rows read:", frows)
+    msg("Read " total " data rows from " nf " file(s); " n " distinct mergeIds")
+    msg("Building merge report and map...")
 
     # header row
     printf "mergeId" OFS "%s", hdr
@@ -77,6 +95,7 @@ END {
     print "not_best_001", "not_best_file", "best_001", "best_file" > mapfile
 
     for (i = 1; i <= n; i++) {
+        if (i % step == 0) tick("mergeIds processed:", i)
         id = order[i]
 
         # several files: must appear in 2+ files
@@ -101,9 +120,18 @@ END {
             printf OFS "%s", v
         }
         printf "\n"
+        kept++
     }
+    done("mergeIds processed:", n)
+    msg("Duplicates found: " kept+0 " mergeIds written to report")
 }
 ' "$@" |cut -f2- > ${outfile}
+rc=${PIPESTATUS[0]}
+
+if [ "$rc" -ne 0 ]; then
+    echo "Error: merge failed (awk exit status $rc)" >&2
+    exit "$rc"
+fi
 
 echo "Merge report has been sent to ${outfile}"
 echo "Merge map has been sent to ${mapfile}"
