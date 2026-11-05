@@ -80,17 +80,17 @@ END {
 	print NR" records were searched"
 	n = asorti(tagcount, sorted_bytag)
 
-	print "Total records: "NR"\\n" > OUTFILE
+	print "field\\tcount" > OUTFILE
 
 	for (tag=1; tag<=n; tag++) {
 		key = sorted_bytag[tag]
 
 		if (INVALID == "yes") {
 			if ((key ~ /[^0-9]/ && length(key) == 3) || (substr(key,4,1) !~ /[0-9a-z]/ && length(key) == 4)) {
-				print key ":", tagcount[key] > OUTFILE
+				print key "\t", tagcount[key] > OUTFILE
 			} 
 		} else {
-			print key ":", tagcount[key] > OUTFILE
+			print key "\t", tagcount[key] > OUTFILE
 		}
 	}
 }
