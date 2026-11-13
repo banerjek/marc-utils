@@ -118,6 +118,7 @@ function extract_tags() {
 				getfixedfield()
 				tag007 = fixedfield
 				if (substr(tag007, 1, 2) == "cr"){ format="e"}
+				if (substr(tag007, 1, 1) == "h"){ format="m"}
 				break
 			case "008":
 				gooddate = 0
@@ -156,7 +157,7 @@ function extract_tags() {
 			case "050":
 				if (maxcall <=3 ){qScore += 5; maxcall++ }
 				getvarfield()
-				tag050 = substr(varfield, 4)
+				tag050 = substr(varfield, 3)
 				gsub(/\037./, " ", tag050)
 				break
 			case "060":
@@ -178,7 +179,7 @@ function extract_tags() {
 				break
 			case "090":
 				getvarfield()
-				tag090 = substr(varfield, 4)
+				tag090 = substr(varfield, 3)
 				gsub(/\037./, " ", tag090)
 				break
 			case "100":
@@ -214,7 +215,9 @@ function extract_tags() {
 				tag245n = extract_subfield("n")
 				sub(/^([Aa] |[Aa]n |[Tt]he )/, "", tag245a)
 	
-				if (index(245h, "electronic")){ format="e"}
+				if (index(tag245, "[electronic")){ format="e"}
+				else if (index(tag245, "[computer")){ format="e"}
+				else if (index(tag245, "[micro")){ format="m"}
 			
 				tag245 = tag245a""tag245b
 				tag245p = substr(tag245p, 1, 10)""substr(tag245n, 1, 10)
@@ -540,4 +543,4 @@ echo
 rm -f workId_mapUnsorted.tsv tmp_addworkids ids
 
 echo "Creating report"
-marcmergereport ${mapped[@]}
+./marcmergereport ${mapped[@]}
