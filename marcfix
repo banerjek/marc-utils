@@ -55,7 +55,8 @@ BEGIN { goodrecs=badrecs=deletedrecs=bad001=badleader=baddirectory=bibcount=hold
 	invalid_subfield_a = SFS"a"not_subfield
 
 	mandatory_numbers = " 100 110 111 130 245 600 610 611 650 651 700 710 711"
-	BAD_INDICATOR_REGEX=FS".?"SFS
+	#BAD_INDICATOR_REGEX=FS".?"SFS
+	BAD_INDICATOR_REGEX=FS"(.{0,1}|.{3})"SFS
 }
 function check_fields() {
 	## get rid of bad subfield zeros that break links
@@ -198,7 +199,7 @@ if ( good_tag == 0 && goodrec == 1) { badtagtext = "(Nonnumeric tags: "bad_tag")
 
 if ( goodrec == 1 && badsubfields == 1){ badsubfieldtotal++;badsubfieldstext = " (Bad subfields: "badsubfieldtotal")";foundbad = 1; print $0 > "tmp_"rectype"_badsubfields.mrc" }
 
-if ( goodrec == 1 && badmandatoryfield == 1){ badmandatorytotal++;badmandatorytext = " (Bad mandatory field: "badmandatorytotal")";foundbad = 1; print $0 > "bad_bib_mandatoryfields"FILEROOT }
+if ( goodrec == 1 && badmandatoryfield == 1 && badsubfields == 0){ badmandatorytotal++;badmandatorytext = " (Bad mandatory field: "badmandatorytotal")";foundbad = 1; print $0 > "tmp_"rectype"_badsubfields.mrc"}
 
 
 if ( goodrec == 1 && badindicators == 1){ badindicatortotal++;badindicatorstext = " (Bad indicators: "badindicatortotal")";foundbad = 1; print $0 > "tmp_"rectype"_badindicators.mrc" }
@@ -302,7 +303,7 @@ if [[ $processType == "file" ]];then
 		temproot="tmp_bib_badindicators"
 		if [[ -f ${temproot}.mrc ]];then
 			marc2text -n ${temproot}.mrc 
-			awk '{if($0~/^=([1-9]|0[1-9])/){if(substr($0,7,1)=="\037")$0=substr($0,1,6)"  "substr($0,7);else if(substr($0,8,1)=="\037")$0=substr($0,1,7)" "substr($0,8)};print $0}' ${temproot}.txt > ${temproot}1.txt
+			awk '{if($0~/^=([1-9]|0[1-9])/){if(substr($0,7,1)=="\037")$0=substr($0,1,6)"  "substr($0,7);else if(substr($0,8,1)=="\037")$0=substr($0,1,7)" "substr($0,8);else if(substr($0,10,1)=="\037")$0=substr($0,1,8)substr($0,10)};print $0}' ${temproot}.txt > ${temproot}1.txt
 			mv ${temproot}1.txt ${temproot}.txt
 			text2marc -n ${temproot}.txt
 			cat ${temproot}.mrc  >> "${fileroot}_bib_fixed.mrc"
